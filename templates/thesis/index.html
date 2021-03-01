@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="GitLab Pages">
+  <title></title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/mobile.css">
+
+  <style>
+    .cover {
+      margin-top: 48px;
+      display: flex;
+    }
+    .cover img {
+      width: 250px;
+      object-fit: contain;
+      margin-bottom: auto;
+      box-shadow: 0px 1px 4px -1px #00000069;
+    }
+    .metadata {
+      display: flex;
+      flex-direction: column;
+      margin-left: 1em;
+    }
+    .title {
+      flex-grow: 1;
+      font-size: 2em;
+      font-weight: bold;
+    }
+    .metadata-item {
+      display: flex;
+      flex-direction: column;
+      margin-top: 24px;
+    }
+    .download-item {
+      display: flex;
+      margin-top: 24px;
+    }
+    .metadata-name {
+      border-bottom: 1px solid #cacaca;
+      border-image: linear-gradient(to right, #cacaca, #ffffff00) 1;
+      margin-bottom: 5px;
+    }
+    .supervisors {
+      display: flex;
+      flex-direction: column;
+    }
+    .button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+    }
+    @media only screen and (max-width : 450px) {
+      .cover {
+        flex-wrap: wrap;
+      }
+      .cover img {
+        width: 100%;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+  <header id="header">
+    <div class="row">
+      <div class="logo" id="logo"></div>
+      <div class="hamburger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+      <nav></nav>
+    </div>
+    <div id='projectname'></div>
+  </header>
+  <div class="content">
+
+    <div class="cover">
+      <img src="cover.jpg">
+      <ul class="metadata">
+        <li class="metadata-item title">
+          The title of the thesis
+        </li>
+        <li class="metadata-item">
+          <div class="metadata-name">Author</div>
+          <div>First name Last name</div>
+        </li>
+        <li class="metadata-item">
+          <div class="metadata-name">Supervisors</div>
+          <div class="supervisors">
+            <div>Prof. Dr.-Ing. Felix Doe</div>
+            <div>Prof. Dr.-Ing. Nigel Doe</div>
+          </div>
+        </li>
+        <li class="metadata-item">
+          <div class="metadata-name">Year</div>
+          <div>2020</div>
+        </li>
+        <li class="download-item"><a href="thesis.pdf" class="button" download>download</a></li>
+      </ul>
+    </div>
+
+    <h1>Abstract</h1>
+
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque pellentesque diam ipsum, nec
+      ultricies sem mollis et. Phasellus porttitor nec felis quis ultricies. In venenatis faucibus nisl
+      sed facilisis. Cras sapien nibh, dignissim at eros quis, commodo lobortis eros. Sed a massa
+      eleifend, dictum elit at, blandit magna. Nullam auctor enim nec orci luctus sagittis. Nunc blandit
+      quam nec laoreet egestas. Nulla feugiat nisl lacus, a viverra nisi hendrerit vitae. In nibh arcu,
+      sodales in enim tincidunt, tempus imperdiet ex. Aliquam fermentum augue magna, vel accumsan augue
+      consequat et. Vestibulum id interdum orci, a aliquam sapien. Vivamus eu ipsum sollicitudin, aliquet
+      arcu ut, ornare massa. Suspendisse tincidunt lectus a odio ultrices interdum. Praesent vitae sodales
+      urna, vitae sagittis ex. Vivamus tincidunt nisi ultrices lectus dapibus, at placerat nisl elementum.
+      Fusce cursus, sapien in tincidunt pellentesque, mi erat mollis nibh, ut maximus tortor magna vitae
+      nibh.
+    </p>
+
+  </div>
+
+  <div class="footer"></div>
+
+  <script src="../settings.js"> </script>
+  <script src="../main.js"> </script>
+</body>
+
+</html>
