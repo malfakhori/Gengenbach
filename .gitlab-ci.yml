@@ -1,0 +1,41 @@
+variables:
+  EXPORT_DIR: "/var/www/html/pages"
+
+stages:
+  - test
+  - deploy
+  - cleanup
+  
+test-job:
+  stage: test
+  script:
+    - echo "Testing files exist..."
+    - test -f  public/index.html
+    - test -f  public/main.js
+    - test -f  public/settings.js
+    - test -f  public/assets/css/style.css
+    - test -f  public/assets/css/moblie.css
+    - test -f  public/assets/images/header.jpg
+    - test -f  public/home/index.html
+    - echo "Test finished, all ok"
+  only:
+    - master
+  
+deploy-job:
+  stage: deploy
+  script:
+    - mkdir -p "$EXPORT_DIR/$CI_PROJECT_NAME"	
+    - cp -r public/* "$EXPORT_DIR/$CI_PROJECT_NAME"
+  tags: 
+    - production
+  only: 
+    - master
+  when: manual 
+
+cleanup-job:
+  stage: cleanup
+  script:
+    - rm -r "$EXPORT_DIR/$CI_PROJECT_NAME"
+  tags: 
+    - production
+  when: manual
