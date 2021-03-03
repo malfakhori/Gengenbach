@@ -24,7 +24,7 @@ test-job:
 deploy-job:
   stage: deploy
   script:
-    - mkdir -p "$EXPORT_DIR/$CI_PROJECT_NAME"	
+    - mkdir -p "$EXPORT_DIR/$CI_PROJECT_NAME"
     - cp -r public/* "$EXPORT_DIR/$CI_PROJECT_NAME"
   tags: 
     - production
