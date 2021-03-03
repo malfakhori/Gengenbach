@@ -8,4 +8,4 @@ To deploy your gitlab page you have to run the deploy-job in the CI / CD pipelin
 
 # Cleanup
 
-To delete  your published gitlab page you have to run the cleanup-job in the CI / CD pipeline
+To delete your published gitlab page you have to run the cleanup-job in the CI / CD pipeline
