@@ -16,6 +16,7 @@ test-job:
     - test -f  public/assets/css/style.css
     - test -f  public/assets/css/moblie.css
     - test -f  public/assets/images/header.jpg
+    - test -f  public/assets/images/hft_logo.svg
     - test -f  public/home/index.html
     - echo "Test finished, all ok"
   only:
