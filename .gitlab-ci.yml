@@ -14,7 +14,7 @@ test-job:
     - test -f  public/main.js
     - test -f  public/settings.js
     - test -f  public/assets/css/style.css
-    - test -f  public/assets/css/moblie.css
+    - test -f  public/assets/css/mobile.css
     - test -f  public/assets/images/header.jpg
     - test -f  public/assets/images/hft_logo.svg
     - test -f  public/home/index.html
@@ -25,11 +25,11 @@ test-job:
 deploy-job:
   stage: deploy
   script:
-    - rm -r "$EXPORT_DIR/$CI_PROJECT_NAME"
+    - if [ -d "$EXPORT_DIR/$CI_PROJECT_NAME" ]; then rm -r "$EXPORT_DIR/$CI_PROJECT_NAME"; fi
     - mkdir -p "$EXPORT_DIR/$CI_PROJECT_NAME"
     - cp -r public/* "$EXPORT_DIR/$CI_PROJECT_NAME"
   tags: 
-    - production
+    - docker
   only: 
     - master
   when: manual 
@@ -37,7 +37,7 @@ deploy-job:
 cleanup-job:
   stage: cleanup
   script:
-    - rm -r "$EXPORT_DIR/$CI_PROJECT_NAME"
+    - if [ -d "$EXPORT_DIR/$CI_PROJECT_NAME" ]; then rm -r "$EXPORT_DIR/$CI_PROJECT_NAME"; fi
   tags: 
-    - production
+    - docker
   when: manual
