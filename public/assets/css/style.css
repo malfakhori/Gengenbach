@@ -23,6 +23,10 @@ p {
   padding-right: 25%;
 }
 
+.content ul {
+  list-style-image: url(../images/list.png);
+}
+
 header {
   position: relative;
   width: 100%;
@@ -210,4 +214,17 @@ nav a:hover {
 
 .top:hover {
   opacity: 1;
+}
+
+audio {
+  width: 100%;
+}
+
+.video-container {
+  width: 100%;
+}
+
+.video-container iframe {
+  width: 100%;
+  max-width: 560px;
 }
