@@ -1,27 +1,28 @@
+const BASE_URL = `${window.location.origin}/${window.location.pathname.split('/').filter((e, i)=>{return i>0 & i<4}).join('/')}`;
 const ON = true;
 const OFF = false;
 const EMPTY_LINK = "javascript:undefined";
 const DEFAULT = {
   social: {
     twitter: {
-      icon: "/assets/images/twitter.png",
+      icon: `${BASE_URL}/assets/images/twitter.png`,
       profile: "https://twitter.com/InnolabM4"
     },
     facebook: {
-      icon: "/assets/images/facebook.png",
+      icon: `${BASE_URL}/assets/images/facebook.png`,
       profile: "https://www.facebook.com/HfTStuttgart"
     },
     linkedin: {
-      icon: "/assets/images/linkedin.png",
+      icon: `${BASE_URL}/assets/images/linkedin.png`,
       profile: "https://www.linkedin.com/school/hochschule-f%C3%BCr-technik-stuttgart-%E2%80%93-university-of-applied-sciences"
     },
     webpage: {
-      icon: "/assets/images/webpage.png",
+      icon: `${BASE_URL}/assets/images/webpage.png`,
       profile: "https://www.hft-stuttgart.de"
     }
   },
-  avatar: "/assets/images/avatar.png"
-}
+  avatar: `${BASE_URL}/assets/images/avatar.png`
+};
 
 let settings = {
 
@@ -49,11 +50,11 @@ let settings = {
   menu: [
     {
       menuText: "home",
-      link: "/home"
+      link: `${BASE_URL}/home`
     },
     {
       menuText: "results",
-      link: "/results"
+      link: `${BASE_URL}/results`
     },
     {
       menuText: "demo",
@@ -91,7 +92,7 @@ let settings = {
     },
     {
       name: "Charlotte Doe",
-      avatar: "/assets/images/charlotte.jpg",
+      avatar: `${BASE_URL}/assets/images/charlotte.jpg`,
       email: "charlotte.doe@lalaland.com",
       social: [
         {
@@ -115,22 +116,22 @@ let settings = {
 
   footerLogos: [
     {
-      logo: "/assets/logos/Logo_M4_LAB.jpg",
+      logo: `${BASE_URL}/assets/logos/Logo_M4_LAB.jpg`,
       href: EMPTY_LINK,
       title: "M4_LAB"
     },
     {
-      logo: "/assets/logos/logo1.png",
+      logo: `${BASE_URL}/assets/logos/logo1.png`,
       href: "http://www.innovative-hochschule.de",
       title: "Innovative Hochschule"
     },
     {
-      logo: "/assets/logos/logo2.png",
+      logo: `${BASE_URL}/assets/logos/logo2.png`,
       href: "https://www.bmbf.de",
       title: "Bundesministerium für Bildung und Forschung"
     },
     {
-      logo: "/assets/logos/logo3.png",
+      logo: `${BASE_URL}/assets/logos/logo3.png`,
       href: "https://www.gwk-bonn.de",
       title: "Die Gemeinsame Wissenschaftskonferenz"
     }

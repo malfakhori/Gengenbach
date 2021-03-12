@@ -3,7 +3,7 @@ image: alpine:latest
 stages:
   - test
   - deploy
-  
+
 test-job:
   stage: test
   script:
@@ -19,14 +19,13 @@ test-job:
     - echo "Test finished, all ok"
   only:
     - master
-  
+
 pages:
   stage: deploy
   script:
-  - echo "Deploying to https://transfer.hft-stuttgart.de/pages/$CI_PROJECT_PATH/"
+    - echo "Deploying to https://transfer.hft-stuttgart.de/pages/$CI_PROJECT_PATH/"
   artifacts:
     paths:
-    - public
+      - public
   only:
-  - master
-
+    - master
