@@ -1,10 +1,6 @@
-variables:
-  EXPORT_DIR: "/var/www/html/pages"
-
 stages:
   - test
   - deploy
-  - cleanup
   
 test-job:
   stage: test
@@ -22,22 +18,9 @@ test-job:
   only:
     - master
   
-deploy-job:
+pages:
   stage: deploy
   script:
-    - if [ -d "$EXPORT_DIR/$CI_PROJECT_NAME" ]; then rm -r "$EXPORT_DIR/$CI_PROJECT_NAME"; fi
-    - mkdir -p "$EXPORT_DIR/$CI_PROJECT_NAME"
-    - cp -r public/* "$EXPORT_DIR/$CI_PROJECT_NAME"
-  tags: 
-    - docker
+    - echo "Deploying to https://transfer.hft-stuttgart.de/pages/$CI_PROJECT_PATH/"
   only: 
     - master
-  when: manual 
-
-cleanup-job:
-  stage: cleanup
-  script:
-    - if [ -d "$EXPORT_DIR/$CI_PROJECT_NAME" ]; then rm -r "$EXPORT_DIR/$CI_PROJECT_NAME"; fi
-  tags: 
-    - docker
-  when: manual
