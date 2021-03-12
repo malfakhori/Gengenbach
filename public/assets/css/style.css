@@ -174,3 +174,40 @@ nav a:hover {
 .hamburger {
   display: none;
 }
+
+.legal {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  background-color: #252525;
+  padding: 10px 80px;
+}
+
+.legal-text-container {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  justify-content: center;
+}
+
+.legal-text {
+  color: #c5c5c5;
+  font-size: 0.8em;
+  margin-right: 20px;
+  text-decoration: none;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+}
+
+.top a {
+  display: inline-block;
+  line-height: 0;
+}
+
+.top:hover {
+  opacity: 1;
+}
