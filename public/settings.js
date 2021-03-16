@@ -50,11 +50,11 @@ let settings = {
   menu: [
     {
       menuText: "home",
-      link: `${BASE_URL}/home/index.html`
+      link: `${BASE_URL}/home/`
     },
     {
       menuText: "results",
-      link: `${BASE_URL}/results/index.html`
+      link: `${BASE_URL}/results/`
     },
     {
       menuText: "demo",
