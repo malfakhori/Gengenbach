@@ -11,3 +11,7 @@ When you create a group project your webpage is published at `https://transfer.h
 # Cleanup
 
 To delete your published gitlab page goto Settings > Pages and click the "Remove pages" button.
+
+# Demo
+
+You can check an example of the template [here](https://transfer.hft-stuttgart.de/pages/athanasios.koukofikis/mygeneric/home/).
