@@ -15,3 +15,7 @@ To delete your published gitlab page goto Settings > Pages and click the "Remove
 # Demo
 
 You can check an example of the template [here](https://transfer.hft-stuttgart.de/pages/athanasios.koukofikis/mygeneric/home/).
+
+# Additional Configuration
+
+You can add the term `website` in the Topics section (Settings > General > Topics input field), so that your project can be recognized as a website and listed at [https://transfer.hft-stuttgart.de/projektinformationen](https://transfer.hft-stuttgart.de/projektinformationen).
