@@ -28,6 +28,10 @@ let settings = {
 
   switches: [
     {
+      name: "projectLogo",
+      state: ON
+    },
+    {
       name: "projectName",
       state: ON
     },
@@ -45,8 +49,10 @@ let settings = {
     }
   ],
 
+  projectLogo: `${BASE_URL}/assets/logos/M4_LAB_tr.png`,
+
   projectName: "M4_LAB Page Demo",
-  
+
   menu: [
     {
       menuText: "home",
