@@ -44,6 +44,8 @@ const DEFAULT = {
 
 let settings = {
 
+  pageTitle: "M4_LAB Page Title",
+
   switches: [
     {
       name: "projectLogo",
