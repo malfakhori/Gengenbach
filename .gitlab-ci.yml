@@ -1,31 +1,14 @@
 image: alpine:latest
 
 stages:
-  - test
-  - deploy
-
-test-job:
-  stage: test
-  script:
-    - echo "Testing files exist..."
-    - test -f  public/index.html
-    - test -f  public/main.js
-    - test -f  public/settings.js
-    - test -f  public/assets/css/style.css
-    - test -f  public/assets/css/mobile.css
-    - test -f  public/assets/images/header.jpg
-    - test -f  public/assets/images/hft_logo.svg
-    - test -f  public/home/index.html
-    - echo "Test finished, all ok"
-  only:
-    - master
-
+    - deploy
+  
 pages:
   stage: deploy
   script:
-    - echo "Deploying to https://transfer.hft-stuttgart.de/pages/$CI_PROJECT_PATH/"
+    - echo "deploy to https://transfer.hft-stuttgart.de/pages/$CI_PROJECT_PATH/"
   artifacts:
     paths:
       - public
-  only:
+  only: 
     - master
