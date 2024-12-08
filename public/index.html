@@ -51,6 +51,15 @@ renderer.autoClear = false;
 // to handle the matrices independently.
 const camera = new THREE.PerspectiveCamera();
 camera.matrixAutoUpdate = false;
+// Initialize a WebXR session using "immersive-ar".
+const session = await navigator.xr.requestSession("immersive-ar");
+session.updateRenderState({
+  baseLayer: new XRWebGLLayer(session, gl)
+});
+
+// A 'local' reference space has a native origin that is located
+// near the viewer's position at the time the session was created.
+const referenceSpace = await session.requestReferenceSpace('local');
 
 }
 </script>
