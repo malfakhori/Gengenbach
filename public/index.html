@@ -132,12 +132,17 @@
         flower = gltf.scene;
       });
 */
-
+      let flower;
+      loader.load("https://github.com/KhronosGroup/glTF-Sample-Models/blob/main/2.0/ToyCar/glTF/ToyCar.gltf
+", function(gltf) {
+        flower = gltf.scene;
+      });
+  /**
   let flower;
       loader.load("/assets/models/street_lamp.glb", function(gltf) {
         flower = gltf.scene;
       });
-
+*/
 
 
       session.addEventListener("select", (event) => {
