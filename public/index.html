@@ -14,10 +14,10 @@
 <button id="startButton" onclick="activateXR()">Start city planning</button>
 
 <script>
-let minimapRenderer, minimapCamera;
+let minimapRenderer, minimapCamera, minimapTexture, minimapMesh;
 
 async function activateXR() {
-  document.getElementById("startButton").style.display = "none"; // Verstecke den Start-Button
+  document.getElementById("startButton").style.display = "none"; // Start-Button verstecken
   
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
@@ -49,9 +49,6 @@ async function activateXR() {
   const viewerSpace = await session.requestReferenceSpace('viewer');
   const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-  // Minimap setup (wird erst jetzt erstellt)
-  setupMinimap();
-
   const loader = new THREE.GLTFLoader();
   let reticle;
   loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", function(gltf) {
@@ -72,6 +69,9 @@ async function activateXR() {
       scene.add(clone);
     }
   });
+
+  // Minimap-Integration
+  setupMinimap(scene);
 
   // Renderloop
   const onXRFrame = (time, frame) => {
@@ -97,8 +97,7 @@ async function activateXR() {
         reticle.updateMatrixWorld(true);
       }
 
-      // Minimap-Update
-      updateMinimap(camera, scene);
+      updateMinimap(scene);
 
       renderer.render(scene, camera);
     }
@@ -106,30 +105,34 @@ async function activateXR() {
   session.requestAnimationFrame(onXRFrame);
 }
 
-function setupMinimap() {
-  const minimapSize = 5; // Sichtfeld der Minimap
+function setupMinimap(scene) {
+  const minimapSize = 5;
+  
+  // Minimap-Kamera (orthographische Kamera für Draufsicht)
   minimapCamera = new THREE.OrthographicCamera(-minimapSize, minimapSize, minimapSize, -minimapSize, 0.1, 100);
-  minimapCamera.position.set(0, 10, 0); // Kamera in Vogelperspektive
+  minimapCamera.position.set(0, 10, 0);
   minimapCamera.lookAt(0, 0, 0);
 
+  // Minimap-Renderer und Textur
   minimapRenderer = new THREE.WebGLRenderer({ alpha: true });
-  minimapRenderer.setSize(200, 200);
-  minimapRenderer.domElement.style.position = "absolute";
-  minimapRenderer.domElement.style.bottom = "10px";
-  minimapRenderer.domElement.style.right = "10px";
-  document.body.appendChild(minimapRenderer.domElement);
+  minimapRenderer.setSize(256, 256); // Kleine Auflösung für die Minimap
+  minimapTexture = new THREE.CanvasTexture(minimapRenderer.domElement);
 
-  console.log("Minimap aktiviert");
+  // Erstelle eine Ebene für die Minimap
+  const geometry = new THREE.PlaneGeometry(0.3, 0.3); // Größe der Minimap in der AR-Welt
+  const material = new THREE.MeshBasicMaterial({ map: minimapTexture, transparent: true });
+  minimapMesh = new THREE.Mesh(geometry, material);
+  
+  minimapMesh.position.set(0, -0.5, -1); // Unterhalb des Sichtfeldes
+  scene.add(minimapMesh);
 }
 
-function updateMinimap(mainCamera, scene) {
-  if (minimapCamera && minimapRenderer) {
-    // Synchronisiere die Position der Minimap-Kamera mit der Hauptkamera
-    minimapCamera.position.x = mainCamera.position.x;
-    minimapCamera.position.z = mainCamera.position.z;
-
-    minimapRenderer.render(scene, minimapCamera);
-  }
+function updateMinimap(scene) {
+  // Render die Minimap-Ansicht
+  minimapRenderer.render(scene, minimapCamera);
+  
+  // Aktualisiere die Textur der Minimap in der AR-Welt
+  minimapTexture.needsUpdate = true;
 }
 </script>
 </body>
