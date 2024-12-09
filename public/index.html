@@ -11,21 +11,24 @@
 </head>
 <body>
 
-<button onclick="activateXR()">Start city planning</button>
+<button id="startButton" onclick="activateXR()">Start city planning</button>
+
 <script>
+let minimapRenderer, minimapCamera;
+
 async function activateXR() {
+  document.getElementById("startButton").style.display = "none"; // Verstecke den Start-Button
+  
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
   const gl = canvas.getContext("webgl", {xrCompatible: true});
 
   const scene = new THREE.Scene();
 
-  // Lichtquelle
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
   directionalLight.position.set(10, 15, 10);
   scene.add(directionalLight);
 
-  // Haupt-Renderer
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     preserveDrawingBuffer: true,
@@ -41,22 +44,13 @@ async function activateXR() {
   session.updateRenderState({
     baseLayer: new XRWebGLLayer(session, gl)
   });
+
   const referenceSpace = await session.requestReferenceSpace('local');
   const viewerSpace = await session.requestReferenceSpace('viewer');
   const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-  // Minimap-Renderer einrichten
-  const minimapSize = 5;
-  const minimapCamera = new THREE.OrthographicCamera(-minimapSize, minimapSize, minimapSize, -minimapSize, 0.1, 100);
-  minimapCamera.position.set(0, 10, 0); // Vogelperspektive
-  minimapCamera.lookAt(0, 0, 0);
-
-  const minimapRenderer = new THREE.WebGLRenderer({ alpha: true });
-  minimapRenderer.setSize(200, 200);
-  minimapRenderer.domElement.style.position = "absolute";
-  minimapRenderer.domElement.style.bottom = "10px";
-  minimapRenderer.domElement.style.right = "10px";
-  document.body.appendChild(minimapRenderer.domElement);
+  // Minimap setup (wird erst jetzt erstellt)
+  setupMinimap();
 
   const loader = new THREE.GLTFLoader();
   let reticle;
@@ -82,7 +76,8 @@ async function activateXR() {
   // Renderloop
   const onXRFrame = (time, frame) => {
     session.requestAnimationFrame(onXRFrame);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer)
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
 
     const pose = frame.getViewerPose(referenceSpace);
     if (pose) {
@@ -103,15 +98,38 @@ async function activateXR() {
       }
 
       // Minimap-Update
-      minimapCamera.position.x = camera.position.x;
-      minimapCamera.position.z = camera.position.z;
-      minimapRenderer.render(scene, minimapCamera);
+      updateMinimap(camera, scene);
 
-      // Szene rendern
       renderer.render(scene, camera);
     }
-  }
+  };
   session.requestAnimationFrame(onXRFrame);
+}
+
+function setupMinimap() {
+  const minimapSize = 5; // Sichtfeld der Minimap
+  minimapCamera = new THREE.OrthographicCamera(-minimapSize, minimapSize, minimapSize, -minimapSize, 0.1, 100);
+  minimapCamera.position.set(0, 10, 0); // Kamera in Vogelperspektive
+  minimapCamera.lookAt(0, 0, 0);
+
+  minimapRenderer = new THREE.WebGLRenderer({ alpha: true });
+  minimapRenderer.setSize(200, 200);
+  minimapRenderer.domElement.style.position = "absolute";
+  minimapRenderer.domElement.style.bottom = "10px";
+  minimapRenderer.domElement.style.right = "10px";
+  document.body.appendChild(minimapRenderer.domElement);
+
+  console.log("Minimap aktiviert");
+}
+
+function updateMinimap(mainCamera, scene) {
+  if (minimapCamera && minimapRenderer) {
+    // Synchronisiere die Position der Minimap-Kamera mit der Hauptkamera
+    minimapCamera.position.x = mainCamera.position.x;
+    minimapCamera.position.z = mainCamera.position.z;
+
+    minimapRenderer.render(scene, minimapCamera);
+  }
 }
 </script>
 </body>
