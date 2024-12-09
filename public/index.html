@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <title>Cube Demo</title>
+  <title>  Demo</title>
 
   <!-- three.js -->
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
@@ -34,9 +34,17 @@ const materials = [
 ];
 
 // Create the cube and add it to the demo scene.
+/**
+ 
 const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.5, 0.5, 0.5), materials);
 cube.position.set(0, 0, -1);
 scene.add(cube);
+* */
+
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
+directionalLight.position.set(10, 15, 10);
+scene.add(directionalLight);
 
 // Set up the WebGLRenderer, which handles rendering to the session's base layer.
 const renderer = new THREE.WebGLRenderer({
