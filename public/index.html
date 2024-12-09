@@ -14,8 +14,6 @@
 <button id="startButton" onclick="activateXR()">Start city planning</button>
 
 <script>
-let minimapRenderer, minimapCamera, minimapTexture, minimapMesh;
-
 async function activateXR() {
   document.getElementById("startButton").style.display = "none"; // Start-Button verstecken
   
@@ -70,10 +68,6 @@ async function activateXR() {
     }
   });
 
-  // Minimap-Integration
-  setupMinimap(scene);
-
-  // Renderloop
   const onXRFrame = (time, frame) => {
     session.requestAnimationFrame(onXRFrame);
 
@@ -97,42 +91,10 @@ async function activateXR() {
         reticle.updateMatrixWorld(true);
       }
 
-      updateMinimap(scene);
-
       renderer.render(scene, camera);
     }
   };
   session.requestAnimationFrame(onXRFrame);
-}
-
-function setupMinimap(scene) {
-  const minimapSize = 5;
-  
-  // Minimap-Kamera (orthographische Kamera für Draufsicht)
-  minimapCamera = new THREE.OrthographicCamera(-minimapSize, minimapSize, minimapSize, -minimapSize, 0.1, 100);
-  minimapCamera.position.set(0, 10, 0);
-  minimapCamera.lookAt(0, 0, 0);
-
-  // Minimap-Renderer und Textur
-  minimapRenderer = new THREE.WebGLRenderer({ alpha: true });
-  minimapRenderer.setSize(256, 256); // Kleine Auflösung für die Minimap
-  minimapTexture = new THREE.CanvasTexture(minimapRenderer.domElement);
-
-  // Erstelle eine Ebene für die Minimap
-  const geometry = new THREE.PlaneGeometry(0.3, 0.3); // Größe der Minimap in der AR-Welt
-  const material = new THREE.MeshBasicMaterial({ map: minimapTexture, transparent: true });
-  minimapMesh = new THREE.Mesh(geometry, material);
-  
-  minimapMesh.position.set(0, -0.5, -1); // Unterhalb des Sichtfeldes
-  scene.add(minimapMesh);
-}
-
-function updateMinimap(scene) {
-  // Render die Minimap-Ansicht
-  minimapRenderer.render(scene, minimapCamera);
-  
-  // Aktualisiere die Textur der Minimap in der AR-Welt
-  minimapTexture.needsUpdate = true;
 }
 </script>
 </body>
