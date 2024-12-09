@@ -96,6 +96,16 @@ loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/
   flower = gltf.scene;
 });
 
+
+session.addEventListener("select", (event) => {
+  if (flower) {
+    const clone = flower.clone();
+    clone.position.copy(reticle.position);
+    scene.add(clone);
+  }
+});
+
+
 // Create a render loop that allows us to draw on the AR view.
 const onXRFrame = (time, frame) => {
 
