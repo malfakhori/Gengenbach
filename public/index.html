@@ -73,9 +73,6 @@ session.updateRenderState({
 // near the viewer's position at the time the session was created.
 const referenceSpace = await session.requestReferenceSpace('local');
 
-// A 'local' reference space has a native origin that is located
-// near the viewer's position at the time the session was created.
-const referenceSpace = await session.requestReferenceSpace('local');
 
 // Create another XRReferenceSpace that has the viewer as the origin.
 const viewerSpace = await session.requestReferenceSpace('viewer');
@@ -105,9 +102,6 @@ session.addEventListener("select", (event) => {
   }
 });
 
-
-// Create a render loop that allows us to draw on the AR view.
-const onXRFrame = (time, frame) => {
 
 
 // Create a render loop that allows us to draw on the AR view.
