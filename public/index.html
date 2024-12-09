@@ -74,9 +74,6 @@
 <body>
 
 
-
-
-
   <div class="container">
     <h1>GeoVis AR Projekt</h1>
     <p>Mit Augmented Reality können Sie ihrer Fantasie freien Lauf lassen und ihre Stadt interaktiv gestalten!</p>
@@ -126,19 +123,11 @@
         reticle.visible = false;
         scene.add(reticle);
       });
-/**
+
       let flower;
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", function(gltf) {
         flower = gltf.scene;
       });
-
-*/
-  let flower;
-      loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", function(gltf) {
-        flower = gltf.scene;
-      });
-
-
 
       session.addEventListener("select", (event) => {
         if (flower) {
