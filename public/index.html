@@ -49,6 +49,7 @@
       border-radius: 5px;
       cursor: pointer;
       transition: background-color 0.3s;
+      margin: 10px;
     }
 
     button:hover {
@@ -59,23 +60,37 @@
       background-color: #387a39;
     }
 
-    .footer {
+    .menu-bar {
       position: fixed;
-      bottom: 20px;
-      font-size: 0.9em;
-      color: white;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      z-index: 10;
     }
 
+    .menu-bar button {
+      background-color: #2196F3;
+    }
+
+    .menu-bar button:hover {
+      background-color: #1E88E5;
+    }
   </style>
+
   <!-- three.js -->
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
-
-
-
-
+  <!-- Menüleiste -->
+  <div class="menu-bar">
+    <button onclick="selectModel('car')">Auto</button>
+    <button onclick="selectModel('lamp')">Laterne</button>
+  </div>
 
   <div class="container">
     <h1>GeoVis AR Projekt</h1>
@@ -83,12 +98,16 @@
     <button onclick="activateXR()">Start City Planning</button>
   </div>
 
-  
-
   <script>
+    let selectedModel = 'car'; // Standardmodell
+
+    function selectModel(model) {
+      selectedModel = model;
+      console.log(`Ausgewähltes Modell: ${model}`);
+    }
+
     async function activateXR() {
-      // Hier können Sie die Funktion für das AR-Projekt aktivieren
-      document.querySelector('.container').style.display = 'none';  // Startseite ausblenden
+      document.querySelector('.container').style.display = 'none'; // Startseite ausblenden
       const canvas = document.createElement("canvas");
       document.body.appendChild(canvas);
       const gl = canvas.getContext("webgl", {xrCompatible: true});
@@ -126,27 +145,23 @@
         reticle.visible = false;
         scene.add(reticle);
       });
-/**
-      let flower;
+
+      let models = {
+        car: null,
+        lamp: null
+      };
+
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", function(gltf) {
-        flower = gltf.scene;
+        models.car = gltf.scene;
       });
-*/
-      let flower;
-      loader.load("https://github.com/KhronosGroup/glTF-Sample-Models/blob/main/2.0/ToyCar/glTF/ToyCar.gltf", function(gltf) {
-        flower = gltf.scene;
-      });
-  /**
-  let flower;
-      loader.load("/assets/models/street_lamp.glb", function(gltf) {
-        flower = gltf.scene;
-      });
-*/
 
+      loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", function(gltf) {
+        models.lamp = gltf.scene;
+      });
 
-      session.addEventListener("select", (event) => {
-        if (flower) {
-          const clone = flower.clone();
+      session.addEventListener("select", () => {
+        if (reticle && models[selectedModel]) {
+          const clone = models[selectedModel].clone();
           clone.position.copy(reticle.position);
           scene.add(clone);
         }
@@ -154,7 +169,6 @@
 
       const onXRFrame = (time, frame) => {
         session.requestAnimationFrame(onXRFrame);
-
         gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
 
         const pose = frame.getViewerPose(referenceSpace);
@@ -181,6 +195,5 @@
       session.requestAnimationFrame(onXRFrame);
     }
   </script>
-
 </body>
 </html>
