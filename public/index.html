@@ -118,15 +118,6 @@
       directionalLight.position.set(10, 15, 10);
       scene.add(directionalLight);
 
-      // Menü direkt vor der Kamera
-const menuGeometry = new THREE.PlaneGeometry(2, 0.5);
-const menuMaterial = new THREE.MeshBasicMaterial({ color: 0x2196F3 });
-const menu = new THREE.Mesh(menuGeometry, menuMaterial);
-
-// Platzierung direkt vor der Kamera
-menu.position.set(0, 1.5, -2);
-scene.add(menu);
-
       const renderer = new THREE.WebGLRenderer({
         alpha: true,
         preserveDrawingBuffer: true,
@@ -176,6 +167,13 @@ scene.add(menu);
         }
       });
 
+      // Menü vor der Kamera hinzufügen
+      let menu;
+      const menuGeometry = new THREE.PlaneGeometry(2, 0.5);
+      const menuMaterial = new THREE.MeshBasicMaterial({ color: 0x2196F3 });
+      menu = new THREE.Mesh(menuGeometry, menuMaterial);
+      scene.add(menu);
+
       const onXRFrame = (time, frame) => {
         session.requestAnimationFrame(onXRFrame);
         gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
@@ -189,6 +187,16 @@ scene.add(menu);
           camera.matrix.fromArray(view.transform.matrix);
           camera.projectionMatrix.fromArray(view.projectionMatrix);
           camera.updateMatrixWorld(true);
+
+          // Menü vor der Kamera platzieren
+          const cameraPosition = new THREE.Vector3();
+          camera.getWorldPosition(cameraPosition);
+          const cameraDirection = new THREE.Vector3();
+          camera.getWorldDirection(cameraDirection);
+
+          menu.position.copy(cameraPosition);
+          menu.position.add(cameraDirection.multiplyScalar(2)); // 2 Meter vor der Kamera
+          menu.lookAt(cameraPosition);
 
           const hitTestResults = frame.getHitTestResults(hitTestSource);
           if (hitTestResults.length > 0 && reticle) {
