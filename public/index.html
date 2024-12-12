@@ -3,7 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Menü als 3D-Objekt</title>
+  <title>GeoVis AR Projekt</title>
+    <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-image: url('https://www.hft-stuttgart.de/fileadmin/Dateien/Hochschule/-_R_Juergen_Pollak_HFT_18.04.18-0091.jpg');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .container {
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 50px;
+      border-radius: 10px;
+      color: white;
+      max-width: 80%;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      font-size: 1.5em;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 10px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:active {
+      background-color: #387a39;
+    }
+
+    .menu-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      z-index: 10;
+    }
+
+    .menu-bar button {
+      background-color: #2196F3;
+    }
+
+    .menu-bar button:hover {
+      background-color: #1E88E5;
+    }
+  </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
@@ -79,12 +154,17 @@
 
       session.requestAnimationFrame(onXRFrame);
 
-      session.addEventListener("select", () => {
-        raycaster.setFromCamera(pointer, camera);
+      session.addEventListener("select", (event) => {
+        if (!reticle) return;
 
+        // Raycaster von der Kameraposition (Mitte des Bildschirms)
+        raycaster.setFromCamera(pointer, camera);
         const intersects = raycaster.intersectObjects([carButton, lampButton]);
+
+        // Prüfen, ob ein Button getroffen wurde
         if (intersects.length > 0) {
           const clickedButton = intersects[0].object;
+
           if (clickedButton === carButton) {
             selectedModel = 'car';
             console.log('Auto ausgewählt');
@@ -92,11 +172,14 @@
             selectedModel = 'lamp';
             console.log('Laterne ausgewählt');
           }
-        } else if (reticle && models[selectedModel]) {
+        } 
+        // Kein Button getroffen -> Modell platzieren
+        else if (models[selectedModel]) {
           const clone = models[selectedModel].clone();
           clone.position.copy(reticle.position);
-          clone.scale.set(0.5, 0.5, 0.5);
+          clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
           scene.add(clone);
+          console.log(`${selectedModel} platziert`);
         }
       });
 
