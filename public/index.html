@@ -3,67 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeoVis AR Projekt</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-
-    /* Menüleiste */
-    .menu-bar {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      border-radius: 10px 10px 0 0;
-      z-index: 10;
-    }
-
-    .menu-bar button {
-      background: #2196F3;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 5px;
-      transition: background 0.3s;
-    }
-
-    .menu-bar button:hover {
-      background: #1E88E5;
-    }
-  </style>
+  <title>AR Menü als 3D-Objekt</title>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
-  <!-- Menüleiste -->
-  <div class="menu-bar">
-    <button onclick="selectModel('car')">Auto</button>
-    <button onclick="selectModel('lamp')">Laterne</button>
-  </div>
-
   <script>
     let selectedModel = 'car'; // Standardauswahl
-    let models = {}; // Hier speichern wir die geladenen Modelle
+    let models = {};
     let reticle;
+    let menu;
 
     async function activateXR() {
-      // WebGL-Renderer erstellen
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
       const gl = canvas.getContext('webgl', { xrCompatible: true });
       const renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
       renderer.autoClear = false;
 
-      // Szene und Kamera
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera();
       camera.matrixAutoUpdate = false;
@@ -73,7 +30,7 @@
       light.position.set(10, 10, 10);
       scene.add(light);
 
-      // Reticle (Platzierungshilfe)
+      // Reticle (Cursor)
       const loader = new THREE.GLTFLoader();
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", (gltf) => {
         reticle = gltf.scene;
@@ -89,6 +46,30 @@
         models.lamp = gltf.scene;
       });
 
+      // 3D-Menü erstellen
+      const menuGeometry = new THREE.PlaneGeometry(0.5, 0.2); // Menügröße
+      const menuMaterial = new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.8, transparent: true });
+      menu = new THREE.Mesh(menuGeometry, menuMaterial);
+      menu.position.set(0, -0.5, -1); // Unten im Kamerasichtfeld
+      scene.add(menu);
+
+      // Menü-Buttons als Flächen
+      const buttonGeometry = new THREE.PlaneGeometry(0.15, 0.1);
+      const buttonMaterial1 = new THREE.MeshBasicMaterial({ color: 0x2196F3 });
+      const buttonMaterial2 = new THREE.MeshBasicMaterial({ color: 0xFF9800 });
+
+      const carButton = new THREE.Mesh(buttonGeometry, buttonMaterial1);
+      carButton.position.set(-0.2, -0.5, -0.99); // Links unten
+      scene.add(carButton);
+
+      const lampButton = new THREE.Mesh(buttonGeometry, buttonMaterial2);
+      lampButton.position.set(0.2, -0.5, -0.99); // Rechts unten
+      scene.add(lampButton);
+
+      // Raycaster für Button-Interaktion
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+
       // AR-Session starten
       const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
@@ -98,7 +79,28 @@
 
       session.requestAnimationFrame(onXRFrame);
 
-      // Hauptloop für AR-Rendering
+      session.addEventListener("select", () => {
+        raycaster.setFromCamera(pointer, camera);
+
+        const intersects = raycaster.intersectObjects([carButton, lampButton]);
+        if (intersects.length > 0) {
+          const clickedButton = intersects[0].object;
+          if (clickedButton === carButton) {
+            selectedModel = 'car';
+            console.log('Auto ausgewählt');
+          } else if (clickedButton === lampButton) {
+            selectedModel = 'lamp';
+            console.log('Laterne ausgewählt');
+          }
+        } else if (reticle && models[selectedModel]) {
+          const clone = models[selectedModel].clone();
+          clone.position.copy(reticle.position);
+          clone.scale.set(0.5, 0.5, 0.5);
+          scene.add(clone);
+        }
+      });
+
+      // AR-Rendering
       function onXRFrame(time, frame) {
         session.requestAnimationFrame(onXRFrame);
         gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
@@ -113,6 +115,13 @@
           camera.projectionMatrix.fromArray(view.projectionMatrix);
           camera.updateMatrixWorld(true);
 
+          // Menü bleibt fixiert vor der Kamera
+          menu.position.set(0, -0.5, -1);
+          menu.lookAt(camera.position);
+
+          carButton.position.set(-0.2, -0.5, -0.99);
+          lampButton.position.set(0.2, -0.5, -0.99);
+
           const hitTestResults = frame.getHitTestResults(hitTestSource);
           if (hitTestResults.length > 0) {
             const hitPose = hitTestResults[0].getPose(referenceSpace);
@@ -124,28 +133,12 @@
           renderer.render(scene, camera);
         }
       }
-
-      // Objekt bei Klick platzieren
-      session.addEventListener("select", () => {
-        if (reticle && models[selectedModel]) {
-          const clone = models[selectedModel].clone();
-          clone.position.copy(reticle.position);
-          clone.scale.set(0.5, 0.5, 0.5); // Skalierung anpassen
-          scene.add(clone);
-        }
-      });
-    }
-
-    // Modell auswählen
-    function selectModel(model) {
-      selectedModel = model;
-      console.log(`Ausgewähltes Modell: ${model}`);
     }
 
     // AR starten
     if (navigator.xr) {
       const startButton = document.createElement('button');
-      startButton.textContent = 'Starte AR';
+      startButton.textContent = 'Start AR';
       startButton.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px; font-size: 18px;";
       document.body.appendChild(startButton);
       startButton.onclick = () => {
@@ -153,7 +146,7 @@
         activateXR();
       };
     } else {
-      alert('WebXR wird von diesem Gerät oder Browser nicht unterstützt.');
+      alert('WebXR wird nicht unterstützt.');
     }
   </script>
 </body>
