@@ -118,6 +118,15 @@
       directionalLight.position.set(10, 15, 10);
       scene.add(directionalLight);
 
+      // Menü direkt vor der Kamera
+const menuGeometry = new THREE.PlaneGeometry(2, 0.5);
+const menuMaterial = new THREE.MeshBasicMaterial({ color: 0x2196F3 });
+const menu = new THREE.Mesh(menuGeometry, menuMaterial);
+
+// Platzierung direkt vor der Kamera
+menu.position.set(0, 1.5, -2);
+scene.add(menu);
+
       const renderer = new THREE.WebGLRenderer({
         alpha: true,
         preserveDrawingBuffer: true,
