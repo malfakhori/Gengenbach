@@ -1,268 +1,241 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Modell Umschalter - Sonnenblume und Roboter</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoVis AR Projekt</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #e0e0e0;
-        }
-        canvas {
-            display: block;
-        }
-    </style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-image: url('https://www.hft-stuttgart.de/fileadmin/Dateien/Hochschule/-_R_Juergen_Pollak_HFT_18.04.18-0091.jpg');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .container {
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 50px;
+      border-radius: 10px;
+      color: white;
+      max-width: 80%;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+    }
+//teste
+    h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      font-size: 1.5em;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 10px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:active {
+      background-color: #387a39;
+    }
+
+
+  </style>
+  <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
+  <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
-
 <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://threejs.org/examples/js/webxr/VRButton.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three-mesh-ui@1.5.0/dist/three-mesh-ui.js"></script>
+  <script>
+    let selectedModel = 'car'; // Standardauswahl
+    let models = {};
+    let reticle;
+    let menu;
 
-    <script>
-        import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
-        import { VRButton } from 'https://threejs.org/examples/jsm/webxr/VRButton.js';
-        import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
-        import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
-        import ThreeMeshUI from 'https://cdn.jsdelivr.net/npm/three-mesh-ui@1.5.0/dist/three-mesh-ui.js';
+    async function activateXR() {
+      const canvas = document.createElement('canvas');
+      document.body.appendChild(canvas);
+      const gl = canvas.getContext('webgl', { xrCompatible: true });
+      const renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
+      renderer.autoClear = false;
 
-        let scene, camera, renderer, controls;
-        let sunflowerModel, robotModel;
-        let currentModel = 'sunflower'; // Default is sunflower
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      camera.matrixAutoUpdate = false;
 
-        window.addEventListener('load', init);
-        window.addEventListener('resize', onWindowResize);
+      // Licht hinzufügen
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(10, 10, 10);
+      scene.add(light);
 
-        const objsToTest = [];
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        let selectState = false;
+      // Reticle (Cursor)
+      const loader = new THREE.GLTFLoader();
+      loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", (gltf) => {
+        reticle = gltf.scene;
+        reticle.visible = false;
+        scene.add(reticle);
+      });
 
-        window.addEventListener('pointermove', (event) => {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        });
+const container = new ThreeMeshUI.Block({
+ width: 1.2,
+ height: 0.7,
+ padding: 0.2,
+ fontFamily: './assets/Roboto-msdf.json',
+ fontTexture: './assets/Roboto-msdf.png',
+});
 
-        window.addEventListener('pointerdown', () => {
-            selectState = true;
-        });
+//
 
-        window.addEventListener('pointerup', () => {
-            selectState = false;
-        });
+const text = new ThreeMeshUI.Text({
+ content: "Some text to be displayed"
+});
 
-        window.addEventListener('touchstart', (event) => {
-            selectState = true;
-            mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
-        });
+container.add( text );
 
-        window.addEventListener('touchend', () => {
-            selectState = false;
-            mouse.x = null;
-            mouse.y = null;
-        });
+// scene is a THREE.Scene (see three.js)
+scene.add( container );
 
-        function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x505050);
+// This is typically done in the render loop :
+ThreeMeshUI.update();
+      // Modelle laden
+      loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
+        models.car = gltf.scene;
+      });
+      loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", (gltf) => {
+        models.lamp = gltf.scene;
+      });
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      // 3D-Menü erstellen
+      const menuGeometry = new THREE.PlaneGeometry(0.5, 0.2); // Menügröße
+      const menuMaterial = new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.8, transparent: true });
+      menu = new THREE.Mesh(menuGeometry, menuMaterial);
+      menu.position.set(0, -0.5, -1); // Unten im Kamerasichtfeld
+      scene.add(menu);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.outputEncoding = THREE.sRGBEncoding;
-            renderer.xr.enabled = true;
-            document.body.appendChild(VRButton.createButton(renderer));
-            document.body.appendChild(renderer.domElement);
+      // Menü-Buttons als Flächen
+      const buttonGeometry = new THREE.PlaneGeometry(0.15, 0.1);
+      const buttonMaterial1 = new THREE.MeshBasicMaterial({ color: 0x2196F3 });
+      const buttonMaterial2 = new THREE.MeshBasicMaterial({ color: 0xFF9800 });
 
-            controls = new OrbitControls(camera, renderer.domElement);
-            camera.position.set(0, 1.6, 0);
-            controls.target = new THREE.Vector3(0, 1, -1.8);
+      const carButton = new THREE.Mesh(buttonGeometry, buttonMaterial1);
+      carButton.position.set(-0.2, -0.5, -0.99); // Links unten
+      scene.add(carButton);
 
-            const room = new THREE.LineSegments(
-                new THREE.BoxGeometry(6, 6, 6, 10, 10, 10).translate(0, 3, 0),
-                new THREE.LineBasicMaterial({ color: 0x808080 })
-            );
+      const lampButton = new THREE.Mesh(buttonGeometry, buttonMaterial2);
+      lampButton.position.set(0.2, -0.5, -0.99); // Rechts unten
+      scene.add(lampButton);
+	  
+	  
 
-            const roomMesh = new THREE.Mesh(
-                new THREE.BoxGeometry(6, 6, 6, 10, 10, 10).translate(0, 3, 0),
-                new THREE.MeshBasicMaterial({ side: THREE.BackSide })
-            );
+      // Raycaster für Button-Interaktion
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
 
-            scene.add(room);
-            objsToTest.push(roomMesh);
+      // AR-Session starten
+      const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
+      session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+      const referenceSpace = await session.requestReferenceSpace('local');
+      const viewerSpace = await session.requestReferenceSpace('viewer');
+      const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(5, 5, 5).normalize();
-            scene.add(light);
+      session.requestAnimationFrame(onXRFrame);
 
-            const hemLight = new THREE.HemisphereLight(0x808080, 0x606060);
-            scene.add(hemLight);
+      session.addEventListener("select", (event) => {
+        if (!reticle) return;
 
-            // Models
-            const loader = new GLTFLoader();
-            loader.load('https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf', (gltf) => {
-                sunflowerModel = gltf.scene;
-                sunflowerModel.scale.set(0.5, 0.5, 0.5);
-                sunflowerModel.position.set(0, 0, -2);
-                scene.add(sunflowerModel);
-            });
-            loader.load('https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb', (gltf) => {
-                robotModel = gltf.scene;
-                robotModel.scale.set(0.5, 0.5, 0.5);
-                robotModel.position.set(0, 0, -2);
-                scene.add(robotModel);
-            });
+        // Raycaster von der Kameraposition (Mitte des Bildschirms)
+        raycaster.setFromCamera(pointer, camera);
+        const intersects = raycaster.intersectObjects([carButton, lampButton]);
 
-            // UI Panel
-            makePanel();
+        // Prüfen, ob ein Button getroffen wurde
+        if (intersects.length > 0) {
+          const clickedButton = intersects[0].object;
 
-            // Start animation loop
-            renderer.setAnimationLoop(loop);
+          if (clickedButton === carButton) {
+            selectedModel = 'car';
+            console.log('Auto ausgewählt');
+          } else if (clickedButton === lampButton) {
+            selectedModel = 'lamp';
+            console.log('Laterne ausgewählt');
+          }
+        } 
+        // Kein Button getroffen -> Modell platzieren
+        else if (models[selectedModel]) {
+          const clone = models[selectedModel].clone();
+          clone.position.copy(reticle.position);
+          clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
+          scene.add(clone);
+          console.log(`${selectedModel} platziert`);
         }
+      });
 
-        function makePanel() {
-            const container = new ThreeMeshUI.Block({
-                justifyContent: 'center',
-                contentDirection: 'row-reverse',
-                fontFamily: './Roboto-msdf.json',
-                fontTexture: './Roboto-msdf.png',
-                fontSize: 0.07,
-                padding: 0.02,
-                borderRadius: 0.11
-            });
+      // AR-Rendering
+      function onXRFrame(time, frame) {
+        session.requestAnimationFrame(onXRFrame);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
 
-            container.position.set(0, 0.6, -1.2);
-            container.rotation.x = -0.55;
-            scene.add(container);
+        const pose = frame.getViewerPose(referenceSpace);
+        if (pose) {
+          const view = pose.views[0];
+          const viewport = session.renderState.baseLayer.getViewport(view);
+          renderer.setSize(viewport.width, viewport.height);
 
-            const buttonOptions = {
-                width: 0.4,
-                height: 0.15,
-                justifyContent: 'center',
-                offset: 0.05,
-                margin: 0.02,
-                borderRadius: 0.075
-            };
+          camera.matrix.fromArray(view.transform.matrix);
+          camera.projectionMatrix.fromArray(view.projectionMatrix);
+          camera.updateMatrixWorld(true);
 
-            const hoveredStateAttributes = {
-                state: 'hovered',
-                attributes: {
-                    offset: 0.035,
-                    backgroundColor: new THREE.Color(0x999999),
-                    backgroundOpacity: 1,
-                    fontColor: new THREE.Color(0xffffff)
-                }
-            };
+          // Menü bleibt fixiert vor der Kamera
+          menu.position.set(0, -0.5, -1);
+          menu.lookAt(camera.position);
 
-            const idleStateAttributes = {
-                state: 'idle',
-                attributes: {
-                    offset: 0.035,
-                    backgroundColor: new THREE.Color(0x666666),
-                    backgroundOpacity: 0.3,
-                    fontColor: new THREE.Color(0xffffff)
-                }
-            };
+          carButton.position.set(-0.2, -0.5, -0.99);
+          lampButton.position.set(0.2, -0.5, -0.99);
 
-            const buttonSunflower = new ThreeMeshUI.Block(buttonOptions);
-            const buttonRobot = new ThreeMeshUI.Block(buttonOptions);
+          const hitTestResults = frame.getHitTestResults(hitTestSource);
+          if (hitTestResults.length > 0) {
+            const hitPose = hitTestResults[0].getPose(referenceSpace);
+            reticle.visible = true;
+            reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
+            reticle.updateMatrixWorld(true);
+          }
 
-            buttonSunflower.add(new ThreeMeshUI.Text({ content: 'Sonnenblume' }));
-            buttonRobot.add(new ThreeMeshUI.Text({ content: 'Roboter' }));
-
-            const selectedAttributes = {
-                offset: 0.02,
-                backgroundColor: new THREE.Color(0x777777),
-                fontColor: new THREE.Color(0x222222)
-            };
-
-            buttonSunflower.setupState({
-                state: 'selected',
-                attributes: selectedAttributes,
-                onSet: () => {
-                    currentModel = 'sunflower';
-                    showModel();
-                }
-            });
-            buttonSunflower.setupState(hoveredStateAttributes);
-            buttonSunflower.setupState(idleStateAttributes);
-
-            buttonRobot.setupState({
-                state: 'selected',
-                attributes: selectedAttributes,
-                onSet: () => {
-                    currentModel = 'robot';
-                    showModel();
-                }
-            });
-            buttonRobot.setupState(hoveredStateAttributes);
-            buttonRobot.setupState(idleStateAttributes);
-
-            container.add(buttonSunflower, buttonRobot);
-            objsToTest.push(buttonSunflower, buttonRobot);
+          renderer.render(scene, camera);
         }
+      }
+    }
 
-        function showModel() {
-            if (sunflowerModel) sunflowerModel.visible = currentModel === 'sunflower';
-            if (robotModel) robotModel.visible = currentModel === 'robot';
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function loop() {
-            ThreeMeshUI.update();
-            controls.update();
-            renderer.render(scene, camera);
-            updateButtons();
-        }
-
-        function updateButtons() {
-            let intersect;
-
-            if (mouse.x !== null && mouse.y !== null) {
-                raycaster.setFromCamera(mouse, camera);
-                intersect = raycast();
-            }
-
-            if (intersect && intersect.object.isUI) {
-                if (selectState) {
-                    intersect.object.setState('selected');
-                } else {
-                    intersect.object.setState('hovered');
-                }
-            }
-
-            objsToTest.forEach((obj) => {
-                if ((!intersect || obj !== intersect.object) && obj.isUI) {
-                    obj.setState('idle');
-                }
-            });
-        }
-
-        function raycast() {
-            return objsToTest.reduce((closestIntersection, obj) => {
-                const intersection = raycaster.intersectObject(obj, true);
-                if (!intersection[0]) return closestIntersection;
-                if (!closestIntersection || intersection[0].distance < closestIntersection.distance) {
-                    intersection[0].object = obj;
-                    return intersection[0];
-                }
-                return closestIntersection;
-            }, null);
-        }
-    </script>
+    // AR starten
+    if (navigator.xr) {
+      const startButton = document.createElement('button');
+      startButton.textContent = 'Start AR';
+      startButton.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px; font-size: 18px;";
+      document.body.appendChild(startButton);
+      startButton.onclick = () => {
+        startButton.remove();
+        activateXR();
+      };
+    } else {
+      alert('WebXR wird nicht unterstützt.');
+    }
+  </script>
 </body>
-
 </html>
