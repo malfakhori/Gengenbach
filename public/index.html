@@ -143,32 +143,7 @@ ThreeMeshUI.update();
         models.lamp = gltf.scene;
       });
 
-      // 3D-Menü erstellen
-      const menuGeometry = new THREE.PlaneGeometry(0.5, 0.2); // Menügröße
-      const menuMaterial = new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.8, transparent: true });
-      menu = new THREE.Mesh(menuGeometry, menuMaterial);
-      menu.position.set(0, -0.5, -1); // Unten im Kamerasichtfeld
-      scene.add(menu);
-
-      // Menü-Buttons als Flächen
-      const buttonGeometry = new THREE.PlaneGeometry(0.15, 0.1);
-      const buttonMaterial1 = new THREE.MeshBasicMaterial({ color: 0x2196F3 });
-      const buttonMaterial2 = new THREE.MeshBasicMaterial({ color: 0xFF9800 });
-
-      const carButton = new THREE.Mesh(buttonGeometry, buttonMaterial1);
-      carButton.position.set(-0.2, -0.5, -0.99); // Links unten
-      scene.add(carButton);
-
-      const lampButton = new THREE.Mesh(buttonGeometry, buttonMaterial2);
-      lampButton.position.set(0.2, -0.5, -0.99); // Rechts unten
-      scene.add(lampButton);
-	  
-	  
-
-      // Raycaster für Button-Interaktion
-      const raycaster = new THREE.Raycaster();
-      const pointer = new THREE.Vector2();
-
+ 
       // AR-Session starten
       const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
@@ -181,31 +156,6 @@ ThreeMeshUI.update();
       session.addEventListener("select", (event) => {
         if (!reticle) return;
 
-        // Raycaster von der Kameraposition (Mitte des Bildschirms)
-        raycaster.setFromCamera(pointer, camera);
-        const intersects = raycaster.intersectObjects([carButton, lampButton]);
-
-        // Prüfen, ob ein Button getroffen wurde
-        if (intersects.length > 0) {
-          const clickedButton = intersects[0].object;
-
-          if (clickedButton === carButton) {
-            selectedModel = 'car';
-            console.log('Auto ausgewählt');
-          } else if (clickedButton === lampButton) {
-            selectedModel = 'lamp';
-            console.log('Laterne ausgewählt');
-          }
-        } 
-        // Kein Button getroffen -> Modell platzieren
-        else if (models[selectedModel]) {
-          const clone = models[selectedModel].clone();
-          clone.position.copy(reticle.position);
-          clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
-          scene.add(clone);
-          console.log(`${selectedModel} platziert`);
-        }
-      });
 
       // AR-Rendering
       function onXRFrame(time, frame) {
