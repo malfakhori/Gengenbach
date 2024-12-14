@@ -95,7 +95,7 @@
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
 
-            // Interaktive Modellwahl
+            // Interaktive Modellwahl: Schalte zwischen den Modellen basierend auf Reticle
             const distanceToRobot = hitTestResults[0].distanceTo(models.robot.position);
             const distanceToFlower = hitTestResults[0].distanceTo(models.flower.position);
 
