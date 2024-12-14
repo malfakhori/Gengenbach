@@ -24,15 +24,13 @@
 </head>
 <body>
   <script>
-    let selectedModel = 'robot'; // Standardauswahl
+    let selectedModel = 'robot';
     let models = {};
     let reticle;
     let currentModel = null;
-    let scene;
-    let camera;
-    let hitTestSource;
+    let scene, camera, hitTestSource;
 
-    const modelKeys = ['robot', 'flower']; // Modell-Liste
+    const modelKeys = ['robot', 'flower'];
     let modelIndex = 0;
 
     async function activateXR() {
@@ -46,12 +44,10 @@
       camera = new THREE.PerspectiveCamera();
       camera.matrixAutoUpdate = false;
 
-      // Licht hinzufügen
       const light = new THREE.DirectionalLight(0xffffff, 1);
       light.position.set(10, 10, 10);
       scene.add(light);
 
-      // Reticle (Cursor)
       const loader = new THREE.GLTFLoader();
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", (gltf) => {
         reticle = gltf.scene;
@@ -59,7 +55,6 @@
         scene.add(reticle);
       });
 
-      // Modelle laden
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
         models.robot = gltf.scene;
       });
@@ -67,16 +62,15 @@
         models.flower = gltf.scene;
       });
 
-      // AR-Session starten
       const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
       const referenceSpace = await session.requestReferenceSpace('local');
       const viewerSpace = await session.requestReferenceSpace('viewer');
       hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
+      session.addEventListener("select", () => placeModel());
       session.requestAnimationFrame(onXRFrame);
 
-      // AR-Rendering
       function onXRFrame(time, frame) {
         session.requestAnimationFrame(onXRFrame);
         gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
@@ -97,18 +91,24 @@
             reticle.visible = true;
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
-
-            if (currentModel) {
-              currentModel.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
-            }
           }
-
           renderer.render(scene, camera);
         }
       }
     }
 
-    // Swipe-Erkennung
+    function placeModel() {
+      if (!reticle || !reticle.visible) return;
+
+      if (currentModel) scene.remove(currentModel);
+
+      currentModel = models[selectedModel]?.clone();
+      if (currentModel) {
+        currentModel.position.copy(reticle.position);
+        scene.add(currentModel);
+      }
+    }
+
     let startX = 0;
     const threshold = 50;
 
@@ -121,18 +121,12 @@
       const deltaX = endX - startX;
 
       if (Math.abs(deltaX) > threshold) {
-        if (deltaX > 0) {
-          switchModel('previous');
-        } else {
-          switchModel('next');
-        }
+        switchModel(deltaX > 0 ? 'previous' : 'next');
       }
     });
 
     function switchModel(direction) {
-      if (currentModel) {
-        scene.remove(currentModel);
-      }
+      if (currentModel) scene.remove(currentModel);
 
       if (direction === 'next') {
         modelIndex = (modelIndex + 1) % modelKeys.length;
@@ -141,12 +135,7 @@
       }
 
       selectedModel = modelKeys[modelIndex];
-      currentModel = models[selectedModel]?.clone();
-      if (currentModel) {
-        currentModel.position.copy(reticle.position);
-        scene.add(currentModel);
-        console.log(`Modell gewechselt zu: ${selectedModel}`);
-      }
+      console.log(`Modell gewechselt zu: ${selectedModel}`);
     }
 
     if (navigator.xr) {
