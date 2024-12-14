@@ -28,8 +28,12 @@
     let models = {};
     let reticle;
     let currentModel = null;
-    let scene, camera, hitTestSource;
-    let placedModels = []; // Array für platzierte Modelle
+    let scene;
+    let camera;
+    let hitTestSource;
+
+    const modelKeys = ['robot', 'flower']; // Modell-Liste
+    let modelIndex = 0;
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -70,7 +74,6 @@
       const viewerSpace = await session.requestReferenceSpace('viewer');
       hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-      session.addEventListener('select', placeModel); // Platzieren des Modells beim Tippen
       session.requestAnimationFrame(onXRFrame);
 
       // AR-Rendering
@@ -94,8 +97,10 @@
             reticle.visible = true;
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
-          } else {
-            reticle.visible = false;
+
+            if (currentModel) {
+              currentModel.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
+            }
           }
 
           renderer.render(scene, camera);
@@ -103,39 +108,47 @@
       }
     }
 
-    // Modell platzieren
-    function placeModel() {
-      if (reticle.visible) {
-        const model = models[selectedModel]?.clone();
-        if (model) {
-          model.position.copy(reticle.position);
-          model.scale.set(0.5, 0.5, 0.5); // Optional: Größe anpassen
-          scene.add(model);
-          placedModels.push(model); // Zum Array hinzufügen
-        }
-      }
-    }
+    // Swipe-Erkennung
+    let startX = 0;
+    const threshold = 50;
 
-    // Swipe-Gesten
-    let startX = 0, endX = 0;
-    const threshold = 50; // Mindestdistanz für Swipe
+    document.body.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+    });
 
-    document.body.addEventListener('touchstart', (e) => startX = e.touches[0].clientX);
     document.body.addEventListener('touchend', (e) => {
-      endX = e.changedTouches[0].clientX;
-      if (Math.abs(endX - startX) > threshold) {
-        if (endX > startX) switchModel('next'); // Swipe rechts
-        else switchModel('previous'); // Swipe links
+      const endX = e.changedTouches[0].clientX;
+      const deltaX = endX - startX;
+
+      if (Math.abs(deltaX) > threshold) {
+        if (deltaX > 0) {
+          switchModel('previous');
+        } else {
+          switchModel('next');
+        }
       }
     });
 
     function switchModel(direction) {
-      if (direction === 'next') selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
-      else if (direction === 'previous') selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
-      console.log("Modell gewechselt zu:", selectedModel);
+      if (currentModel) {
+        scene.remove(currentModel);
+      }
+
+      if (direction === 'next') {
+        modelIndex = (modelIndex + 1) % modelKeys.length;
+      } else {
+        modelIndex = (modelIndex - 1 + modelKeys.length) % modelKeys.length;
+      }
+
+      selectedModel = modelKeys[modelIndex];
+      currentModel = models[selectedModel]?.clone();
+      if (currentModel) {
+        currentModel.position.copy(reticle.position);
+        scene.add(currentModel);
+        console.log(`Modell gewechselt zu: ${selectedModel}`);
+      }
     }
 
-    // AR starten
     if (navigator.xr) {
       const startButton = document.createElement('button');
       startButton.textContent = 'Start AR';
