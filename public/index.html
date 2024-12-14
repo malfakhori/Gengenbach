@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GeoVis AR Projekt</title>
-  <style>
+    <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -18,26 +18,86 @@
       background-size: cover;
       background-position: center;
     }
+
+    .container {
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 50px;
+      border-radius: 10px;
+      color: white;
+      max-width: 80%;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+    }
+//teste
+    h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      font-size: 1.5em;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 10px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:active {
+      background-color: #387a39;
+    }
+
+    .menu-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      z-index: 10;
+    }
+
+    .menu-bar button {
+      background-color: #2196F3;
+    }
+
+    .menu-bar button:hover {
+      background-color: #1E88E5;
+    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
   <script>
-    let selectedModel = 'flower'; // Standardauswahl
+    let selectedModel = 'car'; // Standardauswahl
     let models = {};
     let reticle;
-    let scene, camera, renderer, session;
+    let menu;
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
       const gl = canvas.getContext('webgl', { xrCompatible: true });
-      renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
+      const renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
       renderer.autoClear = false;
 
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera();
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
       camera.matrixAutoUpdate = false;
 
       // Licht hinzufügen
@@ -55,20 +115,75 @@
 
       // Modelle laden
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
-        models.robot = gltf.scene;
+        models.car = gltf.scene;
       });
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", (gltf) => {
-        models.flower = gltf.scene;
+        models.lamp = gltf.scene;
       });
 
+      // 3D-Menü erstellen
+      const menuGeometry = new THREE.PlaneGeometry(0.5, 0.2); // Menügröße
+      const menuMaterial = new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.8, transparent: true });
+      menu = new THREE.Mesh(menuGeometry, menuMaterial);
+      menu.position.set(0, -0.5, -1); // Unten im Kamerasichtfeld
+      scene.add(menu);
+
+      // Menü-Buttons als Flächen
+      const buttonGeometry = new THREE.PlaneGeometry(0.15, 0.1);
+      const buttonMaterial1 = new THREE.MeshBasicMaterial({ color: 0x2196F3 });
+      const buttonMaterial2 = new THREE.MeshBasicMaterial({ color: 0xFF9800 });
+
+      const carButton = new THREE.Mesh(buttonGeometry, buttonMaterial1);
+      carButton.position.set(-0.2, -0.5, -0.99); // Links unten
+      scene.add(carButton);
+
+      const lampButton = new THREE.Mesh(buttonGeometry, buttonMaterial2);
+      lampButton.position.set(0.2, -0.5, -0.99); // Rechts unten
+      scene.add(lampButton);
+	  
+	  
+
+      // Raycaster für Button-Interaktion
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+
       // AR-Session starten
-      session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
+      const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
       const referenceSpace = await session.requestReferenceSpace('local');
       const viewerSpace = await session.requestReferenceSpace('viewer');
       const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
       session.requestAnimationFrame(onXRFrame);
+
+      session.addEventListener("select", (event) => {
+        if (!reticle) return;
+
+        // Raycaster von der Kameraposition (Mitte des Bildschirms)
+        raycaster.setFromCamera(pointer, camera);
+        const intersects = raycaster.intersectObjects([carButton, lampButton]);
+
+        // Prüfen, ob ein Button getroffen wurde
+        if (intersects.length > 0) {
+          const clickedButton = intersects[0].object;
+
+          if (clickedButton === carButton) {
+            selectedModel = 'car';
+            console.log('Auto ausgewählt');
+          } else if (clickedButton === lampButton) {
+            selectedModel = 'lamp';
+            console.log('Laterne ausgewählt');
+          }
+        } 
+        // Kein Button getroffen -> Modell platzieren
+        else if (models[selectedModel]) {
+          const clone = models[selectedModel].clone();
+          clone.position.copy(reticle.position);
+          clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
+          scene.add(clone);
+          console.log(`${selectedModel} platziert`);
+        }
+      });
 
       // AR-Rendering
       function onXRFrame(time, frame) {
@@ -85,6 +200,13 @@
           camera.projectionMatrix.fromArray(view.projectionMatrix);
           camera.updateMatrixWorld(true);
 
+          // Menü bleibt fixiert vor der Kamera
+          menu.position.set(0, -0.5, -1);
+          menu.lookAt(camera.position);
+
+          carButton.position.set(-0.2, -0.5, -0.99);
+          lampButton.position.set(0.2, -0.5, -0.99);
+
           const hitTestResults = frame.getHitTestResults(hitTestSource);
           if (hitTestResults.length > 0) {
             const hitPose = hitTestResults[0].getPose(referenceSpace);
@@ -94,18 +216,6 @@
           }
 
           renderer.render(scene, camera);
-        }
-      }
-    }
-
-    // Modell platzieren
-    function placeModel() {
-      if (reticle.visible) {
-        const model = models[selectedModel];
-        if (model) {
-          const clonedModel = model.clone();
-          clonedModel.position.set(reticle.position.x, reticle.position.y, reticle.position.z);
-          scene.add(clonedModel);
         }
       }
     }
@@ -120,9 +230,6 @@
         startButton.remove();
         activateXR();
       };
-
-      // Touch- oder Klick-Event, um das Modell zu platzieren
-      document.body.addEventListener('click', placeModel);
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
