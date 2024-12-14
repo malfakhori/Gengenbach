@@ -18,15 +18,52 @@
       background-size: cover;
       background-position: center;
     }
+
+    button {
+      padding: 15px;
+      font-size: 18px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .panel {
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 15px;
+      display: flex;
+      justify-content: space-around;
+      width: 60%;
+    }
+
+    .panel button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .panel button:hover {
+      background-color: #45a049;
+    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://unpkg.com/three@0.126.0/examples/jsm/webxr/VRButton.js"></script>
 </head>
 <body>
   <script>
     let selectedModel = 'robot'; // Standardauswahl
     let models = {};
     let reticle;
+    let currentModel = 0;
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -69,8 +106,6 @@
 
       session.requestAnimationFrame(onXRFrame);
 
-     
-
       // AR-Rendering
       function onXRFrame(time, frame) {
         session.requestAnimationFrame(onXRFrame);
@@ -103,15 +138,48 @@
     if (navigator.xr) {
       const startButton = document.createElement('button');
       startButton.textContent = 'Start AR';
-      startButton.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px; font-size: 18px;";
-      document.body.appendChild(startButton);
       startButton.onclick = () => {
         startButton.remove();
         activateXR();
       };
+      document.body.appendChild(startButton);
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
+
+    // Interaktive Buttons für AR-Modellwechsel
+    const createModelButtons = () => {
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+      
+      const previousButton = document.createElement('button');
+      previousButton.textContent = 'Previous';
+      previousButton.onclick = () => {
+        currentModel = (currentModel - 1 + Object.keys(models).length) % Object.keys(models).length;
+        updateModel();
+      };
+      
+      const nextButton = document.createElement('button');
+      nextButton.textContent = 'Next';
+      nextButton.onclick = () => {
+        currentModel = (currentModel + 1) % Object.keys(models).length;
+        updateModel();
+      };
+      
+      panel.appendChild(previousButton);
+      panel.appendChild(nextButton);
+      
+      document.body.appendChild(panel);
+    };
+
+    const updateModel = () => {
+      const modelKeys = Object.keys(models);
+      scene.remove(models[modelKeys[(currentModel - 1 + modelKeys.length) % modelKeys.length]]);
+      scene.add(models[modelKeys[currentModel]]);
+    };
+
+    // Buttons beim Laden der Seite erstellen
+    window.onload = createModelButtons;
   </script>
 </body>
 </html>
