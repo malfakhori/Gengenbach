@@ -30,7 +30,6 @@
     let currentModel = null;
     let scene, camera, hitTestSource;
     let hitTestResults = [];
-    let isSwipe = false;
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -101,30 +100,30 @@
     }
 
     // Touch-Logik zur Unterscheidung zwischen Swipe und Tap
-    let startX = 0, endX = 0, isSwiping = false;
-    const threshold = 50;
+    let startX = 0, startY = 0, endX = 0, endY = 0;
+    const swipeThreshold = 50; // Minimale Swipe-Distanz
 
     document.body.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
-      isSwiping = false;
+      startY = e.touches[0].clientY;
     });
 
-    document.body.addEventListener('touchmove', (e) => {
-      const moveX = e.touches[0].clientX;
-      if (Math.abs(moveX - startX) > threshold) {
-        isSwiping = true;
-        if (moveX > startX) {
+    document.body.addEventListener('touchend', (e) => {
+      endX = e.changedTouches[0].clientX;
+      endY = e.changedTouches[0].clientY;
+
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+
+      // Unterscheidung zwischen Swipe und Tap
+      if (Math.abs(deltaX) > swipeThreshold) {
+        if (deltaX > 0) {
           switchModel('next');
         } else {
           switchModel('previous');
         }
-        startX = moveX; // Verhindert mehrfaches Swipen bei einem langen Touchmove
-      }
-    });
-
-    document.body.addEventListener('touchend', () => {
-      if (!isSwiping) {
-        placeModel();
+      } else if (Math.abs(deltaY) < swipeThreshold) {
+        placeModel(); // Nur platzieren, wenn keine große Bewegung erkannt wurde
       }
     });
 
