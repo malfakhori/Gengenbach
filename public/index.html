@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Kamera mit Menüleiste</title>
+  <title>AR mit Menüleiste</title>
   <style>
     * {
       margin: 0;
@@ -13,24 +13,29 @@
 
     body {
       font-family: Arial, sans-serif;
-      background-color: #000;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
       overflow: hidden;
+      background-color: #000;
+      color: white;
     }
 
-    /* Container für die AR-Kamera */
-    #camera-container {
-      flex: 1; /* Nimmt den oberen Teil des Bildschirms ein */
-      position: relative;
-      background-color: #111;
+    /* Der AR-Bereich: Reduziert durch Skalierung */
+    #ar-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 80px; /* Platz für die Menüleiste */
+      overflow: hidden;
+      background-color: #000;
     }
 
-    /* Menüleiste unterhalb der Kamera */
+    /* Menüleiste */
     #menu-bar {
-      height: 80px; /* Höhe der Menüleiste */
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 80px;
       background-color: rgba(0, 0, 0, 0.8);
       display: flex;
       justify-content: space-around;
@@ -40,13 +45,12 @@
 
     button {
       background-color: #2196F3;
-      color: #fff;
-      font-size: 16px;
+      color: white;
       padding: 10px 20px;
+      font-size: 18px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
 
     button:hover {
@@ -55,40 +59,44 @@
   </style>
 </head>
 <body>
-  <!-- AR-Kamera-Container -->
-  <div id="camera-container"></div>
+  <!-- Container für die AR-Ansicht -->
+  <div id="ar-container"></div>
 
   <!-- Menüleiste -->
   <div id="menu-bar">
-    <button onclick="selectModel('car')">Auto</button>
-    <button onclick="selectModel('lamp')">Lampe</button>
+    <button onclick="setModel('car')">Auto</button>
+    <button onclick="setModel('lamp')">Lampe</button>
   </div>
 
+  <!-- Three.js & AR-Skripte -->
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+
   <script>
     let selectedModel = 'car';
     let models = {};
+    let reticle;
 
     async function activateXR() {
-      const cameraContainer = document.getElementById('camera-container');
+      const container = document.getElementById('ar-container');
 
-      // Renderer erstellen
-      const renderer = new THREE.WebGLRenderer({ alpha: true });
-      renderer.setSize(cameraContainer.clientWidth, cameraContainer.clientHeight);
-      cameraContainer.appendChild(renderer.domElement);
+      const canvas = document.createElement('canvas');
+      container.appendChild(canvas);
 
-      // Szene und Kamera erstellen
+      const gl = canvas.getContext('webgl', { xrCompatible: true });
+      const renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
+      renderer.autoClear = false;
+
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(70, cameraContainer.clientWidth / cameraContainer.clientHeight, 0.01, 100);
-      camera.position.z = 2;
+      const camera = new THREE.PerspectiveCamera();
+      camera.matrixAutoUpdate = false;
 
-      // Licht hinzufügen
+      // Licht
       const light = new THREE.DirectionalLight(0xffffff, 1);
       light.position.set(10, 10, 10);
       scene.add(light);
 
-      // Modelle laden
+      // GLTF-Loader für Modelle
       const loader = new THREE.GLTFLoader();
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
         models.car = gltf.scene;
@@ -97,40 +105,73 @@
         models.lamp = gltf.scene;
       });
 
-      // Animation
-      function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-      }
-      animate();
+      // Reticle (Cursor für Platzierung)
+      loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", (gltf) => {
+        reticle = gltf.scene;
+        reticle.visible = false;
+        scene.add(reticle);
+      });
 
-      // Dummy-Reticle (nur zur Demo)
-      const reticleGeometry = new THREE.CircleGeometry(0.05, 32);
-      const reticleMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-      const reticle = new THREE.Mesh(reticleGeometry, reticleMaterial);
-      reticle.position.set(0, -0.5, -2);
-      scene.add(reticle);
+      const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
+      session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+      const referenceSpace = await session.requestReferenceSpace('local');
+      const viewerSpace = await session.requestReferenceSpace('viewer');
+      const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-      // Modell platzieren
-      window.addEventListener('click', () => {
-        if (models[selectedModel]) {
-          const modelClone = models[selectedModel].clone();
-          modelClone.position.set(0, -0.5, -2);
-          modelClone.scale.set(0.5, 0.5, 0.5);
-          scene.add(modelClone);
+      session.requestAnimationFrame(onXRFrame);
+
+      session.addEventListener("select", () => {
+        if (reticle && models[selectedModel]) {
+          const clone = models[selectedModel].clone();
+          clone.position.copy(reticle.position);
+          scene.add(clone);
           console.log(`${selectedModel} platziert`);
         }
       });
+
+      function onXRFrame(time, frame) {
+        session.requestAnimationFrame(onXRFrame);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
+
+        const pose = frame.getViewerPose(referenceSpace);
+        if (pose) {
+          const view = pose.views[0];
+          const viewport = session.renderState.baseLayer.getViewport(view);
+          renderer.setSize(container.clientWidth, container.clientHeight);
+
+          camera.matrix.fromArray(view.transform.matrix);
+          camera.projectionMatrix.fromArray(view.projectionMatrix);
+          camera.updateMatrixWorld(true);
+
+          const hitTestResults = frame.getHitTestResults(hitTestSource);
+          if (hitTestResults.length > 0) {
+            const hitPose = hitTestResults[0].getPose(referenceSpace);
+            reticle.visible = true;
+            reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
+          }
+
+          renderer.render(scene, camera);
+        }
+      }
     }
 
-    // Modell auswählen
-    function selectModel(model) {
+    function setModel(model) {
       selectedModel = model;
       console.log(`${model} ausgewählt`);
     }
 
-    // AR aktivieren
-    activateXR();
+    if (navigator.xr) {
+      const startButton = document.createElement('button');
+      startButton.textContent = 'Start AR';
+      startButton.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100;";
+      document.body.appendChild(startButton);
+      startButton.onclick = () => {
+        startButton.remove();
+        activateXR();
+      };
+    } else {
+      alert('WebXR wird nicht unterstützt.');
+    }
   </script>
 </body>
 </html>
