@@ -24,7 +24,7 @@
 </head>
 <body>
   <script>
-    let selectedModel = 'robot'; // Standardauswahl
+    let selectedModel = 'robot';
     let models = {};
     let reticle;
     let currentModel = null;
@@ -43,7 +43,7 @@
       camera = new THREE.PerspectiveCamera();
       camera.matrixAutoUpdate = false;
 
-      // Licht hinzufügen
+      // Licht
       const light = new THREE.DirectionalLight(0xffffff, 1);
       light.position.set(10, 10, 10);
       scene.add(light);
@@ -56,7 +56,7 @@
         scene.add(reticle);
       });
 
-      // Modelle laden
+      // Modelle
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
         models.robot = gltf.scene;
       });
@@ -64,14 +64,12 @@
         models.flower = gltf.scene;
       });
 
-      // AR-Session starten
+      // XR-Session
       const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
       const referenceSpace = await session.requestReferenceSpace('local');
       const viewerSpace = await session.requestReferenceSpace('viewer');
       hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
-
-      session.addEventListener('select', onPlaceModel);
 
       session.requestAnimationFrame(onXRFrame);
 
@@ -102,9 +100,35 @@
       }
     }
 
-    function onPlaceModel() {
-      if (isSwipe) return; // Verhindere Platzieren bei Swipe
+    // Touch-Logik zur Unterscheidung zwischen Swipe und Tap
+    let startX = 0, endX = 0, isSwiping = false;
+    const threshold = 50;
 
+    document.body.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      isSwiping = false;
+    });
+
+    document.body.addEventListener('touchmove', (e) => {
+      const moveX = e.touches[0].clientX;
+      if (Math.abs(moveX - startX) > threshold) {
+        isSwiping = true;
+        if (moveX > startX) {
+          switchModel('next');
+        } else {
+          switchModel('previous');
+        }
+        startX = moveX; // Verhindert mehrfaches Swipen bei einem langen Touchmove
+      }
+    });
+
+    document.body.addEventListener('touchend', () => {
+      if (!isSwiping) {
+        placeModel();
+      }
+    });
+
+    function placeModel() {
       if (reticle && reticle.visible && models[selectedModel]) {
         const newModel = models[selectedModel].clone();
         newModel.position.copy(reticle.position);
@@ -112,41 +136,10 @@
       }
     }
 
-    // Swipe-Logik
-    let startX = 0, endX = 0;
-    const threshold = 50; // Mindestdistanz für Swipe
-
-    document.body.addEventListener('touchstart', (e) => {
-      startX = e.touches[0].clientX;
-      isSwipe = false;
-    });
-
-    document.body.addEventListener('touchend', (e) => {
-      endX = e.changedTouches[0].clientX;
-      const deltaX = endX - startX;
-
-      if (Math.abs(deltaX) > threshold) {
-        isSwipe = true; // Swipe erkannt
-        if (deltaX > 0) {
-          switchModel('next');
-        } else {
-          switchModel('previous');
-        }
-      }
-    });
-
     function switchModel(direction) {
-      if (currentModel) scene.remove(currentModel);
-
-      if (direction === 'next') {
-        selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
-      } else if (direction === 'previous') {
-        selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
-      }
-
-      currentModel = models[selectedModel].clone();
-      currentModel.position.copy(reticle.position);
-      scene.add(currentModel);
+      selectedModel = direction === 'next' ? 
+        (selectedModel === 'robot' ? 'flower' : 'robot') : 
+        (selectedModel === 'robot' ? 'flower' : 'robot');
     }
 
     if (navigator.xr) {
