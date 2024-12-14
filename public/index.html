@@ -11,22 +11,50 @@
       background-color: #f0f0f0;
       color: #333;
       display: flex;
-      justify-content: center;
-      align-items: center;
       height: 100vh;
-      background-image: url('https://www.hft-stuttgart.de/fileadmin/Dateien/Hochschule/-_R_Juergen_Pollak_HFT_18.04.18-0091.jpg');
-      background-size: cover;
-      background-position: center;
     }
 
-    .container {
-      text-align: center;
-      background-color: rgba(0, 0, 0, 0.5);
-      padding: 50px;
-      border-radius: 10px;
+    /* Fixiertes Menü auf der linken Seite */
+    .menu-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 200px;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      box-sizing: border-box;
+      z-index: 10;
+    }
+
+    .menu-bar button {
+      background-color: #2196F3;
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 10px;
       color: white;
-      max-width: 80%;
-      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+      font-size: 1.2em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .menu-bar button:hover {
+      background-color: #1E88E5;
+    }
+
+    .menu-bar button:active {
+      background-color: #1976D2;
+    }
+
+    /* Der Hauptbereich für die AR-Ansicht */
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #e0e0e0;
     }
 
     h1 {
@@ -38,52 +66,23 @@
       font-size: 1.2em;
       margin-bottom: 30px;
     }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      font-size: 1.5em;
-      padding: 15px 30px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      margin: 10px;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    button:active {
-      background-color: #387a39;
-    }
-
-    .menu-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      background-color: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      z-index: 10;
-    }
-
-    .menu-bar button {
-      background-color: #2196F3;
-      margin: 0 10px;
-    }
-
-    .menu-bar button:hover {
-      background-color: #1E88E5;
-    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
+  <!-- Menü auf der linken Seite -->
+  <div class="menu-bar">
+    <button id="robotButton">RobotExpressive</button>
+    <button id="sunflowerButton">Sunflower</button>
+  </div>
+
+  <!-- AR-Bereich -->
+  <div class="main-content" id="arArea">
+    <h1>AR Modell</h1>
+    <p>Wählen Sie ein Modell aus dem Menü auf der linken Seite.</p>
+  </div>
+
   <script>
     let selectedModel = 'robot'; // Standardauswahl
     let models = {};
@@ -122,30 +121,6 @@
         models.sunflower = gltf.scene;
       });
 
-      // AR-Menü erstellen
-      const menuGeometry = new THREE.PlaneGeometry(0.5, 0.2); // Menügröße
-      const menuMaterial = new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.8, transparent: true });
-      menu = new THREE.Mesh(menuGeometry, menuMaterial);
-      menu.position.set(0, -0.5, -1); // Unten im Kamerasichtfeld
-      scene.add(menu);
-
-      // Menü-Buttons als Flächen
-      const buttonGeometry = new THREE.PlaneGeometry(0.15, 0.1);
-      const buttonMaterial1 = new THREE.MeshBasicMaterial({ color: 0x2196F3 });
-      const buttonMaterial2 = new THREE.MeshBasicMaterial({ color: 0xFF9800 });
-
-      const robotButton = new THREE.Mesh(buttonGeometry, buttonMaterial1);
-      robotButton.position.set(-0.2, -0.5, -0.99); // Links unten
-      scene.add(robotButton);
-
-      const sunflowerButton = new THREE.Mesh(buttonGeometry, buttonMaterial2);
-      sunflowerButton.position.set(0.2, -0.5, -0.99); // Rechts unten
-      scene.add(sunflowerButton);
-
-      // Raycaster für Button-Interaktion
-      const raycaster = new THREE.Raycaster();
-      const pointer = new THREE.Vector2();
-
       // AR-Session starten
       const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
@@ -158,24 +133,8 @@
       session.addEventListener("select", (event) => {
         if (!reticle) return;
 
-        // Raycaster von der Kameraposition (Mitte des Bildschirms)
-        raycaster.setFromCamera(pointer, camera);
-        const intersects = raycaster.intersectObjects([robotButton, sunflowerButton]);
-
-        // Prüfen, ob ein Button getroffen wurde
-        if (intersects.length > 0) {
-          const clickedButton = intersects[0].object;
-
-          if (clickedButton === robotButton) {
-            selectedModel = 'robot';
-            console.log('Robot ausgewählt');
-          } else if (clickedButton === sunflowerButton) {
-            selectedModel = 'sunflower';
-            console.log('Sunflower ausgewählt');
-          }
-        } 
-        // Kein Button getroffen -> Modell platzieren
-        else if (models[selectedModel]) {
+        // Modelle platzieren
+        if (models[selectedModel]) {
           const clone = models[selectedModel].clone();
           clone.position.copy(reticle.position);
           clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
@@ -199,13 +158,7 @@
           camera.projectionMatrix.fromArray(view.projectionMatrix);
           camera.updateMatrixWorld(true);
 
-          // Menü bleibt fixiert vor der Kamera
-          menu.position.set(0, -0.5, -1);
-          menu.lookAt(camera.position);
-
-          robotButton.position.set(-0.2, -0.5, -0.99);
-          sunflowerButton.position.set(0.2, -0.5, -0.99);
-
+          // AR-Ansicht aktualisieren
           const hitTestResults = frame.getHitTestResults(hitTestSource);
           if (hitTestResults.length > 0) {
             const hitPose = hitTestResults[0].getPose(referenceSpace);
@@ -232,6 +185,17 @@
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
+
+    // Button-Klicks zur Auswahl des Modells
+    document.getElementById('robotButton').addEventListener('click', () => {
+      selectedModel = 'robot';
+      console.log('Robot ausgewählt');
+    });
+
+    document.getElementById('sunflowerButton').addEventListener('click', () => {
+      selectedModel = 'sunflower';
+      console.log('Sunflower ausgewählt');
+    });
   </script>
 </body>
 </html>
