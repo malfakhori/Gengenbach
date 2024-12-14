@@ -24,7 +24,7 @@
 </head>
 <body>
   <script>
-    let selectedModel = 'car'; // Standardauswahl
+    let selectedModel = 'robot'; // Standardauswahl
     let models = {};
     let reticle;
 
@@ -54,10 +54,10 @@
 
       // Modelle laden
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
-        models.car = gltf.scene;
+        models.robot = gltf.scene;
       });
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", (gltf) => {
-        models.lamp = gltf.scene;
+        models.flower = gltf.scene;
       });
 
       // AR-Session starten
@@ -69,18 +69,7 @@
 
       session.requestAnimationFrame(onXRFrame);
 
-      session.addEventListener("select", (event) => {
-        if (!reticle) return;
-
-        // Kein Button getroffen -> Modell platzieren
-        if (models[selectedModel]) {
-          const clone = models[selectedModel].clone();
-          clone.position.copy(reticle.position);
-          clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
-          scene.add(clone);
-          console.log(`${selectedModel} platziert`);
-        }
-      });
+     
 
       // AR-Rendering
       function onXRFrame(time, frame) {
