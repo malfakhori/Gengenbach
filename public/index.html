@@ -18,52 +18,15 @@
       background-size: cover;
       background-position: center;
     }
-
-    button {
-      padding: 15px;
-      font-size: 18px;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    .panel {
-      position: absolute;
-      bottom: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.6);
-      padding: 10px;
-      border-radius: 15px;
-      display: flex;
-      justify-content: space-around;
-      width: 60%;
-    }
-
-    .panel button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px;
-      border-radius: 5px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .panel button:hover {
-      background-color: #45a049;
-    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://unpkg.com/three@0.126.0/examples/jsm/webxr/VRButton.js"></script>
 </head>
 <body>
   <script>
     let selectedModel = 'robot'; // Standardauswahl
     let models = {};
     let reticle;
-    let currentModel = 0;
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -134,52 +97,79 @@
       }
     }
 
+    // Touch Events für Swipe-Geste
+    let startX = 0;
+    let startY = 0;
+    let endX = 0;
+    let endY = 0;
+    const threshold = 50; // Mindestdistanz für die Swipe-Erkennung
+
+    // Event Listener für Touch-Ereignisse
+    document.body.addEventListener('touchstart', (event) => {
+      // Die Startposition der Geste speichern
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    });
+
+    document.body.addEventListener('touchmove', (event) => {
+      // Die Bewegungsposition des Fingers (optional)
+      endX = event.touches[0].clientX;
+      endY = event.touches[0].clientY;
+    });
+
+    document.body.addEventListener('touchend', (event) => {
+      // Berechne die Distanz in der X- und Y-Richtung
+      let deltaX = endX - startX;
+      let deltaY = endY - startY;
+
+      // Wenn der Swipe horizontal ist (Links oder Rechts)
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
+        if (deltaX > 0) {
+          // Swipe nach rechts -> Wechseln zum nächsten Modell
+          switchModel('next');
+        } else {
+          // Swipe nach links -> Wechseln zum vorherigen Modell
+          switchModel('previous');
+        }
+      }
+    });
+
+    // Funktion zum Modellwechsel
+    function switchModel(direction) {
+      if (direction === 'next') {
+        selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
+        updateModel();
+      } else if (direction === 'previous') {
+        selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
+        updateModel();
+      }
+    }
+
+    function updateModel() {
+      // Entferne das aktuelle Modell
+      scene.remove(models[selectedModel]);
+      
+      // Lade das neue Modell basierend auf selectedModel
+      if (selectedModel === 'robot') {
+        scene.add(models.robot);
+      } else if (selectedModel === 'flower') {
+        scene.add(models.flower);
+      }
+    }
+
     // AR starten
     if (navigator.xr) {
       const startButton = document.createElement('button');
       startButton.textContent = 'Start AR';
+      startButton.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px; font-size: 18px;";
+      document.body.appendChild(startButton);
       startButton.onclick = () => {
         startButton.remove();
         activateXR();
       };
-      document.body.appendChild(startButton);
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
-
-    // Interaktive Buttons für AR-Modellwechsel
-    const createModelButtons = () => {
-      const panel = document.createElement('div');
-      panel.className = 'panel';
-      
-      const previousButton = document.createElement('button');
-      previousButton.textContent = 'Previous';
-      previousButton.onclick = () => {
-        currentModel = (currentModel - 1 + Object.keys(models).length) % Object.keys(models).length;
-        updateModel();
-      };
-      
-      const nextButton = document.createElement('button');
-      nextButton.textContent = 'Next';
-      nextButton.onclick = () => {
-        currentModel = (currentModel + 1) % Object.keys(models).length;
-        updateModel();
-      };
-      
-      panel.appendChild(previousButton);
-      panel.appendChild(nextButton);
-      
-      document.body.appendChild(panel);
-    };
-
-    const updateModel = () => {
-      const modelKeys = Object.keys(models);
-      scene.remove(models[modelKeys[(currentModel - 1 + modelKeys.length) % modelKeys.length]]);
-      scene.add(models[modelKeys[currentModel]]);
-    };
-
-    // Buttons beim Laden der Seite erstellen
-    window.onload = createModelButtons;
   </script>
 </body>
 </html>
