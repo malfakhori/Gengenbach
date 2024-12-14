@@ -59,7 +59,25 @@
       background-color: #387a39;
     }
 
+    .menu-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      z-index: 10;
+    }
 
+    .menu-bar button {
+      background-color: #2196F3;
+    }
+
+    .menu-bar button:hover {
+      background-color: #1E88E5;
+    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -95,27 +113,6 @@
         scene.add(reticle);
       });
 
-const container = new ThreeMeshUI.Block({
- width: 1.2,
- height: 0.7,
- padding: 0.2,
- fontFamily: './assets/Roboto-msdf.json',
- fontTexture: './assets/Roboto-msdf.png',
-});
-
-//
-
-const text = new ThreeMeshUI.Text({
- content: "Some text to be displayed"
-});
-
-container.add( text );
-
-// scene is a THREE.Scene (see three.js)
-scene.add( container );
-
-// This is typically done in the render loop :
-ThreeMeshUI.update();
       // Modelle laden
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
         models.car = gltf.scene;
