@@ -28,6 +28,7 @@
     let models = {};
     let reticle;
     let currentModel;
+    let scene;
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -36,7 +37,7 @@
       const renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
       renderer.autoClear = false;
 
-      const scene = new THREE.Scene();
+      scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera();
       camera.matrixAutoUpdate = false;
 
@@ -142,7 +143,7 @@
 
     // Funktion zum Modellwechsel
     function switchModel(direction) {
-      // Entferne das aktuelle Modell
+      // Entferne das aktuelle Modell nur, wenn es bereits in der Szene ist
       if (currentModel) {
         scene.remove(currentModel);
       }
@@ -154,7 +155,8 @@
         selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
       }
 
-      currentModel = models[selectedModel].clone(); // Erstelle eine Kopie des Modells, damit es platziert werden kann
+      // Stelle sicher, dass das aktuelle Modell auch tatsächlich in der Szene ist
+      currentModel = models[selectedModel].clone(); // Erstelle eine Kopie des Modells
       scene.add(currentModel);
     }
 
