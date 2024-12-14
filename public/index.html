@@ -11,50 +11,22 @@
       background-color: #f0f0f0;
       color: #333;
       display: flex;
-      height: 100vh;
-    }
-
-    /* Fixiertes Menü auf der linken Seite */
-    .menu-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 200px;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      padding: 20px;
-      box-sizing: border-box;
-      z-index: 10;
-    }
-
-    .menu-bar button {
-      background-color: #2196F3;
-      width: 100%;
-      padding: 15px;
-      margin-bottom: 10px;
-      color: white;
-      font-size: 1.2em;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .menu-bar button:hover {
-      background-color: #1E88E5;
-    }
-
-    .menu-bar button:active {
-      background-color: #1976D2;
-    }
-
-    /* Der Hauptbereich für die AR-Ansicht */
-    .main-content {
-      flex-grow: 1;
-      display: flex;
       justify-content: center;
       align-items: center;
-      background-color: #e0e0e0;
+      height: 100vh;
+      background-image: url('https://www.hft-stuttgart.de/fileadmin/Dateien/Hochschule/-_R_Juergen_Pollak_HFT_18.04.18-0091.jpg');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .container {
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 50px;
+      border-radius: 10px;
+      color: white;
+      max-width: 80%;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
     }
 
     h1 {
@@ -66,25 +38,54 @@
       font-size: 1.2em;
       margin-bottom: 30px;
     }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      font-size: 1.5em;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 10px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:active {
+      background-color: #387a39;
+    }
+
+    .menu-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      z-index: 10;
+    }
+
+    .menu-bar button {
+      background-color: #2196F3;
+    }
+
+    .menu-bar button:hover {
+      background-color: #1E88E5;
+    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three-mesh-ui"></script>
 </head>
 <body>
-  <!-- Menü auf der linken Seite -->
-  <div class="menu-bar">
-    <button id="robotButton">RobotExpressive</button>
-    <button id="sunflowerButton">Sunflower</button>
-  </div>
-
-  <!-- AR-Bereich -->
-  <div class="main-content" id="arArea">
-    <h1>AR Modell</h1>
-    <p>Wählen Sie ein Modell aus dem Menü auf der linken Seite.</p>
-  </div>
-
   <script>
-    let selectedModel = 'robot'; // Standardauswahl
+    let selectedModel = 'car'; // Standardauswahl
     let models = {};
     let reticle;
     let menu;
@@ -115,11 +116,54 @@
 
       // Modelle laden
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
-        models.robot = gltf.scene;
+        models.car = gltf.scene;
       });
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", (gltf) => {
-        models.sunflower = gltf.scene;
+        models.lamp = gltf.scene;
       });
+
+      // 3D-Menü erstellen
+      const ui = new THREE.MeshUI.UI({
+        containerWidth: 3,
+        containerHeight: 2,
+        fontSize: 0.1,
+        padding: 0.05,
+      });
+      scene.add(ui);
+
+      // Text hinzufügen
+      const text = new THREE.MeshUI.Text({
+        content: 'Modell auswählen',
+        fontSize: 0.2,
+        color: new THREE.Color(0xFFFFFF)
+      });
+      ui.add(text);
+
+      // Buttons hinzufügen
+      const buttonGeometry = new THREE.PlaneGeometry(0.5, 0.3);
+      const button1 = new THREE.MeshUI.Button({
+        width: 0.8,
+        height: 0.4,
+        backgroundColor: new THREE.Color(0x2196F3),
+      });
+      button1.position.set(-0.5, -0.8, 0);
+      button1.onClick = () => {
+        selectedModel = 'car';
+        console.log('Auto ausgewählt');
+      };
+      ui.add(button1);
+
+      const button2 = new THREE.MeshUI.Button({
+        width: 0.8,
+        height: 0.4,
+        backgroundColor: new THREE.Color(0xFF9800),
+      });
+      button2.position.set(0.5, -0.8, 0);
+      button2.onClick = () => {
+        selectedModel = 'lamp';
+        console.log('Laterne ausgewählt');
+      };
+      ui.add(button2);
 
       // AR-Session starten
       const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
@@ -133,7 +177,7 @@
       session.addEventListener("select", (event) => {
         if (!reticle) return;
 
-        // Modelle platzieren
+        // Modell platzieren, wenn kein Button angeklickt wurde
         if (models[selectedModel]) {
           const clone = models[selectedModel].clone();
           clone.position.copy(reticle.position);
@@ -158,7 +202,10 @@
           camera.projectionMatrix.fromArray(view.projectionMatrix);
           camera.updateMatrixWorld(true);
 
-          // AR-Ansicht aktualisieren
+          // Menü bleibt fixiert vor der Kamera
+          ui.position.set(0, -0.5, -1);
+          ui.lookAt(camera.position);
+
           const hitTestResults = frame.getHitTestResults(hitTestSource);
           if (hitTestResults.length > 0) {
             const hitPose = hitTestResults[0].getPose(referenceSpace);
@@ -185,17 +232,6 @@
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
-
-    // Button-Klicks zur Auswahl des Modells
-    document.getElementById('robotButton').addEventListener('click', () => {
-      selectedModel = 'robot';
-      console.log('Robot ausgewählt');
-    });
-
-    document.getElementById('sunflowerButton').addEventListener('click', () => {
-      selectedModel = 'sunflower';
-      console.log('Sunflower ausgewählt');
-    });
   </script>
 </body>
 </html>
