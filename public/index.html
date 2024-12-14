@@ -18,6 +18,14 @@
       background-size: cover;
       background-position: center;
     }
+    button {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 15px;
+      font-size: 18px;
+    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -28,16 +36,14 @@
     let models = {};
     let reticle;
     let currentModel = null;
-    let scene, camera, hitTestSource;
-
-    const modelKeys = ['robot', 'flower'];
-    let modelIndex = 0;
+    let scene, camera, hitTestSource, renderer;
+    let lastTouchTime = 0;
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
       const gl = canvas.getContext('webgl', { xrCompatible: true });
-      const renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
+      renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
       renderer.autoClear = false;
 
       scene = new THREE.Scene();
@@ -49,12 +55,15 @@
       scene.add(light);
 
       const loader = new THREE.GLTFLoader();
+
+      // Reticle laden
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", (gltf) => {
         reticle = gltf.scene;
         reticle.visible = false;
         scene.add(reticle);
       });
 
+      // Modelle laden
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
         models.robot = gltf.scene;
       });
@@ -68,7 +77,7 @@
       const viewerSpace = await session.requestReferenceSpace('viewer');
       hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-      session.addEventListener("select", () => placeModel());
+      session.addEventListener('select', placeModel);
       session.requestAnimationFrame(onXRFrame);
 
       function onXRFrame(time, frame) {
@@ -92,56 +101,56 @@
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
           }
+
           renderer.render(scene, camera);
         }
       }
     }
 
+    // Modell platzieren
     function placeModel() {
-      if (!reticle || !reticle.visible) return;
-
-      if (currentModel) scene.remove(currentModel);
-
-      currentModel = models[selectedModel]?.clone();
-      if (currentModel) {
-        currentModel.position.copy(reticle.position);
-        scene.add(currentModel);
-      }
+      if (!reticle || !reticle.visible || !models[selectedModel]) return;
+      const model = models[selectedModel].clone();
+      model.position.copy(reticle.position);
+      scene.add(model);
     }
 
-    let startX = 0;
-    const threshold = 50;
+    // Swipe-Gesten erkennen
+    let touchStartX = 0;
+    let touchEndX = 0;
 
     document.body.addEventListener('touchstart', (e) => {
-      startX = e.touches[0].clientX;
+      touchStartX = e.touches[0].clientX;
     });
 
     document.body.addEventListener('touchend', (e) => {
-      const endX = e.changedTouches[0].clientX;
-      const deltaX = endX - startX;
-
-      if (Math.abs(deltaX) > threshold) {
-        switchModel(deltaX > 0 ? 'previous' : 'next');
-      }
+      touchEndX = e.changedTouches[0].clientX;
+      handleSwipe();
     });
 
-    function switchModel(direction) {
-      if (currentModel) scene.remove(currentModel);
-
-      if (direction === 'next') {
-        modelIndex = (modelIndex + 1) % modelKeys.length;
-      } else {
-        modelIndex = (modelIndex - 1 + modelKeys.length) % modelKeys.length;
+    function handleSwipe() {
+      const deltaX = touchEndX - touchStartX;
+      if (Math.abs(deltaX) > 50) {
+        if (deltaX > 0) {
+          switchModel('next');
+        } else {
+          switchModel('previous');
+        }
       }
+    }
 
-      selectedModel = modelKeys[modelIndex];
+    function switchModel(direction) {
+      if (direction === 'next') {
+        selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
+      } else {
+        selectedModel = selectedModel === 'flower' ? 'robot' : 'flower';
+      }
       console.log(`Modell gewechselt zu: ${selectedModel}`);
     }
 
     if (navigator.xr) {
       const startButton = document.createElement('button');
       startButton.textContent = 'Start AR';
-      startButton.style.cssText = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px; font-size: 18px;";
       document.body.appendChild(startButton);
       startButton.onclick = () => {
         startButton.remove();
