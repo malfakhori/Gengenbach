@@ -18,20 +18,6 @@
       background-size: cover;
       background-position: center;
     }
-    button {
-      position: fixed;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 15px;
-      font-size: 18px;
-      background-color: rgba(255, 255, 255, 0.7);
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: rgba(255, 255, 255, 1);
-    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -40,7 +26,6 @@
   <script>
     let selectedModel = 'robot'; // Standardauswahl
     let models = {};
-    let currentModel = null; // Variable für das aktuell angezeigte Modell
     let reticle;
 
     async function activateXR() {
@@ -84,6 +69,8 @@
 
       session.requestAnimationFrame(onXRFrame);
 
+     
+
       // AR-Rendering
       function onXRFrame(time, frame) {
         session.requestAnimationFrame(onXRFrame);
@@ -105,25 +92,11 @@
             reticle.visible = true;
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
-
-            // Aktuelles Modell anzeigen
-            if (currentModel !== models[selectedModel]) {
-              if (currentModel) {
-                scene.remove(currentModel); // Entferne das alte Modell
-              }
-              currentModel = models[selectedModel];
-              scene.add(currentModel); // Füge das neue Modell hinzu
-            }
           }
 
           renderer.render(scene, camera);
         }
       }
-    }
-
-    // Modellwechsel-Funktion
-    function toggleModel() {
-      selectedModel = (selectedModel === 'robot') ? 'flower' : 'robot';
     }
 
     // AR starten
@@ -136,11 +109,6 @@
         startButton.remove();
         activateXR();
       };
-
-      const toggleButton = document.createElement('button');
-      toggleButton.textContent = 'Wechseln zwischen Robot und Sonnenblume';
-      toggleButton.onclick = toggleModel;
-      document.body.appendChild(toggleButton);
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
