@@ -27,8 +27,9 @@
     let selectedModel = 'robot'; // Standardauswahl
     let models = {};
     let reticle;
-    let currentModel;
+    let currentModel = null;
     let scene;
+    let camera;
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -38,7 +39,7 @@
       renderer.autoClear = false;
 
       scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera();
+      camera = new THREE.PerspectiveCamera();
       camera.matrixAutoUpdate = false;
 
       // Licht hinzufügen
@@ -93,7 +94,7 @@
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
 
-            // Setze die Position des aktuellen Modells
+            // Das Modell an die Reticle-Position setzen
             if (currentModel) {
               currentModel.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             }
@@ -148,14 +149,14 @@
         scene.remove(currentModel);
       }
 
-      // Setze das ausgewählte Modell
+      // Bestimmen, welches Modell ausgewählt wird
       if (direction === 'next') {
         selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
       } else if (direction === 'previous') {
         selectedModel = selectedModel === 'robot' ? 'flower' : 'robot';
       }
 
-      // Stelle sicher, dass das aktuelle Modell auch tatsächlich in der Szene ist
+      // Das ausgewählte Modell hinzufügen
       currentModel = models[selectedModel].clone(); // Erstelle eine Kopie des Modells
       scene.add(currentModel);
     }
