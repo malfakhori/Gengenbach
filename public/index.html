@@ -18,6 +18,20 @@
       background-size: cover;
       background-position: center;
     }
+    button {
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px;
+      font-size: 18px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: rgba(255, 255, 255, 1);
+    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -26,6 +40,7 @@
   <script>
     let selectedModel = 'robot'; // Standardauswahl
     let models = {};
+    let currentModel = null; // Variable für das aktuell angezeigte Modell
     let reticle;
 
     async function activateXR() {
@@ -55,13 +70,9 @@
       // Modelle laden
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
         models.robot = gltf.scene;
-        models.robot.visible = false; // Start ohne sichtbar
-        scene.add(models.robot);
       });
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", (gltf) => {
         models.flower = gltf.scene;
-        models.flower.visible = false; // Start ohne sichtbar
-        scene.add(models.flower);
       });
 
       // AR-Session starten
@@ -95,22 +106,24 @@
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
 
-            // Interaktive Modellwahl: Schalte zwischen den Modellen basierend auf Reticle
-            const distanceToRobot = hitTestResults[0].distanceTo(models.robot.position);
-            const distanceToFlower = hitTestResults[0].distanceTo(models.flower.position);
-
-            if (distanceToRobot < distanceToFlower) {
-              models.robot.visible = true;
-              models.flower.visible = false;
-            } else {
-              models.flower.visible = true;
-              models.robot.visible = false;
+            // Aktuelles Modell anzeigen
+            if (currentModel !== models[selectedModel]) {
+              if (currentModel) {
+                scene.remove(currentModel); // Entferne das alte Modell
+              }
+              currentModel = models[selectedModel];
+              scene.add(currentModel); // Füge das neue Modell hinzu
             }
           }
 
           renderer.render(scene, camera);
         }
       }
+    }
+
+    // Modellwechsel-Funktion
+    function toggleModel() {
+      selectedModel = (selectedModel === 'robot') ? 'flower' : 'robot';
     }
 
     // AR starten
@@ -123,6 +136,11 @@
         startButton.remove();
         activateXR();
       };
+
+      const toggleButton = document.createElement('button');
+      toggleButton.textContent = 'Wechseln zwischen Robot und Sonnenblume';
+      toggleButton.onclick = toggleModel;
+      document.body.appendChild(toggleButton);
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
