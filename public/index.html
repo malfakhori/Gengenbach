@@ -68,6 +68,8 @@
     let selectedModel = 'robot'; // Start mit dem Roboter
     let models = {};
     let reticle;
+    let lastClickTime = 0; // Zeit des letzten Klicks
+    const doubleClickThreshold = 300; // Zeitspanne für Doppelklick in Millisekunden
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -113,18 +115,27 @@
       session.addEventListener("select", (event) => {
         if (!reticle) return;
 
-        // Modell wechseln (zwischen Robot und Sonnenblume)
-        selectedModel = selectedModel === 'robot' ? 'sunflower' : 'robot';
-        console.log(`${selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1)} ausgewählt`);
+        // Prüfen, ob es ein Doppelklick ist
+        const currentTime = Date.now();
+        const timeDiff = currentTime - lastClickTime;
 
-        // Kein Button getroffen -> Modell platzieren
-        if (models[selectedModel]) {
-          const clone = models[selectedModel].clone();
-          clone.position.copy(reticle.position);
-          clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
-          scene.add(clone);
-          console.log(`${selectedModel} platziert`);
+        if (timeDiff < doubleClickThreshold) {
+          // Doppelklick erkannt, Modell wechseln
+          selectedModel = selectedModel === 'robot' ? 'sunflower' : 'robot';
+          console.log(`${selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1)} ausgewählt`);
+        } else {
+          // Einzelner Klick – Modell platzieren
+          if (models[selectedModel]) {
+            const clone = models[selectedModel].clone();
+            clone.position.copy(reticle.position);
+            clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
+            scene.add(clone);
+            console.log(`${selectedModel} platziert`);
+          }
         }
+
+        // Zeit des letzten Klicks aktualisieren
+        lastClickTime = currentTime;
       });
 
       // AR-Rendering
