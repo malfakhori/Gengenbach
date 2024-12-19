@@ -59,11 +59,46 @@
       background-color: #387a39;
     }
 
+    #menu {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      gap: 15px;
+      overflow-x: auto;
+      z-index: 1000; /* Sicherstellen, dass über canvas liegt */
+    }
+    #menu img {
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: 2px solid transparent;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    #menu img:hover {
+      transform: scale(1.2);
+      border-color: #fff;
+    }
+    #menu img.selected {
+      border-color: #4CAF50;
+    }
+
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
+  <div id="menu">
+    <img src="robot-preview.png" alt="Robot" data-model="robot" onclick="setModel('robot')">
+    <img src="sunflower-preview.png" alt="Sunflower" data-model="sunflower" onclick="setModel('sunflower')">
+  </div>
+  
   <script>
     let selectedModel = 'robot'; // Start mit dem Roboter
     let models = {};
@@ -72,6 +107,9 @@
     const doubleClickThreshold = 300; // Zeitspanne für Doppelklick in Millisekunden
 
     async function activateXR() {
+      // Menü sichtbar machen
+      document.getElementById('menu').style.display = 'flex';
+  
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
       const gl = canvas.getContext('webgl', { xrCompatible: true });
@@ -160,11 +198,20 @@
             reticle.visible = true;
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
+          } else {
+            reticle.visible = false;
           }
 
           renderer.render(scene, camera);
         }
       }
+    }
+
+    function setModel(modelName) {
+      selectedModel = modelName;
+      document.querySelectorAll('#menu img').forEach(img => img.classList.remove('selected'));
+      document.querySelector(`#menu img[data-model="${modelName}"]`).classList.add('selected');
+      console.log(`Modell gewechselt zu: ${modelName}`);
     }
 
     // AR starten
