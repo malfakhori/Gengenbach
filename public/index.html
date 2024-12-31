@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="de">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,6 +40,35 @@
       margin-bottom: 30px;
     }
 
+    #menu-bar {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      color: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      z-index: 10;
+    }
+
+    .menu-item {
+      cursor: pointer;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .menu-item:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .menu-item.active {
+      background: rgba(255, 255, 255, 0.5);
+      font-weight: bold;
+    }
+
     button {
       background-color: #4CAF50;
       color: white;
@@ -58,47 +88,23 @@
     button:active {
       background-color: #387a39;
     }
-
-    #menu {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      justify-content: center;
-      align-items: center;
-      padding: 10px;
-      gap: 15px;
-      overflow-x: auto;
-      z-index: 1000; /* Sicherstellen, dass über canvas liegt */
-    }
-    #menu img {
-      width: 50px;
-      height: 50px;
-      cursor: pointer;
-      border-radius: 5px;
-      border: 2px solid transparent;
-      transition: transform 0.2s, border-color 0.2s;
-    }
-    #menu img:hover {
-      transform: scale(1.2);
-      border-color: #fff;
-    }
-    #menu img.selected {
-      border-color: #4CAF50;
-    }
-
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
+
 <body>
-  <div id="menu">
-    <img src="robot-preview.png" alt="Robot" data-model="robot" onclick="setModel('robot')">
-    <img src="sunflower-preview.png" alt="Sunflower" data-model="sunflower" onclick="setModel('sunflower')">
+  <div id="menu-bar">
+    <div class="menu-item active" id="robot-item" onclick="selectModel('robot')">
+      <img src="placeholder.png" alt="Roboter" style="width: 50px; height: 50px;">
+      <span>Roboter</span>
+    </div>
+    <div class="menu-item" id="sunflower-item" onclick="selectModel('sunflower')">
+      <img src="placeholder.png" alt="Sonnenblume" style="width: 50px; height: 50px;">
+      <span>Sonnenblume</span>
+    </div>
+    <div class="menu-item" id="exit-item" onclick="exitAR()">Exit</div>
   </div>
-  
   <script>
     let selectedModel = 'robot'; // Start mit dem Roboter
     let models = {};
@@ -106,10 +112,18 @@
     let lastClickTime = 0; // Zeit des letzten Klicks
     const doubleClickThreshold = 300; // Zeitspanne für Doppelklick in Millisekunden
 
+    function updateMenu() {
+      document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+      document.getElementById(`${selectedModel}-item`).classList.add('active');
+    }
+
+    function selectModel(modelId) {
+      selectedModel = modelId;
+      console.log(`Modell ausgewählt: ${selectedModel}`);
+      updateMenu();
+    }
+
     async function activateXR() {
-      // Menü sichtbar machen
-      document.getElementById('menu').style.display = 'flex';
-  
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
       const gl = canvas.getContext('webgl', { xrCompatible: true });
@@ -142,7 +156,11 @@
       });
 
       // AR-Session starten
-      const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
+      const session = await navigator.xr.requestSession('immersive-ar', {
+        optionalFeatures: ["dom-overlay"],
+        domOverlay: { root: document.body },
+        requiredFeatures: ['hit-test']
+      });
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
       const referenceSpace = await session.requestReferenceSpace('local');
       const viewerSpace = await session.requestReferenceSpace('viewer');
@@ -161,6 +179,7 @@
           // Doppelklick erkannt, Modell wechseln
           selectedModel = selectedModel === 'robot' ? 'sunflower' : 'robot';
           console.log(`${selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1)} ausgewählt`);
+          updateMenu();
         } else {
           // Einzelner Klick – Modell platzieren
           if (models[selectedModel]) {
@@ -198,20 +217,11 @@
             reticle.visible = true;
             reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
             reticle.updateMatrixWorld(true);
-          } else {
-            reticle.visible = false;
           }
 
           renderer.render(scene, camera);
         }
       }
-    }
-
-    function setModel(modelName) {
-      selectedModel = modelName;
-      document.querySelectorAll('#menu img').forEach(img => img.classList.remove('selected'));
-      document.querySelector(`#menu img[data-model="${modelName}"]`).classList.add('selected');
-      console.log(`Modell gewechselt zu: ${modelName}`);
     }
 
     // AR starten
@@ -227,6 +237,17 @@
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
+
+    function exitAR() {
+      if (navigator.xr && navigator.xr.isSessionSupported('immersive-ar')) {
+        navigator.xr.getSessions().then((sessions) => {
+          sessions.forEach((session) => session.end());
+        });
+      }
+      alert("AR-Session beendet.");
+    }
+
   </script>
 </body>
+
 </html>
