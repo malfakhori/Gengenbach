@@ -46,7 +46,7 @@
       width: 100%;
       background: rgba(0, 0, 0, 0.4);
       color: white;
-      display: flex;
+      display: none;
       justify-content: space-around;
       padding: 10px;
       z-index: 10;
@@ -88,6 +88,55 @@
     button:active {
       background-color: #387a39;
     }
+
+    #confirmation-dialog {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .dialog-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .dialog-box {
+      position: relative;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .dialog-box button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .dialog-box button:first-child {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .dialog-box button:last-child {
+      background-color: #3498db;
+      color: white;
+    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -96,14 +145,22 @@
 <body>
   <div id="menu-bar">
     <div class="menu-item active" id="robot-item" onclick="selectModel('robot')">
-      <img src="placeholder.png" alt="Roboter" style="width: 50px; height: 50px;">
-      <span>Roboter</span>
+      <img src="previewImages/robot.png" alt="Roboter" style="width: 50px; height: 50px;">
     </div>
     <div class="menu-item" id="sunflower-item" onclick="selectModel('sunflower')">
-      <img src="placeholder.png" alt="Sonnenblume" style="width: 50px; height: 50px;">
-      <span>Sonnenblume</span>
+      <img src="previewImages/sunflower.png" alt="Sonnenblume" style="width: 50px; height: 50px;">
     </div>
-    <div class="menu-item" id="exit-item" onclick="exitAR()">Exit</div>
+    <div class="menu-item" id="exit-item" onclick="exitAR()">
+      <img src="previewImages/exit.png" alt="Exit" style="width: 50px; height: 50px;">
+    </div>
+  </div>
+  <div id="confirmation-dialog" style="display: none;">
+    <div class="dialog-overlay"></div>
+    <div class="dialog-box">
+      <p>Möchten Sie die AR-Session wirklich verlassen?</p>
+      <button onclick="confirmExit(true)">Ja</button>
+      <button onclick="confirmExit(false)">Nein</button>
+    </div>
   </div>
   <script>
     let selectedModel = 'robot'; // Start mit dem Roboter
@@ -166,6 +223,9 @@
       const viewerSpace = await session.requestReferenceSpace('viewer');
       const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
+      // Menü sichtbar machen, wenn die AR-Session gestartet wird
+      document.getElementById('menu-bar').style.display = 'flex';
+
       session.requestAnimationFrame(onXRFrame);
 
       session.addEventListener("select", (event) => {
@@ -193,6 +253,12 @@
 
         // Zeit des letzten Klicks aktualisieren
         lastClickTime = currentTime;
+      });
+
+      session.addEventListener("end", () => {
+        console.log("AR-Session beendet");
+        currentSession = null;
+        document.getElementById('menu-bar').style.display = 'none'; // Menü ausblenden
       });
 
       // AR-Rendering
@@ -224,6 +290,19 @@
       }
     }
 
+    function exitAR() {
+      document.getElementById('confirmation-dialog').style.display = 'flex'; // Dialog anzeigen
+    }
+
+    function confirmExit(shouldExit) {
+      if (shouldExit) {
+        if (currentSession) {
+          currentSession.end(); // Beende die AR-Session
+        }
+      }
+      document.getElementById('confirmation-dialog').style.display = 'none'; // Dialog ausblenden
+    }
+
     // AR starten
     if (navigator.xr) {
       const startButton = document.createElement('button');
@@ -236,15 +315,6 @@
       };
     } else {
       alert('WebXR wird nicht unterstützt.');
-    }
-
-    function exitAR() {
-      if (navigator.xr && navigator.xr.isSessionSupported('immersive-ar')) {
-        navigator.xr.getSessions().then((sessions) => {
-          sessions.forEach((session) => session.end());
-        });
-      }
-      alert("AR-Session beendet.");
     }
 
   </script>
