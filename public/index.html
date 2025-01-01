@@ -168,6 +168,7 @@
     let reticle;
     let lastClickTime = 0; // Zeit des letzten Klicks
     const doubleClickThreshold = 300; // Zeitspanne für Doppelklick in Millisekunden
+    let currentSession = null; // Globale Variable für die aktuelle AR-Session
 
     function updateMenu() {
       document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
@@ -213,11 +214,13 @@
       });
 
       // AR-Session starten
-      const session = await navigator.xr.requestSession('immersive-ar', {
+      currentSession = await navigator.xr.requestSession('immersive-ar', {
         optionalFeatures: ["dom-overlay"],
         domOverlay: { root: document.body },
         requiredFeatures: ['hit-test']
       });
+
+      const session = currentSession; // Referenz speichern
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
       const referenceSpace = await session.requestReferenceSpace('local');
       const viewerSpace = await session.requestReferenceSpace('viewer');
