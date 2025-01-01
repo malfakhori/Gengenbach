@@ -150,11 +150,8 @@
     <div class="menu-item" id="sunflower-item" onclick="selectModel('sunflower')">
       <img src="previewImages/sunflower.png" alt="Sonnenblume" style="width: 50px; height: 50px;">
     </div>
-    <div class="menu-item" id="duck-item" onclick="selectModel('duck')">
-      <img src="previewImages/tree.png" alt="duck" style="width: 50px; height: 50px;">
-    </div>
-    <div class="menu-item" id="lantern-item" onclick="selectModel('lantern')">
-      <img src="previewImages/tree.png" alt="lantern" style="width: 50px; height: 50px;">
+    <div class="menu-item" id="lantern-item" onclick="selectModel('tree')">
+      <img src="previewImages/tree.png" alt="Baum" style="width: 50px; height: 50px;">
     </div>
     <div class="menu-item" id="exit-item" onclick="exitAR()">
       <img src="previewImages/exit.png" alt="Exit" style="width: 50px; height: 50px;">
@@ -218,9 +215,7 @@
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", (gltf) => {
         models.sunflower = gltf.scene;
       });
-      loader.load("https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/refs/heads/main/2.0/Duck/glTF/Duck.gltf", (gltf) => {
-        models.tree = gltf.scene;
-      });
+     
       loader.load("https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf", (gltf) => {
         models.tree = gltf.scene;
       });
