@@ -173,6 +173,7 @@
     let reticle;
     let lastClickTime = 0; // Zeit des letzten Klicks
     const doubleClickThreshold = 300; // Zeitspanne für Doppelklick in Millisekunden
+    let placedModel = null;
 
     function updateMenu() {
       document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
@@ -259,6 +260,7 @@
             const clone = models[selectedModel].clone();
             clone.position.copy(reticle.position);
             scene.add(clone);
+            placedModel = clone;
             console.log(`${selectedModel} platziert`);
           }
         }
@@ -300,6 +302,19 @@
           renderer.render(scene, camera);
         }
       }
+
+      // Skalierung ändern
+      window.addEventListener("gesturestart", (event) => {
+        if (placedModel) {
+          placedModel.scale.set(1, 1, 1);  // Reset scaling on pinch start
+        }
+      });
+
+      window.addEventListener("gesturechange", (event) => {
+        if (placedModel) {
+          placedModel.scale.set(event.scale, event.scale, event.scale); // Update scaling
+        }
+      });
     }
 
     function exitAR() {
