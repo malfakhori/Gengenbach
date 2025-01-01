@@ -150,6 +150,9 @@
     <div class="menu-item" id="sunflower-item" onclick="selectModel('sunflower')">
       <img src="previewImages/sunflower.png" alt="Sonnenblume" style="width: 50px; height: 50px;">
     </div>
+    <div class="menu-item" id="tree-item" onclick="selectModel('tree')">
+      <img src="previewImages/tree.png" alt="Baum" style="width: 50px; height: 50px;">
+    </div>
     <div class="menu-item" id="exit-item" onclick="exitAR()">
       <img src="previewImages/exit.png" alt="Exit" style="width: 50px; height: 50px;">
     </div>
@@ -168,7 +171,6 @@
     let reticle;
     let lastClickTime = 0; // Zeit des letzten Klicks
     const doubleClickThreshold = 300; // Zeitspanne für Doppelklick in Millisekunden
-    let currentSession = null; // Globale Variable für die aktuelle AR-Session
 
     function updateMenu() {
       document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
@@ -212,15 +214,16 @@
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", (gltf) => {
         models.sunflower = gltf.scene;
       });
+      loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/tree/tree.gltf", (gltf) => {
+        models.tree = gltf.scene;
+      });
 
       // AR-Session starten
-      currentSession = await navigator.xr.requestSession('immersive-ar', {
+      const session = await navigator.xr.requestSession('immersive-ar', {
         optionalFeatures: ["dom-overlay"],
         domOverlay: { root: document.body },
         requiredFeatures: ['hit-test']
       });
-
-      const session = currentSession; // Referenz speichern
       session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
       const referenceSpace = await session.requestReferenceSpace('local');
       const viewerSpace = await session.requestReferenceSpace('viewer');
@@ -240,7 +243,7 @@
 
         if (timeDiff < doubleClickThreshold) {
           // Doppelklick erkannt, Modell wechseln
-          selectedModel = selectedModel === 'robot' ? 'sunflower' : 'robot';
+          selectedModel = selectedModel === 'robot' ? 'sunflower' : selectedModel === 'sunflower' ? 'tree' : 'robot';
           console.log(`${selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1)} ausgewählt`);
           updateMenu();
         } else {
