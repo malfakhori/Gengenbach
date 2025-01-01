@@ -174,6 +174,7 @@
     let lastClickTime = 0; // Zeit des letzten Klicks
     const doubleClickThreshold = 300; // Zeitspanne für Doppelklick in Millisekunden
     let placedModel = null;
+    let currentSession = null; // AR-Sitzung
 
     function updateMenu() {
       document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
@@ -219,30 +220,28 @@
         models.sunflower = gltf.scene;
       });
 
-      // Lantern Model laden und skalieren
       loader.load("https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf", (gltf) => {
         models.tree = gltf.scene;
-        // Skaliere das Modell kleiner
         models.tree.scale.set(0.1, 0.1, 0.1); // Skaliert das Modell auf 50% der Originalgröße
       });
 
       // AR-Session starten
-      const session = await navigator.xr.requestSession('immersive-ar', {
+      currentSession = await navigator.xr.requestSession('immersive-ar', {
         optionalFeatures: ["dom-overlay"],
         domOverlay: { root: document.body },
         requiredFeatures: ['hit-test']
       });
-      session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
-      const referenceSpace = await session.requestReferenceSpace('local');
-      const viewerSpace = await session.requestReferenceSpace('viewer');
-      const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
+      currentSession.updateRenderState({ baseLayer: new XRWebGLLayer(currentSession, gl) });
+      const referenceSpace = await currentSession.requestReferenceSpace('local');
+      const viewerSpace = await currentSession.requestReferenceSpace('viewer');
+      const hitTestSource = await currentSession.requestHitTestSource({ space: viewerSpace });
 
-      // Menü sichtbar machen, wenn die AR-Session gestartet wird
+      // Menü sichtbar machen
       document.getElementById('menu-bar').style.display = 'flex';
 
-      session.requestAnimationFrame(onXRFrame);
+      currentSession.requestAnimationFrame(onXRFrame);
 
-      session.addEventListener("select", (event) => {
+      currentSession.addEventListener("select", (event) => {
         if (!reticle) return;
 
         // Prüfen, ob es ein Doppelklick ist
@@ -269,7 +268,7 @@
         lastClickTime = currentTime;
       });
 
-      session.addEventListener("end", () => {
+      currentSession.addEventListener("end", () => {
         console.log("AR-Session beendet");
         currentSession = null;
         document.getElementById('menu-bar').style.display = 'none'; // Menü ausblenden
@@ -277,13 +276,13 @@
 
       // AR-Rendering
       function onXRFrame(time, frame) {
-        session.requestAnimationFrame(onXRFrame);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
+        currentSession.requestAnimationFrame(onXRFrame);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, currentSession.renderState.baseLayer.framebuffer);
 
         const pose = frame.getViewerPose(referenceSpace);
         if (pose) {
           const view = pose.views[0];
-          const viewport = session.renderState.baseLayer.getViewport(view);
+          const viewport = currentSession.renderState.baseLayer.getViewport(view);
           renderer.setSize(viewport.width, viewport.height);
 
           camera.matrix.fromArray(view.transform.matrix);
@@ -302,19 +301,6 @@
           renderer.render(scene, camera);
         }
       }
-
-      // Skalierung ändern
-      window.addEventListener("gesturestart", (event) => {
-        if (placedModel) {
-          placedModel.scale.set(1, 1, 1);  // Reset scaling on pinch start
-        }
-      });
-
-      window.addEventListener("gesturechange", (event) => {
-        if (placedModel) {
-          placedModel.scale.set(event.scale, event.scale, event.scale); // Update scaling
-        }
-      });
     }
 
     function exitAR() {
