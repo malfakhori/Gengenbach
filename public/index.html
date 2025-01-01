@@ -156,8 +156,8 @@
     <div class="menu-item" id="exit-item" onclick="exitAR()">
       <img src="previewImages/exit.png" alt="Exit" style="width: 50px; height: 50px;">
     </div>
-    
   </div>
+
   <div id="confirmation-dialog" style="display: none;">
     <div class="dialog-overlay"></div>
     <div class="dialog-box">
@@ -166,6 +166,7 @@
       <button onclick="confirmExit(false)">Nein</button>
     </div>
   </div>
+
   <script>
     let selectedModel = 'robot'; // Start mit dem Roboter
     let models = {};
@@ -212,12 +213,16 @@
       loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
         models.robot = gltf.scene;
       });
+
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf", (gltf) => {
         models.sunflower = gltf.scene;
       });
-     
+
+      // Lantern Model laden und skalieren
       loader.load("https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf", (gltf) => {
         models.tree = gltf.scene;
+        // Skaliere das Modell kleiner
+        models.tree.scale.set(0.3, 0.3, 0.3); // Skaliert das Modell auf 50% der Originalgröße
       });
 
       // AR-Session starten
@@ -253,7 +258,6 @@
           if (models[selectedModel]) {
             const clone = models[selectedModel].clone();
             clone.position.copy(reticle.position);
-            clone.scale.set(0.5, 0.5, 0.5); // Größe anpassen
             scene.add(clone);
             console.log(`${selectedModel} platziert`);
           }
@@ -324,7 +328,6 @@
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
-
   </script>
 </body>
 
