@@ -218,6 +218,7 @@
 //https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf
       loader.load("https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf", (gltf) => {
         models.sunflower = gltf.scene;
+        models.sunflower.scale.set(0.01, 0.01, 0.01);
       });
 
       loader.load("https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf", (gltf) => {
