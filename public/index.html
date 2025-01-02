@@ -204,6 +204,7 @@
       scene.add(light);
 
       // Reticle (Cursor)
+      
       const loader = new THREE.GLTFLoader();
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", (gltf) => {
         reticle = gltf.scene;
@@ -211,8 +212,9 @@
         scene.add(reticle);
       });
 
+//https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb
       // Modelle laden
-      loader.load("https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
+      loader.load("https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf", (gltf) => {
         models.robot = gltf.scene;
       });
 //https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf
