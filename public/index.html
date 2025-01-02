@@ -189,6 +189,22 @@
       console.log(`Modell ausgewählt: ${selectedModel}`);
       updateMenu();
     }
+    async function loadAndUnpackZip(zipUrl) {
+  const response = await fetch(zipUrl);
+  const buffer = await response.arrayBuffer();
+  const zip = await JSZip.loadAsync(buffer);
+
+  const files = {};
+  for (const filename of Object.keys(zip.files)) {
+    if (!zip.files[filename].dir) {
+      const content = await zip.files[filename].async('blob');
+      files[filename] = URL.createObjectURL(content);
+    }
+  }
+
+  return files;
+}
+
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -211,7 +227,7 @@
   status.textContent = "Lade Modell aus ZIP-Datei...";
 
   try {
-    const zipUrl = './assets/models/model.zip'; // Relativer Pfad zur ZIP-Datei
+    const zipUrl = './assets/models/city_trash_can.zip'; // Relativer Pfad zur ZIP-Datei
     const files = await loadAndUnpackZip(zipUrl);
     const gltfFile = Object.keys(files).find((filename) => filename.endsWith('.gltf'));
 
