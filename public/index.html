@@ -216,6 +216,7 @@
       // Modelle laden
       loader.load("https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf", (gltf) => {
         models.robot = gltf.scene;
+        models.robot.lookAt(camera.position);
       });
 //https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf
       loader.load("https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf", (gltf) => {
