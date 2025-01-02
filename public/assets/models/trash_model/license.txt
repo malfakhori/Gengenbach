@@ -1,0 +1,11 @@
+Model Information:
+* title:	City Trash Can
+* source:	https://sketchfab.com/3d-models/city-trash-can-f336a10e46084212ab33de0ff811bd78
+* author:	_Tempus_ (https://sketchfab.com/_Tempus_)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "City Trash Can" (https://sketchfab.com/3d-models/city-trash-can-f336a10e46084212ab33de0ff811bd78) by _Tempus_ (https://sketchfab.com/_Tempus_) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
