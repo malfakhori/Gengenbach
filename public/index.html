@@ -216,12 +216,15 @@
       // Modelle laden
       loader.load("https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf", (gltf) => {
         models.robot = gltf.scene;
+        models.robot.position.set(0, 0, -2);
         models.robot.lookAt(camera.position);
+        scene.add(models.robot);
       });
 //https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf
       loader.load("https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf", (gltf) => {
         models.sunflower = gltf.scene;
         models.sunflower.scale.set(0.04, 0.04, 0.04);
+        
       });
 
       loader.load("https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf", (gltf) => {
