@@ -143,17 +143,15 @@
 </head>
 
 <body>
-  <div id="status"></div>
-
   <div id="menu-bar">
     <div class="menu-item active" id="robot-item" onclick="selectModel('robot')">
       <img src="previewImages/robot.png" alt="Roboter" style="width: 50px; height: 50px;">
     </div>
+    <div class="menu-item" id="sunflower-item" onclick="selectModel('sunflower')">
+      <img src="previewImages/sunflower.png" alt="Sonnenblume" style="width: 50px; height: 50px;">
+    </div>
     <div class="menu-item" id="lantern-item" onclick="selectModel('tree')">
       <img src="previewImages/tree.png" alt="Baum" style="width: 50px; height: 50px;">
-    </div>
-    <div class="menu-item" id="zipModel-item" onclick="selectModel('zipModel')">
-      <img src="previewImages/zipModel.png" alt="zipModel" style="width: 50px; height: 50px;">
     </div>
     <div class="menu-item" id="exit-item" onclick="exitAR()">
       <img src="previewImages/exit.png" alt="Exit" style="width: 50px; height: 50px;">
@@ -188,22 +186,6 @@
       console.log(`Modell ausgewählt: ${selectedModel}`);
       updateMenu();
     }
-    async function loadAndUnpackZip(zipUrl) {
-  const response = await fetch(zipUrl);
-  const buffer = await response.arrayBuffer();
-  const zip = await JSZip.loadAsync(buffer);
-
-  const files = {};
-  for (const filename of Object.keys(zip.files)) {
-    if (!zip.files[filename].dir) {
-      const content = await zip.files[filename].async('blob');
-      files[filename] = URL.createObjectURL(content);
-    }
-  }
-
-  return files;
-}
-
 
     async function activateXR() {
       const canvas = document.createElement('canvas');
@@ -220,30 +202,6 @@
       const light = new THREE.DirectionalLight(0xffffff, 1);
       light.position.set(10, 10, 10);
       scene.add(light);
-
-        // Dynamisches Laden eines Modells aus ZIP-Datei
-  const status = document.getElementById('status');
-  status.textContent = "Lade Modell aus ZIP-Datei...";
-
-  try {
-    const zipUrl = './assets/models/city_trash_can.zip'; // Relativer Pfad zur ZIP-Datei
-    const files = await loadAndUnpackZip(zipUrl);
-    const gltfFile = Object.keys(files).find((filename) => filename.endsWith('.gltf'));
-
-    if (!gltfFile) {
-      throw new Error('Keine glTF-Datei in der ZIP gefunden.');
-    }
-
-    loader.load(files[gltfFile], (gltf) => {
-      const zipModel = gltf.scene;
-      zipModel.scale.set(0.5, 0.5, 0.5); // Skaliere das Modell
-      scene.add(zipModel);
-      status.textContent = "Modell erfolgreich geladen!";
-    });
-  } catch (error) {
-    console.error('Fehler beim Laden der ZIP-Datei:', error);
-    status.textContent = "Fehler beim Laden der ZIP-Datei.";
-  }
 
       // Reticle (Cursor)
       const loader = new THREE.GLTFLoader();
