@@ -44,29 +44,39 @@
       position: absolute;
       bottom: 0;
       width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      color: white;
-      display: none;
-      justify-content: space-around;
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.5);
       padding: 10px;
       z-index: 10;
     }
 
-    .menu-item {
+    .menu-section {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       cursor: pointer;
-      padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 5px;
-      transition: background-color 0.3s;
     }
 
-    .menu-item:hover {
-      background: rgba(255, 255, 255, 0.3);
+    .menu-section img {
+      width: 40px;
+      height: 40px;
     }
 
-    .menu-item.active {
-      background: rgba(255, 255, 255, 0.5);
-      font-weight: bold;
+    #dynamic-menu {
+      position: absolute;
+      bottom: 70px;
+      width: 100%;
+      height: 200px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px;
+      z-index: 20;
+      overflow-y: auto;
     }
 
     button {
@@ -143,18 +153,22 @@
 </head>
 
 <body>
+  <div id="dynamic-menu" style="display: none;"></div>
+
   <div id="menu-bar">
-    <div class="menu-item active" id="robot-item" onclick="selectModel('robot')">
-      <img src="previewImages/robot.png" alt="Roboter" style="width: 50px; height: 50px;">
+    <!-- Linkes Symbol: Stift (Bearbeiten) -->
+    <div class="menu-section" id="edit-section" onclick="openEditMenu()">
+      <img src="previewImages/edit-icon.png" alt="Bearbeiten" />
     </div>
-    <div class="menu-item" id="sunflower-item" onclick="selectModel('sunflower')">
-      <img src="previewImages/sunflower.png" alt="Sonnenblume" style="width: 50px; height: 50px;">
+
+    <!-- Mittleres Symbol: Plus (Modell hinzufügen) -->
+    <div class="menu-section" id="add-section" onclick="openAddMenu()">
+      <img src="previewImages/add-icon.png" alt="Hinzufügen" />
     </div>
-    <div class="menu-item" id="lantern-item" onclick="selectModel('tree')">
-      <img src="previewImages/tree.png" alt="Baum" style="width: 50px; height: 50px;">
-    </div>
-    <div class="menu-item" id="exit-item" onclick="exitAR()">
-      <img src="previewImages/exit.png" alt="Exit" style="width: 50px; height: 50px;">
+
+    <!-- Rechtes Symbol: Optionen -->
+    <div class="menu-section" id="options-section" onclick="openOptionsMenu()">
+      <img src="previewImages/options-icon.png" alt="Optionen" />
     </div>
   </div>
 
@@ -168,23 +182,187 @@
   </div>
 
   <script>
-    let selectedModel = 'robot'; // Start mit dem Roboter
-    let models = {};
-    let reticle;
-    let lastClickTime = 0; // Zeit des letzten Klicks
-    const doubleClickThreshold = 300; // Zeitspanne für Doppelklick in Millisekunden
-    let placedModel = null;
-    let currentSession = null; // AR-Sitzung
+    let selectedModel = 'robot';
+    let selectedPlacedModel = null;
+    let models = {
+      robot: {
+        name: "Roboter",
+        image: "previewImages/robot.png",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf",
+        scale: { x: 0.1, y: 0.1, z: 0.1 }
+      },
+      sunflower: {
+        name: "Sonnenblume",
+        image: "previewImages/sunflower.png",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf",
+        scale: { x: 0.04, y: 0.04, z: 0.04 }
+      },
+      tree: {
+        name: "Baum",
+        image: "previewImages/tree.png",
+        file: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf",
+        scale: { x: 0.1, y: 0.1, z: 0.1 }
+      }
+    };
 
-    function updateMenu() {
-      document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-      document.getElementById(`${selectedModel}-item`).classList.add('active');
+    let currentSession = null;
+    let reticle = null;
+    let scene, camera;
+
+    function loadModel(filePath) {
+      const modelConfig = Object.values(models).find(model => model.file === filePath);
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        filePath,
+        (gltf) => {
+          const model = gltf.scene;
+          if (modelConfig && modelConfig.scale) {
+            model.scale.set(modelConfig.scale.x, modelConfig.scale.y, modelConfig.scale.z);
+          }
+          model.position.copy(reticle.position);
+          scene.add(model);
+          selectedPlacedModel = model;
+          highlightSelectedModel();
+          console.log(`Modell ${modelConfig.name} erfolgreich platziert.`);
+        },
+        undefined,
+        (error) => {
+          console.error("Fehler beim Laden des Modells:", error);
+        }
+      );
+    }
+
+    function removeHighlightFromAllModels() {
+      scene.traverse((child) => {
+        if (child.isMesh && child.material && child.material.emissive) {
+          child.material.emissive.setHex(0x000000); // Markierung entfernen
+        }
+      });
+    }
+
+    function highlightSelectedModel() {
+      if (selectedPlacedModel) {
+        removeHighlightFromAllModels();
+        selectedPlacedModel.traverse((child) => {
+          if (child.isMesh) {
+            child.material.emissive.setHex(0xff0000); // Rote Hervorhebung
+          }
+        });
+      }
     }
 
     function selectModel(modelId) {
-      selectedModel = modelId;
-      console.log(`Modell ausgewählt: ${selectedModel}`);
-      updateMenu();
+      const model = models[modelId];
+      if (model && model.file) {
+        console.log(`Modell ausgewählt: ${model.name}`);
+        loadModel(model.file);
+        closeDynamicMenu();
+      }
+    }
+
+    function selectModelFromScene(event) {
+      const mouse = new THREE.Vector2(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1
+      );
+
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, camera);
+
+      const intersects = raycaster.intersectObjects(scene.children, true);
+      if (intersects.length > 0) {
+        selectedPlacedModel = intersects[0].object;
+        highlightSelectedModel();
+        console.log("Modell ausgewählt:", selectedPlacedModel);
+      }
+    }
+
+    function openAddMenu() {
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.style.display = "block";
+      dynamicMenu.innerHTML = `
+        <h3>Modell hinzufügen</h3>
+        <div class="model-list">
+          ${Object.entries(models)
+          .map(
+            ([key, model]) => `
+              <div class="model-item" onclick="selectModel('${key}')">
+                <img src="${model.image}" alt="${model.name}" />
+                <span>${model.name}</span>
+              </div>
+            `
+          )
+          .join("")}
+        </div>
+        <button onclick="closeDynamicMenu()">Schließen</button>
+      `;
+    }
+
+    function openEditMenu() {
+      if (!selectedPlacedModel) {
+        alert("Kein Modell ausgewählt. Bitte tippen Sie auf ein Modell, um es zu bearbeiten.");
+        return;
+      }
+
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.style.display = "block";
+      dynamicMenu.innerHTML = `
+        <h3>Modell bearbeiten</h3>
+        <button onclick="openRotationMenu()">Rotation</button>
+        <button onclick="openScaleMenu()">Skalierung</button>
+        <button onclick="deleteModel()">Löschen</button>
+        <button onclick="closeDynamicMenu()">Schließen</button>
+      `;
+    }
+
+    function openRotationMenu() {
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.innerHTML = `
+        <h3>Rotation anpassen</h3>
+        <label>X-Achse: <input type="range" min="0" max="360" step="10" onchange="updateRotation('x', this.value)"></label>
+        <label>Y-Achse: <input type="range" min="0" max="360" step="10" onchange="updateRotation('y', this.value)"></label>
+        <label>Z-Achse: <input type="range" min="0" max="360" step="10" onchange="updateRotation('z', this.value)"></label>
+        <button onclick="openEditMenu()">Zurück</button>
+      `;
+    }
+
+    function openScaleMenu() {
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.innerHTML = `
+        <h3>Skalierung anpassen</h3>
+        <label>Größe: <input type="range" min="0.1" max="3" step="0.1" onchange="updateScale(this.value)"></label>
+        <button onclick="openEditMenu()">Zurück</button>
+      `;
+    }
+
+    function updateRotation(axis, value) {
+      if (selectedPlacedModel) {
+        const radians = (value / 180) * Math.PI;
+        selectedPlacedModel.rotation[axis] = radians;
+        console.log(`Modell um ${value} Grad auf der ${axis.toUpperCase()}-Achse gedreht.`);
+      }
+    }
+
+    function updateScale(value) {
+      if (selectedPlacedModel) {
+        const scale = parseFloat(value);
+        selectedPlacedModel.scale.set(scale, scale, scale);
+        console.log(`Modell auf Größe ${value} skaliert.`);
+      }
+    }
+
+    function deleteModel() {
+      if (selectedPlacedModel) {
+        scene.remove(selectedPlacedModel);
+        selectedPlacedModel = null;
+        console.log("Modell gelöscht.");
+        closeDynamicMenu();
+      }
+    }
+
+    function closeDynamicMenu() {
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.style.display = "none";
     }
 
     async function activateXR() {
@@ -194,17 +372,14 @@
       const renderer = new THREE.WebGLRenderer({ alpha: true, canvas, context: gl });
       renderer.autoClear = false;
 
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera();
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera();
       camera.matrixAutoUpdate = false;
 
-      // Licht hinzufügen
       const light = new THREE.DirectionalLight(0xffffff, 1);
       light.position.set(10, 10, 10);
       scene.add(light);
 
-      // Reticle (Cursor)
-      
       const loader = new THREE.GLTFLoader();
       loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", (gltf) => {
         reticle = gltf.scene;
@@ -212,74 +387,22 @@
         scene.add(reticle);
       });
 
-//https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb
-      // Modelle laden
-      loader.load("https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf", (gltf) => {
-        models.robot = gltf.scene;
-      });
-//https://immersive-web.github.io/webxr-samples/media/gltf/sunflower/sunflower.gltf
-      loader.load("https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf", (gltf) => {
-        models.sunflower = gltf.scene;
-        models.sunflower.scale.set(0.04, 0.04, 0.04);
-        
-      });
-
-      loader.load("https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf", (gltf) => {
-        models.tree = gltf.scene;
-        models.tree.scale.set(0.1, 0.1, 0.1); // Skaliert das Modell auf 50% der Originalgröße
-      });
-
-      // AR-Session starten
       currentSession = await navigator.xr.requestSession('immersive-ar', {
         optionalFeatures: ["dom-overlay"],
         domOverlay: { root: document.body },
         requiredFeatures: ['hit-test']
       });
+
       currentSession.updateRenderState({ baseLayer: new XRWebGLLayer(currentSession, gl) });
       const referenceSpace = await currentSession.requestReferenceSpace('local');
       const viewerSpace = await currentSession.requestReferenceSpace('viewer');
       const hitTestSource = await currentSession.requestHitTestSource({ space: viewerSpace });
 
-      // Menü sichtbar machen
       document.getElementById('menu-bar').style.display = 'flex';
 
-      currentSession.requestAnimationFrame(onXRFrame);
+      canvas.addEventListener("pointerdown", selectModelFromScene);
 
-      currentSession.addEventListener("select", (event) => {
-        if (!reticle) return;
-
-        // Prüfen, ob es ein Doppelklick ist
-        const currentTime = Date.now();
-        const timeDiff = currentTime - lastClickTime;
-
-        if (timeDiff < doubleClickThreshold) {
-          // Doppelklick erkannt, Modell wechseln
-          selectedModel = selectedModel === 'robot' ? 'sunflower' : selectedModel === 'sunflower' ? 'tree' : 'robot';
-          console.log(`${selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1)} ausgewählt`);
-          updateMenu();
-        } else {
-          // Einzelner Klick – Modell platzieren
-          if (models[selectedModel]) {
-            const clone = models[selectedModel].clone();
-            clone.position.copy(reticle.position);
-            scene.add(clone);
-            placedModel = clone;
-            console.log(`${selectedModel} platziert`);
-          }
-        }
-
-        // Zeit des letzten Klicks aktualisieren
-        lastClickTime = currentTime;
-      });
-
-      currentSession.addEventListener("end", () => {
-        console.log("AR-Session beendet");
-        currentSession = null;
-        document.getElementById('menu-bar').style.display = 'none'; // Menü ausblenden
-      });
-
-      // AR-Rendering
-      function onXRFrame(time, frame) {
+      currentSession.requestAnimationFrame(function onXRFrame(time, frame) {
         currentSession.requestAnimationFrame(onXRFrame);
         gl.bindFramebuffer(gl.FRAMEBUFFER, currentSession.renderState.baseLayer.framebuffer);
 
@@ -293,7 +416,6 @@
           camera.projectionMatrix.fromArray(view.projectionMatrix);
           camera.updateMatrixWorld(true);
 
-          // Reticle Position
           const hitTestResults = frame.getHitTestResults(hitTestSource);
           if (hitTestResults.length > 0) {
             const hitPose = hitTestResults[0].getPose(referenceSpace);
@@ -304,23 +426,20 @@
 
           renderer.render(scene, camera);
         }
-      }
+      });
     }
 
     function exitAR() {
-      document.getElementById('confirmation-dialog').style.display = 'flex'; // Dialog anzeigen
+      document.getElementById('confirmation-dialog').style.display = 'flex';
     }
 
     function confirmExit(shouldExit) {
-      if (shouldExit) {
-        if (currentSession) {
-          currentSession.end(); // Beende die AR-Session
-        }
+      if (shouldExit && currentSession) {
+        currentSession.end();
       }
-      document.getElementById('confirmation-dialog').style.display = 'none'; // Dialog ausblenden
+      document.getElementById('confirmation-dialog').style.display = 'none';
     }
 
-    // AR starten
     if (navigator.xr) {
       const startButton = document.createElement('button');
       startButton.textContent = 'Start AR';
@@ -333,6 +452,7 @@
     } else {
       alert('WebXR wird nicht unterstützt.');
     }
+
   </script>
 </body>
 
