@@ -517,6 +517,13 @@
 
       document.getElementById('menu-bar').style.display = 'flex';
 
+      currentSession.addEventListener("end", () => {
+        currentSession = null;
+        menus.forEach(id => {
+          document.getElementById(id).style.display = 'none';
+        });
+      });
+
       canvas.addEventListener("pointerdown", selectModelFromScene);
 
       currentSession.requestAnimationFrame(function onXRFrame(time, frame) {
