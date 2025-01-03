@@ -61,7 +61,7 @@
     .menu-item {
       background: #2c2c2c;
       border-radius: 20px;
-      padding: 5px;
+      padding: 8px;
       transition: background-color 0.3s, transform 0.2s;
     }
 
@@ -103,6 +103,7 @@
 
     /* Confirmation Dialog */
     #confirmation-dialog,
+    #delete-confirmation-dialog,
     #info-dialog {
       position: fixed;
       top: 0;
@@ -121,16 +122,23 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.7);
     }
 
     .dialog-box {
       position: relative;
-      background: white;
+      background: #2c2c2c;
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 10px;
       text-align: center;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8);
+    }
+
+    .dialog-box p {
+      margin-bottom: 20px;
+      font-size: 1.2em;
+      color: #f0f0f0;
     }
 
     .dialog-box button {
@@ -140,6 +148,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s;
     }
 
     .dialog-box button:first-child {
@@ -147,10 +156,21 @@
       color: white;
     }
 
+    .dialog-box button:first-child:hover {
+      background-color: #c0392b;
+      transform: scale(1.05);
+    }
+
     .dialog-box button:last-child {
       background-color: #3498db;
       color: white;
     }
+
+    .dialog-box button:last-child:hover {
+      background-color: #2980b9;
+      transform: scale(1.05);
+    }
+
 
     #dynamic-menu {
       position: absolute;
@@ -236,7 +256,17 @@
   <!-- Dynamisches Menü -->
   <div id="dynamic-menu" style="display: none;"></div>
 
-  <!-- Bestätigungsdialog -->
+  <!-- Bestätigungsdialog für Löschen -->
+  <div id="delete-confirmation-dialog" style="display: none;">
+    <div class="dialog-overlay"></div>
+    <div class="dialog-box">
+      <p id="delete-confirmation-text">Möchten Sie das Modell wirklich löschen?</p>
+      <button onclick="confirmDelete(true)">Ja</button>
+      <button onclick="confirmDelete(false)">Nein</button>
+    </div>
+  </div>
+
+  <!-- Bestätigungsdialog für Beenden -->
   <div id="confirmation-dialog" style="display: none;">
     <div class="dialog-overlay"></div>
     <div class="dialog-box">
@@ -349,6 +379,7 @@
           scene.add(model);
           selectedPlacedModel = model;
           highlightSelectedModel();
+          showMenu('edit-menu');
         },
         undefined,
         (error) => {
@@ -427,7 +458,7 @@
       dynamicMenu.style.display = "flex";
       dynamicMenu.innerHTML = `
         <h3>Rotation anpassen</h3>
-        <label>Y-Achse: <input type="range" min="0" max="360" step="10" onchange="updateRotation('y', this.value)"></label>
+        <label>Y-Achse: <span id="current-rotation">${currentRotation}</span>°<input type="range" min="0" max="360" step="10" onchange="updateRotation('y', this.value)"></label>
         <button onclick="closeDynamicMenu()">Zurück</button>
       `;
     }
@@ -436,6 +467,12 @@
       if (selectedPlacedModel) {
         const radians = (value / 180) * Math.PI;
         selectedPlacedModel.rotation[axis] = radians;
+
+        // Update der aktuellen Rotation im Menü
+        const currentRotationDisplay = document.getElementById("current-rotation");
+        if (currentRotationDisplay) {
+          currentRotationDisplay.textContent = value; // Zeige den aktuellen Wert in Grad an
+        }
       }
     }
 
@@ -452,8 +489,7 @@
       dynamicMenu.style.display = "flex";
       dynamicMenu.innerHTML = `
         <h3>Skalierung anpassen</h3>
-        <label>Größe: <input type="range" min="0.01" max="3" step="0.01" value="${currentScale}" onchange="updateScale(this.value)"></label>
-        <p id="scale-value">Aktuelle Größe: ${currentScale.toFixed(2)}</p>
+        <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="3" step="0.01" value="${currentScale}" onchange="updateScale(this.value)"></label>
         <button onclick="closeDynamicMenu()">Zurück</button>
       `;
     }
@@ -466,15 +502,30 @@
         // Anzeige des aktuellen Wertes aktualisieren
         const scaleValueDisplay = document.getElementById("scale-value");
         if (scaleValueDisplay) {
-          scaleValueDisplay.textContent = `Aktuelle Größe: ${scale.toFixed(2)}`;
+          scaleValueDisplay.textContent = `${scale.toFixed(2)}`;
         }
       }
     }
 
     function deleteModel() {
-      if (selectedPlacedModel) {
+      if (!selectedPlacedModel) {
+        showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es löschen.");
+        return;
+      }
+
+      // Dialog anzeigen
+      const deleteDialog = document.getElementById('delete-confirmation-dialog');
+      deleteDialog.style.display = 'flex';
+    }
+
+    function confirmDelete(shouldDelete) {
+      const deleteDialog = document.getElementById('delete-confirmation-dialog');
+      deleteDialog.style.display = 'none';
+
+      if (shouldDelete && selectedPlacedModel) {
         scene.remove(selectedPlacedModel);
         selectedPlacedModel = null;
+        showMenu('menu-bar');
       }
     }
 
