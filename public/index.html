@@ -22,17 +22,18 @@
 
     .container {
       text-align: center;
-      background-color: rgba(0, 0, 0, 0.5);
+      background-color: rgba(255, 255, 255, 0.9);
       padding: 50px;
       border-radius: 10px;
-      color: white;
+      color: #333;
       max-width: 80%;
-      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
     }
 
     h1 {
       font-size: 3em;
       margin-bottom: 20px;
+      color: #444;
     }
 
     p {
@@ -44,50 +45,58 @@
       position: absolute;
       bottom: 0;
       width: 100%;
-      height: 70px;
+      height: 80px;
       display: flex;
-      justify-content: space-between;
+      justify-content: space-around;
       align-items: center;
-      background: rgba(0, 0, 0, 0.5);
+      background: #e0e0e0;
       padding: 10px;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
       z-index: 10;
     }
 
-    .menu-section {
-      width: 60px;
-      height: 60px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
+    .menu-item:hover {
+      background-color: #d6d6d6;
+      /* Etwas dunkleres Grau beim Hover */
+      transform: scale(1.1);
+      /* Leichte Vergrößerung beim Hover */
     }
 
-    .menu-section img {
-      width: 40px;
-      height: 40px;
+    .menu-item img {
+      width: 50px;
+      height: 50px;
     }
 
-    #dynamic-menu {
+    .menu-placeholder {
+      display: none;
       position: absolute;
-      bottom: 70px;
+      bottom: 0;
       width: 100%;
-      height: 200px;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 20px;
-      z-index: 20;
-      overflow-y: auto;
+      height: 80px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #e0e0e0;
+      /* Helles Grau */
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 15;
+    }
+
+    .menu-placeholder .menu-item img {
+      width: 50px;
+      height: 50px;
     }
 
     button {
       background-color: #4CAF50;
       color: white;
-      font-size: 1.5em;
-      padding: 15px 30px;
+      font-size: 1em;
+      padding: 10px 20px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: background-color 0.3s ease-in-out, transform 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       margin: 10px;
     }
 
@@ -99,6 +108,7 @@
       background-color: #387a39;
     }
 
+    /* Confirmation Dialog */
     #confirmation-dialog {
       position: fixed;
       top: 0;
@@ -153,22 +163,45 @@
 </head>
 
 <body>
-  <div id="dynamic-menu" style="display: none;"></div>
-
-  <div id="menu-bar">
-    <!-- Linkes Symbol: Stift (Bearbeiten) -->
-    <div class="menu-section" id="edit-section" onclick="openEditMenu()">
+  <!-- Standardmenü -->
+  <div id="menu-bar" style="display: none;">
+    <div class="menu-item" id="edit-section" onclick="showMenu('edit-menu')">
       <img src="previewImages/edit-icon.png" alt="Bearbeiten" />
     </div>
-
-    <!-- Mittleres Symbol: Plus (Modell hinzufügen) -->
-    <div class="menu-section" id="add-section" onclick="openAddMenu()">
+    <div class="menu-item" id="add-section" onclick="showMenu('add-menu')">
       <img src="previewImages/add-icon.png" alt="Hinzufügen" />
     </div>
-
-    <!-- Rechtes Symbol: Optionen -->
-    <div class="menu-section" id="options-section" onclick="openOptionsMenu()">
+    <div class="menu-item" id="options-section" onclick="showMenu('options-menu')">
       <img src="previewImages/options-icon.png" alt="Optionen" />
+    </div>
+  </div>
+
+  <!-- Hinzufügen-Menü -->
+  <div id="add-menu" class="menu-placeholder" style="display: none;"></div>
+
+  <!-- Bearbeiten-Menü -->
+  <div id="edit-menu" class="menu-placeholder" style="display: none;">
+    <div class="menu-item" onclick="openRotationMenu()">
+      <img src="previewImages/rotate-icon.png" alt="Rotation" />
+    </div>
+    <div class="menu-item" onclick="openScaleMenu()">
+      <img src="previewImages/scale-icon.png" alt="Skalierung" />
+    </div>
+    <div class="menu-item" onclick="deleteModel()">
+      <img src="previewImages/delete-icon.png" alt="Löschen" />
+    </div>
+    <div class="menu-item" onclick="showMenu('menu-bar')">
+      <img src="previewImages/back-icon.png" alt="Zurück" />
+    </div>
+  </div>
+
+  <!-- Optionen-Menü -->
+  <div id="options-menu" class="menu-placeholder" style="display: none;">
+    <div class="menu-item" onclick="exitAR()">
+      <img src="previewImages/exit-icon.png" alt="Beenden" />
+    </div>
+    <div class="menu-item" onclick="showMenu('menu-bar')">
+      <img src="previewImages/back-icon.png" alt="Zurück" />
     </div>
   </div>
 
@@ -182,8 +215,13 @@
   </div>
 
   <script>
+    // Variablen
     let selectedModel = 'robot';
     let selectedPlacedModel = null;
+    let currentSession = null;
+    let reticle = null;
+    let scene, camera;
+
     let models = {
       robot: {
         name: "Roboter",
@@ -205,9 +243,43 @@
       }
     };
 
-    let currentSession = null;
-    let reticle = null;
-    let scene, camera;
+    const menus = ['menu-bar', 'add-menu', 'edit-menu', 'options-menu'];
+
+    window.onload = () => {
+      initializeAddMenu();
+    };
+
+    function initializeAddMenu() {
+      const addMenu = document.getElementById('add-menu');
+      addMenu.innerHTML = Object.entries(models)
+        .map(
+          ([key, model]) => `
+            <div class="menu-item" id="${key}-item" onclick="selectModel('${key}')">
+              <img src="${model.image}" alt="${model.name}" />
+            </div>
+          `
+        )
+        .join('') +
+        `
+        <div class="menu-item" onclick="showMenu('menu-bar')">
+          <img src="previewImages/back-icon.png" alt="Zurück" />
+        </div>
+      `;
+    }
+
+    function showMenu(menuId) {
+      menus.forEach(id => {
+        document.getElementById(id).style.display = id === menuId ? 'flex' : 'none';
+      });
+    }
+
+    function selectModel(modelId) {
+      const model = models[modelId];
+      if (model && model.file) {
+        loadModel(model.file);
+        showMenu('menu-bar');
+      }
+    }
 
     function loadModel(filePath) {
       const modelConfig = Object.values(models).find(model => model.file === filePath);
@@ -223,21 +295,12 @@
           scene.add(model);
           selectedPlacedModel = model;
           highlightSelectedModel();
-          console.log(`Modell ${modelConfig.name} erfolgreich platziert.`);
         },
         undefined,
         (error) => {
           console.error("Fehler beim Laden des Modells:", error);
         }
       );
-    }
-
-    function removeHighlightFromAllModels() {
-      scene.traverse((child) => {
-        if (child.isMesh && child.material && child.material.emissive) {
-          child.material.emissive.setHex(0x000000); // Markierung entfernen
-        }
-      });
     }
 
     function highlightSelectedModel() {
@@ -251,13 +314,12 @@
       }
     }
 
-    function selectModel(modelId) {
-      const model = models[modelId];
-      if (model && model.file) {
-        console.log(`Modell ausgewählt: ${model.name}`);
-        loadModel(model.file);
-        closeDynamicMenu();
-      }
+    function removeHighlightFromAllModels() {
+      scene.traverse((child) => {
+        if (child.isMesh && child.material && child.material.emissive) {
+          child.material.emissive.setHex(0x000000); // Markierung entfernen
+        }
+      });
     }
 
     function selectModelFromScene(event) {
@@ -273,65 +335,15 @@
       if (intersects.length > 0) {
         selectedPlacedModel = intersects[0].object;
         highlightSelectedModel();
-        console.log("Modell ausgewählt:", selectedPlacedModel);
       }
-    }
-
-    function openAddMenu() {
-      const dynamicMenu = document.getElementById("dynamic-menu");
-      dynamicMenu.style.display = "block";
-      dynamicMenu.innerHTML = `
-        <h3>Modell hinzufügen</h3>
-        <div class="model-list">
-          ${Object.entries(models)
-          .map(
-            ([key, model]) => `
-              <div class="model-item" onclick="selectModel('${key}')">
-                <img src="${model.image}" alt="${model.name}" />
-                <span>${model.name}</span>
-              </div>
-            `
-          )
-          .join("")}
-        </div>
-        <button onclick="closeDynamicMenu()">Schließen</button>
-      `;
-    }
-
-    function openEditMenu() {
-      if (!selectedPlacedModel) {
-        alert("Kein Modell ausgewählt. Bitte tippen Sie auf ein Modell, um es zu bearbeiten.");
-        return;
-      }
-
-      const dynamicMenu = document.getElementById("dynamic-menu");
-      dynamicMenu.style.display = "block";
-      dynamicMenu.innerHTML = `
-        <h3>Modell bearbeiten</h3>
-        <button onclick="openRotationMenu()">Rotation</button>
-        <button onclick="openScaleMenu()">Skalierung</button>
-        <button onclick="deleteModel()">Löschen</button>
-        <button onclick="closeDynamicMenu()">Schließen</button>
-      `;
     }
 
     function openRotationMenu() {
       const dynamicMenu = document.getElementById("dynamic-menu");
       dynamicMenu.innerHTML = `
         <h3>Rotation anpassen</h3>
-        <label>X-Achse: <input type="range" min="0" max="360" step="10" onchange="updateRotation('x', this.value)"></label>
         <label>Y-Achse: <input type="range" min="0" max="360" step="10" onchange="updateRotation('y', this.value)"></label>
-        <label>Z-Achse: <input type="range" min="0" max="360" step="10" onchange="updateRotation('z', this.value)"></label>
-        <button onclick="openEditMenu()">Zurück</button>
-      `;
-    }
-
-    function openScaleMenu() {
-      const dynamicMenu = document.getElementById("dynamic-menu");
-      dynamicMenu.innerHTML = `
-        <h3>Skalierung anpassen</h3>
-        <label>Größe: <input type="range" min="0.1" max="3" step="0.1" onchange="updateScale(this.value)"></label>
-        <button onclick="openEditMenu()">Zurück</button>
+        <button onclick="showMenu('edit-menu')">Zurück</button>
       `;
     }
 
@@ -339,15 +351,22 @@
       if (selectedPlacedModel) {
         const radians = (value / 180) * Math.PI;
         selectedPlacedModel.rotation[axis] = radians;
-        console.log(`Modell um ${value} Grad auf der ${axis.toUpperCase()}-Achse gedreht.`);
       }
+    }
+
+    function openScaleMenu() {
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.innerHTML = `
+        <h3>Skalierung anpassen</h3>
+        <label>Größe: <input type="range" min="0.1" max="3" step="0.1" onchange="updateScale(this.value)"></label>
+        <button onclick="showMenu('edit-menu')">Zurück</button>
+      `;
     }
 
     function updateScale(value) {
       if (selectedPlacedModel) {
         const scale = parseFloat(value);
         selectedPlacedModel.scale.set(scale, scale, scale);
-        console.log(`Modell auf Größe ${value} skaliert.`);
       }
     }
 
@@ -355,14 +374,7 @@
       if (selectedPlacedModel) {
         scene.remove(selectedPlacedModel);
         selectedPlacedModel = null;
-        console.log("Modell gelöscht.");
-        closeDynamicMenu();
       }
-    }
-
-    function closeDynamicMenu() {
-      const dynamicMenu = document.getElementById("dynamic-menu");
-      dynamicMenu.style.display = "none";
     }
 
     async function activateXR() {
