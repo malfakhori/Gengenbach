@@ -454,6 +454,9 @@
         return;
       }
 
+      // Holen Sie die aktuelle Y-Rotation des Modells (in Grad)
+      const currentRotation = Math.round(THREE.MathUtils.radToDeg(selectedPlacedModel.rotation.y));
+
       const dynamicMenu = document.getElementById("dynamic-menu");
       dynamicMenu.style.display = "flex";
       dynamicMenu.innerHTML = `
