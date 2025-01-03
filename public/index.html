@@ -176,6 +176,11 @@
       z-index: 20;
       overflow-y: auto;
     }
+
+    #dynamic-menu input[type="range"] {
+      width: 100%;
+      margin: 10px 0;
+    }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -303,6 +308,7 @@
       menus.forEach(id => {
         document.getElementById(id).style.display = id === menuId ? 'flex' : 'none';
       });
+      closeDynamicMenu();
       if (menuId === 'menu-bar') clearSelectedModel();
     }
 
@@ -405,7 +411,7 @@
       dynamicMenu.innerHTML = `
         <h3>Rotation anpassen</h3>
         <label>Y-Achse: <input type="range" min="0" max="360" step="10" onchange="updateRotation('y', this.value)"></label>
-        <button onclick="showMenu('edit-menu')">Zurück</button>
+        <button onclick="closeDynamicMenu()">Zurück</button>
       `;
     }
 
@@ -413,7 +419,6 @@
       if (selectedPlacedModel) {
         const radians = (value / 180) * Math.PI;
         selectedPlacedModel.rotation[axis] = radians;
-        closeDynamicMenu();
       }
     }
 
@@ -428,7 +433,7 @@
       dynamicMenu.innerHTML = `
         <h3>Skalierung anpassen</h3>
         <label>Größe: <input type="range" min="0.1" max="3" step="0.1" onchange="updateScale(this.value)"></label>
-        <button onclick="showMenu('edit-menu')">Zurück</button>
+        <button onclick="closeDynamicMenu()">Zurück</button>
       `;
     }
 
@@ -436,7 +441,6 @@
       if (selectedPlacedModel) {
         const scale = parseFloat(value);
         selectedPlacedModel.scale.set(scale, scale, scale);
-        closeDynamicMenu();
       }
     }
 
