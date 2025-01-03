@@ -60,8 +60,8 @@
 
     .menu-item {
       background: #2c2c2c;
-      border-radius: 8px;
-      padding: 10px;
+      border-radius: 20px;
+      padding: 5px;
       transition: background-color 0.3s, transform 0.2s;
     }
 
@@ -71,13 +71,11 @@
     }
 
     .menu-item img {
-      filter: invert(100%);
       width: 50px;
       height: 50px;
     }
 
     .menu-placeholder .menu-item img {
-      filter: none;
       width: 50px;
       height: 50px;
     }
@@ -447,11 +445,15 @@
         return;
       }
 
+      // Aktuelle Skalierung des Modells bestimmen
+      const currentScale = selectedPlacedModel.scale.x;
+
       const dynamicMenu = document.getElementById("dynamic-menu");
       dynamicMenu.style.display = "flex";
       dynamicMenu.innerHTML = `
         <h3>Skalierung anpassen</h3>
-        <label>Größe: <input type="range" min="0.01" max="3" step="0.1" onchange="updateScale(this.value)"></label>
+        <label>Größe: <input type="range" min="0.01" max="3" step="0.01" value="${currentScale}" onchange="updateScale(this.value)"></label>
+        <p id="scale-value">Aktuelle Größe: ${currentScale.toFixed(2)}</p>
         <button onclick="closeDynamicMenu()">Zurück</button>
       `;
     }
@@ -460,6 +462,12 @@
       if (selectedPlacedModel) {
         const scale = parseFloat(value);
         selectedPlacedModel.scale.set(scale, scale, scale);
+
+        // Anzeige des aktuellen Wertes aktualisieren
+        const scaleValueDisplay = document.getElementById("scale-value");
+        if (scaleValueDisplay) {
+          scaleValueDisplay.textContent = `Aktuelle Größe: ${scale.toFixed(2)}`;
+        }
       }
     }
 
