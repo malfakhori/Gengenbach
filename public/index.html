@@ -160,38 +160,15 @@
     }
 
     #dynamic-menu {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      padding: 20px;
-      background: #f5f5f5;
-      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
+      position: absolute;
+      bottom: 70px;
       width: 100%;
-    }
-
-    #dynamic-menu label {
-      font-size: 16px;
-      color: #333;
-    }
-
-    #dynamic-menu input[type="range"] {
-      width: 80%;
-    }
-
-    #dynamic-menu button {
-      padding: 10px 20px;
-      font-size: 16px;
+      height: 200px;
+      background: rgba(0, 0, 0, 0.8);
       color: white;
-      background-color: #007bff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    #dynamic-menu button:hover {
-      background-color: #0056b3;
+      padding: 20px;
+      z-index: 20;
+      overflow-y: auto;
     }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
@@ -323,6 +300,18 @@
       menus.forEach(id => {
         document.getElementById(id).style.display = id === menuId ? 'flex' : 'none';
       });
+      if (menuId === 'menu-bar') clearSelectedModel();
+    }
+
+    function clearSelectedModel() {
+      if (selectedPlacedModel) {
+        selectedPlacedModel.traverse((child) => {
+          if (child.isMesh) {
+            child.material.emissive.setHex(0x000000); // Markierung entfernen
+          }
+        });
+        selectedPlacedModel = null; // Kein Modell mehr ausgewählt
+      }
     }
 
     function selectModel(modelId) {
@@ -374,6 +363,17 @@
       });
     }
 
+    function removeHighlightFromSelectedModel() {
+      if (selectedPlacedModel) {
+        selectedPlacedModel.traverse((child) => {
+          if (child.isMesh) {
+            child.material.emissive.setHex(0x000000); // Markierung entfernen
+          }
+        });
+        selectedPlacedModel = null; // Kein Modell mehr ausgewählt
+      }
+    }
+
     function selectModelFromScene(event) {
       const mouse = new THREE.Vector2(
         (event.clientX / window.innerWidth) * 2 - 1,
@@ -387,6 +387,9 @@
       if (intersects.length > 0) {
         selectedPlacedModel = intersects[0].object;
         highlightSelectedModel();
+        showInfoDialog("Modell erfolgreich ausgewählt.");
+      } else {
+        showInfoDialog("Kein Modell unter dem Cursor gefunden.");
       }
     }
 
@@ -409,6 +412,7 @@
       if (selectedPlacedModel) {
         const radians = (value / 180) * Math.PI;
         selectedPlacedModel.rotation[axis] = radians;
+        closeDynamicMenu();
       }
     }
 
@@ -431,6 +435,7 @@
       if (selectedPlacedModel) {
         const scale = parseFloat(value);
         selectedPlacedModel.scale.set(scale, scale, scale);
+        closeDynamicMenu();
       }
     }
 
@@ -439,6 +444,11 @@
         scene.remove(selectedPlacedModel);
         selectedPlacedModel = null;
       }
+    }
+
+    function closeDynamicMenu() {
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.style.display = "none";
     }
 
     function showInfoDialog(message) {
