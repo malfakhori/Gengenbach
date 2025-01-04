@@ -334,6 +334,10 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script> <!-- Leaflet einbinden -->
   <script src="ar_overviewmap.js"></script>
+
+  <!-- Audio-Element für Button-Klick -->
+  <audio id="button-sound" src="sounds/button-sound.mp3" preload="auto"></audio>
+
   <script>
     // Variablen
     let selectedModel = 'robot';
@@ -367,6 +371,12 @@
 
     window.onload = () => {
       initializeAddMenu();
+
+      // Fügt Sound zu allen Buttons hinzu
+      const buttons = document.querySelectorAll("button, .menu-item");
+      buttons.forEach(button => {
+        button.addEventListener("click", playButtonSound);
+      });
     };
 
     function initializeAddMenu() {
@@ -493,6 +503,7 @@
 
     function completeEditing() {
       removeHighlightFromSelectedModel();
+      closeDynamicMenu();
       selectedPlacedModel = null;
       document.getElementById('edit-menu').style.display = 'none';
       document.getElementById('menu-bar').style.display = 'flex';
@@ -694,6 +705,22 @@
       }
       document.getElementById('confirmation-dialog').style.display = 'none';
     }
+
+    let soundTimeout = false;
+
+    function playButtonSound() {
+      if (!soundTimeout) {
+        const sound = document.getElementById("button-sound");
+        sound.currentTime = 0;
+        sound.play();
+
+        soundTimeout = true;
+        setTimeout(() => {
+          soundTimeout = false;
+        }, 200); // Verzögerung von 200ms
+      }
+    }
+
 
     if (navigator.xr) {
       const startButton = document.createElement('button');
