@@ -1,0 +1,11 @@
+Model Information:
+* title:	Fire hydrant
+* source:	https://sketchfab.com/3d-models/fire-hydrant-1d74e6c3d0a1417fa0b45ee8baf032ae
+* author:	Spellkaze (https://sketchfab.com/Spellkaze)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Fire hydrant" (https://sketchfab.com/3d-models/fire-hydrant-1d74e6c3d0a1417fa0b45ee8baf032ae) by Spellkaze (https://sketchfab.com/Spellkaze) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
