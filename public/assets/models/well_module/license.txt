@@ -1,11 +1,11 @@
 Model Information:
-* title:	Ganymedes-Brunnen
-* source:	https://sketchfab.com/3d-models/ganymedes-brunnen-63c2a6fe24cd4f9daa2d80de5b2d17d4
-* author:	noe-3d.at (https://sketchfab.com/www.noe-3d.at)
+* title:	Rüdiger-Brunnen Kaufbeuren
+* source:	https://sketchfab.com/3d-models/rudiger-brunnen-kaufbeuren-86c9879156d04d93a8b34666622785df
+* author:	PHIEW (https://sketchfab.com/phiew)
 
 Model License:
-* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
-* requirements:	Author must be credited. No commercial use.
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "Ganymedes-Brunnen" (https://sketchfab.com/3d-models/ganymedes-brunnen-63c2a6fe24cd4f9daa2d80de5b2d17d4) by noe-3d.at (https://sketchfab.com/www.noe-3d.at) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+This work is based on "Rüdiger-Brunnen Kaufbeuren" (https://sketchfab.com/3d-models/rudiger-brunnen-kaufbeuren-86c9879156d04d93a8b34666622785df) by PHIEW (https://sketchfab.com/phiew) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
