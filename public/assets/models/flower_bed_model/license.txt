@@ -1,0 +1,11 @@
+Model Information:
+* title:	Flower Bed at Gadsdenboro Park
+* source:	https://sketchfab.com/3d-models/flower-bed-at-gadsdenboro-park-1789485ee5ac43a7af619ef8cf897e89
+* author:	stevencmutter (https://sketchfab.com/stevencmutter)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Flower Bed at Gadsdenboro Park" (https://sketchfab.com/3d-models/flower-bed-at-gadsdenboro-park-1789485ee5ac43a7af619ef8cf897e89) by stevencmutter (https://sketchfab.com/stevencmutter) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
