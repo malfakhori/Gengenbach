@@ -633,7 +633,7 @@ function openScaleMenu() {
         <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="3" step="0.001" value="${currentScale}" onchange="updateScale(this.value)"></label>
         <button onclick="closeDynamicMenu()">Zurück</button>
       `;
-   
+    }
 
     function updateScale(value) {
       if (selectedPlacedModel) {
