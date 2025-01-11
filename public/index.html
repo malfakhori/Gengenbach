@@ -568,7 +568,8 @@
         }
       }
     }
-
+/**
+ * 
     function calculateBoundingBox(object) {
   const box = new THREE.Box3().setFromObject(object);
   const size = new THREE.Vector3();
@@ -614,9 +615,8 @@ function openScaleMenu() {
   `;
 }
 
+ }*/
 
-/**
- * 
     function openScaleMenu() {
       if (!selectedPlacedModel) {
         showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
@@ -630,10 +630,10 @@ function openScaleMenu() {
       dynamicMenu.style.display = "flex";
       dynamicMenu.innerHTML = `
         <h3>Skalierung anpassen</h3>
-        <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="3" step="0.01" value="${currentScale}" onchange="updateScale(this.value)"></label>
+        <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="3" step="0.001" value="${currentScale}" onchange="updateScale(this.value)"></label>
         <button onclick="closeDynamicMenu()">Zurück</button>
       `;
-    }*/
+   
 
     function updateScale(value) {
       if (selectedPlacedModel) {
