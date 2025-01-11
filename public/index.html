@@ -569,6 +569,50 @@
       }
     }
 
+    function calculateBoundingBox(object) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  return size;
+}
+
+
+function calculateMaxScale(object) {
+  const boundingBox = calculateBoundingBox(object);
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  // Berechne den Skalierungsfaktor für Breite und Höhe
+  const scaleWidth = viewportWidth / boundingBox.x;
+  const scaleHeight = viewportHeight / boundingBox.y;
+
+  // Wähle den kleineren Faktor, um sicherzustellen, dass das Objekt nicht aus dem Bildschirm herausragt
+  return Math.min(scaleWidth, scaleHeight);
+}
+
+function openScaleMenu() {
+  if (!selectedPlacedModel) {
+    showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
+    return;
+  }
+
+  // Berechne die maximale Skalierung
+  const maxScale = calculateMaxScale(selectedPlacedModel);
+
+  // Aktuelle Skalierung des Modells bestimmen
+  const currentScale = selectedPlacedModel.scale.x;
+
+  const dynamicMenu = document.getElementById("dynamic-menu");
+  dynamicMenu.style.display = "flex";
+  dynamicMenu.innerHTML = `
+    <h3>Skalierung anpassen</h3>
+    <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="${maxScale}" step="0.01" value="${currentScale}" onchange="updateScale(this.value)"></label>
+    <button onclick="closeDynamicMenu()">Zurück</button>
+  `;
+}
+
+/**
+ * 
     function openScaleMenu() {
       if (!selectedPlacedModel) {
         showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
@@ -585,7 +629,7 @@
         <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="3" step="0.01" value="${currentScale}" onchange="updateScale(this.value)"></label>
         <button onclick="closeDynamicMenu()">Zurück</button>
       `;
-    }
+    }*/
 
     function updateScale(value) {
       if (selectedPlacedModel) {
