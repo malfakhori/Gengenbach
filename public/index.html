@@ -582,15 +582,16 @@ function calculateMaxScale(object) {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
-  // Berechne das Verhältnis zwischen der Größe des Viewports und der Größe des Objekts
+  // Berechne die maximal mögliche Skalierung, um im Viewport zu bleiben
   const scaleWidth = viewportWidth / boundingBox.x;
   const scaleHeight = viewportHeight / boundingBox.y;
 
-  // Reduziere den Wert, um sicherzustellen, dass das Objekt nicht zu groß wird
-  const safeScaleFactor = 0.9; // Reduziert die Skalierung um 10%, um sicher zu sein
+  // Wähle den kleineren Wert und reduziere ihn leicht, um sicherzugehen, dass das Objekt nicht über den Rand hinausgeht
+  const safeScaleFactor = 0.95; // Puffer, um sicherzustellen, dass es nicht zu groß wird
 
   return Math.min(scaleWidth, scaleHeight) * safeScaleFactor;
 }
+
 
 
 function openScaleMenu() {
@@ -599,7 +600,7 @@ function openScaleMenu() {
     return;
   }
 
-  // Berechne die maximale Skalierung
+  // Berechne die maximale Skalierung für das spezifische Objekt
   const maxScale = calculateMaxScale(selectedPlacedModel);
 
   // Aktuelle Skalierung des Modells bestimmen
@@ -609,10 +610,11 @@ function openScaleMenu() {
   dynamicMenu.style.display = "flex";
   dynamicMenu.innerHTML = `
     <h3>Skalierung anpassen</h3>
-    <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="${maxScale}" step="0.001" value="${currentScale}" onchange="updateScale(this.value)"></label>
+    <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="${maxScale.toFixed(2)}" step="0.0001" value="${currentScale}" onchange="updateScale(this.value)"></label>
     <button onclick="closeDynamicMenu()">Zurück</button>
   `;
 }
+
 
  
 /**
