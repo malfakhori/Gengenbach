@@ -582,13 +582,16 @@ function calculateMaxScale(object) {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
-  // Berechne den Skalierungsfaktor für Breite und Höhe
+  // Berechne das Verhältnis zwischen der Größe des Viewports und der Größe des Objekts
   const scaleWidth = viewportWidth / boundingBox.x;
   const scaleHeight = viewportHeight / boundingBox.y;
 
-  // Wähle den kleineren Faktor, um sicherzustellen, dass das Objekt nicht aus dem Bildschirm herausragt
-  return Math.min(scaleWidth, scaleHeight);
+  // Reduziere den Wert, um sicherzustellen, dass das Objekt nicht zu groß wird
+  const safeScaleFactor = 0.9; // Reduziert die Skalierung um 10%, um sicher zu sein
+
+  return Math.min(scaleWidth, scaleHeight) * safeScaleFactor;
 }
+
 
 function openScaleMenu() {
   if (!selectedPlacedModel) {
@@ -610,6 +613,7 @@ function openScaleMenu() {
     <button onclick="closeDynamicMenu()">Zurück</button>
   `;
 }
+
 
 /**
  * 
