@@ -195,7 +195,7 @@
       /*padding: 20px 0;*/
       border-radius: 8px;
     }
-    
+
 
     #dynamic-menu input[type="range"] {
       width: 100%;
@@ -483,7 +483,11 @@
           }
           model.position.copy(reticle.position);
           scene.add(model);
+
+          // Speichere das platzierte Modell und die Konfiguration
           selectedPlacedModel = model;
+          selectedPlacedModel.modelConfig = modelConfig;
+
           highlightSelectedModel();
           showMenu('edit-menu');
         },
@@ -630,12 +634,12 @@
         <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="${maxScale.toFixed(2)}" step="0.0001" value="${currentScale}" onchange="updateScale(this.value)"></label>
         <button onclick="closeDynamicMenu()">Zurück</button>
       `;
-        }
-    
-    
-    
-        
-         * */
+        } * */
+
+
+
+
+
     function openScaleMenu() {
       if (!selectedPlacedModel) {
         showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
@@ -647,14 +651,11 @@
 
       // Aktuelle Skalierung des Modells bestimmen
       const currentScale = selectedPlacedModel.scale.x;
-      const minScale = selectedPlacedModel.minScale;
-      const maxScale = selectedPlacedModel.maxScale;
+      const minScale = selectedPlacedModel.modelConfig.minScale;
+      const maxScale = selectedPlacedModel.modelConfig.maxScale;
       const step = (maxScale - minScale) / 100; // Dynamische Schrittgröße basierend auf Grenzen
 
-      console.log("Die größen des ausgewählten Modells sind wie folgt: ")
-      console.log("currentScale", currentScale)
-      console.log("minScale", minScale)
-      console.log("maxScale", maxScale)
+      console.log("Slider-Werte:", { minScale, maxScale, currentScale });
 
       const dynamicMenu = document.getElementById("dynamic-menu");
       dynamicMenu.style.display = "flex";
