@@ -183,16 +183,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-around;
+      justify-content: center;
+      gap: 20px;
       background: #1e1e1e;
       box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.8);
       color: white;
       width: 100vw;
-      height: 220px;
+      height: 200px;
       z-index: 20;
       overflow-y: auto;
-      padding: 15px;
-      border-radius: 12px;
+      border-radius: 8px;
     }
 
 
@@ -212,18 +212,6 @@
       border: 2px solid #555;
       border-radius: 50%;
       cursor: pointer;
-    }
-
-    #dynamic-menu input[type="range"]::-webkit-slider-runnable-track {
-      height: 8px;
-      background: #666;
-      border-radius: 5px;
-    }
-
-    #dynamic-menu input[type="range"]::-moz-range-track {
-      height: 8px;
-      background: #666;
-      border-radius: 5px;
     }
   </style>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
@@ -388,7 +376,7 @@
         file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/telephone_box_model/scene.gltf",
         scale: { x: 0.5, y: 0.5, z: 0.5 },
         minScale: 0.05,
-        maxScale: 2
+        maxScale: 1
       },
       fire_hydrant_model: {
         name: "Fire Hydrant",
@@ -418,9 +406,9 @@
         name: "Lantern",
         image: "previewImages/lantern.jpg",
         file: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf",
-        scale: { x: 0.1, y: 0.1, z: 0.1 },
+        scale: { x: 0.15, y: 0.15, z: 0.15 },
         minScale: 0.05,
-        maxScale: 0.5
+        maxScale: 0.3
       }
     };
 
