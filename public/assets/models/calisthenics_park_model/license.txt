@@ -1,11 +1,11 @@
 Model Information:
-* title:	CALISTHENICS
-* source:	https://sketchfab.com/3d-models/calisthenics-705e77fbfcf94fd4b2461f977b6420a4
-* author:	Pozza 1865 (https://sketchfab.com/exportpozza)
+* title:	Cotización Final COT-1258
+* source:	https://sketchfab.com/3d-models/cotizacion-final-cot-1258-a57c8f207835468b88e677ecfaacd5a8
+* author:	Dave M. (https://sketchfab.com/homeandgym)
 
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "CALISTHENICS" (https://sketchfab.com/3d-models/calisthenics-705e77fbfcf94fd4b2461f977b6420a4) by Pozza 1865 (https://sketchfab.com/exportpozza) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "Cotización Final COT-1258" (https://sketchfab.com/3d-models/cotizacion-final-cot-1258-a57c8f207835468b88e677ecfaacd5a8) by Dave M. (https://sketchfab.com/homeandgym) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
