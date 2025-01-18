@@ -1,11 +1,11 @@
 Model Information:
-* title:	simple low poly calisthenics
-* source:	https://sketchfab.com/3d-models/simple-low-poly-calisthenics-b54f57efa0b84ca38e17195b6dbbab12
-* author:	lupas (https://sketchfab.com/ivan.anton.albarracin)
+* title:	CALISTHENICS
+* source:	https://sketchfab.com/3d-models/calisthenics-705e77fbfcf94fd4b2461f977b6420a4
+* author:	Pozza 1865 (https://sketchfab.com/exportpozza)
 
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "simple low poly calisthenics" (https://sketchfab.com/3d-models/simple-low-poly-calisthenics-b54f57efa0b84ca38e17195b6dbbab12) by lupas (https://sketchfab.com/ivan.anton.albarracin) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "CALISTHENICS" (https://sketchfab.com/3d-models/calisthenics-705e77fbfcf94fd4b2461f977b6420a4) by Pozza 1865 (https://sketchfab.com/exportpozza) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
