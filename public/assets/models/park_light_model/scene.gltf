@@ -3,164 +3,125 @@
     {
       "bufferView": 2,
       "componentType": 5126,
-      "count": 1253,
+      "count": 2944,
       "max": [
-        -83.31147766113281,
-        522.8269653320313,
-        21.494308471679688
+        1.1778082847595215,
+        71.68600463867188,
+        1.177808165550232
       ],
       "min": [
-        -126.49954986572266,
-        -0.1708393096923828,
-        -21.69377326965332
+        -1.1778085231781006,
+        -1.0,
+        -1.177808403968811
       ],
       "type": "VEC3"
     },
     {
       "bufferView": 2,
-      "byteOffset": 15036,
+      "byteOffset": 35328,
       "componentType": 5126,
-      "count": 1253,
+      "count": 2944,
       "max": [
-        1.0,
-        1.0,
-        1.0
+        0.9807855486869812,
+        0.7628369927406311,
+        0.9871309399604797
       ],
       "min": [
+        -0.9807854294776917,
         -1.0,
-        -1.0,
-        -1.0
+        -0.9807857275009155
       ],
       "type": "VEC3"
     },
     {
-      "bufferView": 3,
-      "componentType": 5126,
-      "count": 1253,
-      "max": [
-        1.0,
-        0.9999904632568359,
-        1.0,
-        1.0
-      ],
-      "min": [
-        -1.0,
-        -0.9999915361404419,
-        -1.0,
-        -1.0
-      ],
-      "type": "VEC4"
-    },
-    {
       "bufferView": 1,
       "componentType": 5126,
-      "count": 1253,
+      "count": 2944,
       "max": [
-        0.9903382062911987,
-        0.9842617511749268
+        0.9722591042518616,
+        0.971050500869751
       ],
       "min": [
-        0.016747653484344482,
-        0.014697551727294922
+        0.017211854457855225,
+        0.012609779834747314
       ],
       "type": "VEC2"
     },
     {
       "bufferView": 0,
       "componentType": 5125,
-      "count": 4488,
+      "count": 4410,
       "type": "SCALAR"
     }
   ],
   "asset": {
     "extras": {
-      "author": "RBG_illustrations (https://sketchfab.com/RBG_illustrations)",
+      "author": "Anticipateants (https://sketchfab.com/anticipateants)",
       "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
-      "source": "https://sketchfab.com/3d-models/park-light-10ece6657c89401da32194340cc894c9",
-      "title": "Park Light"
+      "source": "https://sketchfab.com/3d-models/nyc-park-streetlight-4efdeb23f30e49aab10fac0c3064443d",
+      "title": "NYC Park Streetlight,"
     },
-    "generator": "Sketchfab-12.67.0",
+    "generator": "Sketchfab-13.53.0",
     "version": "2.0"
   },
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 17952,
+      "byteLength": 17640,
       "name": "floatBufferViews",
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteLength": 10024,
-      "byteOffset": 17952,
+      "byteLength": 23552,
+      "byteOffset": 17640,
       "byteStride": 8,
       "name": "floatBufferViews",
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteLength": 30072,
-      "byteOffset": 27976,
+      "byteLength": 70656,
+      "byteOffset": 41192,
       "byteStride": 12,
-      "name": "floatBufferViews",
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteLength": 20048,
-      "byteOffset": 58048,
-      "byteStride": 16,
       "name": "floatBufferViews",
       "target": 34962
     }
   ],
   "buffers": [
     {
-      "byteLength": 78096,
+      "byteLength": 111848,
       "uri": "scene.bin"
     }
   ],
   "images": [
     {
-      "uri": "textures/park_light_baseColor.png"
-    },
-    {
-      "uri": "textures/park_light_metallicRoughness.png"
-    },
-    {
-      "uri": "textures/park_light_normal.png"
+      "uri": "textures/Material.001_baseColor.png"
     }
   ],
   "materials": [
     {
-      "alphaMode": "BLEND",
       "doubleSided": true,
-      "name": "park_light",
-      "normalTexture": {
-        "index": 2
-      },
+      "name": "Material.001",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
           "index": 0
         },
-        "metallicRoughnessTexture": {
-          "index": 1
-        }
+        "metallicFactor": 0.0
       }
     }
   ],
   "meshes": [
     {
-      "name": "lamp_post_park_light_0",
+      "name": "Object_0",
       "primitives": [
         {
           "attributes": {
             "NORMAL": 1,
             "POSITION": 0,
-            "TANGENT": 2,
-            "TEXCOORD_0": 3
+            "TEXCOORD_0": 2
           },
-          "indices": 4,
+          "indices": 3,
           "material": 0,
           "mode": 4
         }
@@ -196,47 +157,59 @@
       "children": [
         2
       ],
+      "name": "root"
+    },
+    {
+      "children": [
+        3
+      ],
       "matrix": [
         1.0,
         0.0,
         0.0,
         0.0,
         0.0,
-        0.0,
+        2.220446049250313e-16,
         1.0,
         0.0,
         0.0,
         -1.0,
-        0.0,
+        2.220446049250313e-16,
         0.0,
         0.0,
         0.0,
         0.0,
         1.0
       ],
-      "name": "park light.fbx"
-    },
-    {
-      "children": [
-        3
-      ],
-      "name": "RootNode"
+      "name": "GLTF_SceneRootNode"
     },
     {
       "children": [
         4
       ],
-      "name": "done_stuff"
-    },
-    {
-      "children": [
-        5
+      "matrix": [
+        0.03656700626015663,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.010605139657855034,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.03656700626015663,
+        0.0,
+        -0.006100017577409744,
+        0.010527204722166061,
+        -0.0016316026449203491,
+        1.0
       ],
-      "name": "lamp_post"
+      "name": "main_0"
     },
     {
       "mesh": 0,
-      "name": "lamp_post_park_light_0"
+      "name": "Object_4"
     }
   ],
   "samplers": [
@@ -260,14 +233,6 @@
     {
       "sampler": 0,
       "source": 0
-    },
-    {
-      "sampler": 0,
-      "source": 1
-    },
-    {
-      "sampler": 0,
-      "source": 2
     }
   ]
 }
