@@ -5,251 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GeoVis AR Projekt</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
-      color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-image: url('https://www.hft-stuttgart.de/fileadmin/Dateien/Hochschule/-_R_Juergen_Pollak_HFT_18.04.18-0091.jpg');
-      background-size: cover;
-      background-position: center;
-    }
-
-    .container {
-      text-align: center;
-      background-color: rgba(255, 255, 255, 0.9);
-      padding: 50px;
-      border-radius: 10px;
-      color: #333;
-      max-width: 80%;
-      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    h1 {
-      font-size: 3em;
-      margin-bottom: 20px;
-      color: #444;
-    }
-
-    p {
-      font-size: 1.2em;
-      margin-bottom: 30px;
-    }
-
-    #add-menu {
-      overflow-y: auto;
-
-    }
-
-    #menu-bar,
-    .menu-placeholder {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 80px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      background: #121212;
-      padding: 10px;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.8);
-      color: white;
-      z-index: 10;
-      border-top: 1px solid #2a2a2a;
-    }
-
-    .menu-item {
-      background: #2c2c2c;
-      border-radius: 20px;
-      padding: 8px;
-      transition: background-color 0.3s, transform 0.2s;
-    }
-
-    .menu-item:hover {
-      background-color: #3a3a3a;
-      transform: scale(1.1);
-    }
-
-    .menu-item img {
-      width: 50px;
-      height: 50px;
-    }
-
-    .menu-placeholder .menu-item img {
-      width: 50px;
-      height: 50px;
-    }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      font-size: 1em;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease-in-out, transform 0.2s;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      margin: 10px;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    button:active {
-      background-color: #387a39;
-    }
-
-    /* Confirmation Dialog */
-    #confirmation-dialog,
-    #delete-confirmation-dialog,
-    #info-dialog {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
-    }
-
-    .dialog-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-    }
-
-    .dialog-box {
-      position: relative;
-      background: #2c2c2c;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      color: white;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8);
-    }
-
-    .dialog-box p {
-      margin-bottom: 20px;
-      font-size: 1.2em;
-      color: #f0f0f0;
-    }
-
-    .dialog-box button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s;
-    }
-
-    .dialog-box button:first-child {
-      background-color: #e74c3c;
-      color: white;
-    }
-
-    .dialog-box button:first-child:hover {
-      background-color: #c0392b;
-      transform: scale(1.05);
-    }
-
-    .dialog-box button:last-child {
-      background-color: #3498db;
-      color: white;
-    }
-
-    .dialog-box button:last-child:hover {
-      background-color: #2980b9;
-      transform: scale(1.05);
-    }
-
-
-    #dynamic-menu {
-      position: absolute;
-      bottom: 80px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      background: #1e1e1e;
-      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.8);
-      color: white;
-      width: 100vw;
-      height: 200px;
-      z-index: 20;
-      overflow-y: auto;
-      border-radius: 8px;
-    }
-
-
-    #dynamic-menu input[type="range"] {
-      width: 100%;
-      margin: 10px auto;
-      background: #3a3a3a;
-      border-radius: 5px;
-    }
-
-    #dynamic-menu input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      background: #fff;
-      border: 2px solid #555;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 
 <body>
   <!-- Debug -->
-  <div id="debug-container" style="
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 9999;
-      font-family: monospace;
-      font-size: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-  ">
-    <div id="debug-console" style="
-          width: 100%;
-          max-height: 200px;
-          overflow-y: auto;
-          background: rgba(0, 0, 0, 0.7);
-          color: #00ff00;
-          padding: 5px;
-          display: none;
-      "></div>
-    <button id="debug-toggle-btn" style="
-          background: rgba(0, 0, 0, 0.7);
-          color: #00ff00;
-          font-size: 14px;
-          border: none;
-          padding: 5px 10px;
-          cursor: pointer;
-          display: none;
-      "></button>
+  <div id="debug-container">
+    <div id="debug-console"></div>
+    <button id="debug-toggle-btn"></button>
   </div>
 
   <!-- Standardmenü -->
@@ -265,7 +30,7 @@
     </div>
   </div>
 
-  <!-- Hinzufügen-Menü -->
+  <!-- Hinzufügen-Menü für das Auswählen der Modelle-->
   <div id="add-menu" class="menu-placeholder" style="display: none;"></div>
 
   <!-- Bearbeiten-Menü -->
@@ -275,6 +40,9 @@
     </div>
     <div class="menu-item" onclick="openScaleMenu()">
       <img src="previewImages/scale-icon.png" alt="Skalierung" />
+    </div>
+    <div class="menu-item" onclick="openMoveMenu()">
+      <img src="previewImages/move-icon.png" alt="Bewegen" />
     </div>
     <div class="menu-item" onclick="deleteModel()">
       <img src="previewImages/delete-icon.png" alt="Löschen" />
@@ -294,7 +62,7 @@
     </div>
   </div>
 
-  <!-- Dynamisches Menü -->
+  <!-- Dynamisches Menü für Rotation und Scaling-->
   <div id="dynamic-menu" style="display: none;"></div>
 
   <!-- Bestätigungsdialog für Löschen -->
@@ -314,15 +82,6 @@
       <p>Möchten Sie die AR-Session wirklich verlassen?</p>
       <button onclick="confirmExit(true)">Ja</button>
       <button onclick="confirmExit(false)">Nein</button>
-    </div>
-  </div>
-
-  <!-- Informations-Dialog -->
-  <div id="info-dialog" style="display: none;">
-    <div class="dialog-overlay"></div>
-    <div class="dialog-box">
-      <p id="info-text">Hier kommt die Nachricht hin</p>
-      <button onclick="closeInfoDialog()">OK</button>
     </div>
   </div>
 
@@ -374,9 +133,9 @@
         name: "Lantern",
         image: "previewImages/park_light.png",
         file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/park_light_model/scene.gltf",
-        scale: { x: 0.15, y: 0.15, z: 0.15 },
-        minScale: 0.05,
-        maxScale: 0.3
+        scale: { x: 0.5, y: 0.5, z: 0.5 },
+        minScale: 0.2,
+        maxScale: 5
       },
       telephone_box: {
         name: "Telephone Box",
@@ -543,6 +302,12 @@
           selectedObject = selectedObject.parent;
         }
 
+        // Überprüfe, ob das ausgewählte Objekt das Reticle ist
+        if (selectedObject === reticle) {
+          console.log("Reticle kann nicht ausgewählt werden.");
+          return; // Auswahl ignorieren
+        }
+
         // Markiere das gesamte Modell als ausgewählt
         selectedPlacedModel = selectedObject;
         highlightSelectedModel();
@@ -560,7 +325,7 @@
 
     function openRotationMenu() {
       if (!selectedPlacedModel) {
-        showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
+        console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
         return;
       }
 
@@ -589,64 +354,11 @@
       }
     }
 
-    function calculateBoundingBox(object) {
-      const box = new THREE.Box3().setFromObject(object);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      return size;
-    }
-
-
-    function calculateMaxScale(object) {
-      const boundingBox = calculateBoundingBox(object);
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      // Berechne die maximal mögliche Skalierung, um im Viewport zu bleiben
-      const scaleWidth = viewportWidth / boundingBox.x;
-      const scaleHeight = viewportHeight / boundingBox.y;
-
-      // Wähle den kleineren Wert und reduziere ihn leicht, um sicherzugehen, dass das Objekt nicht über den Rand hinausgeht
-      const safeScaleFactor = 0.95; // Puffer, um sicherzustellen, dass es nicht zu groß wird
-
-      return Math.min(scaleWidth, scaleHeight) * safeScaleFactor;
-    }
-
-
-    /**
-        function openScaleMenu() {
-          if (!selectedPlacedModel) {
-            showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
-            return;
-          }
-    
-          // Berechne die maximale Skalierung für das spezifische Objekt
-          const maxScale = calculateMaxScale(selectedPlacedModel);
-    
-          // Aktuelle Skalierung des Modells bestimmen
-          const currentScale = selectedPlacedModel.scale.x;
-    
-          const dynamicMenu = document.getElementById("dynamic-menu");
-          dynamicMenu.style.display = "flex";
-          dynamicMenu.innerHTML = `
-        <h3>Skalierung anpassen</h3>
-        <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="${maxScale.toFixed(2)}" step="0.0001" value="${currentScale}" onchange="updateScale(this.value)"></label>
-        <button onclick="closeDynamicMenu()">Zurück</button>
-      `;
-        } * */
-
-
-
-
-
     function openScaleMenu() {
       if (!selectedPlacedModel) {
-        showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
+        console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
         return;
       }
-
-      // Berechne die maximale Skalierung für das spezifische Objekt
-      // const maxScale = calculateMaxScale(selectedPlacedModel);
 
       // Aktuelle Skalierung des Modells bestimmen
       const currentScale = selectedPlacedModel.scale.x;
@@ -679,9 +391,42 @@
       }
     }
 
+    function openMoveMenu() {
+      if (!selectedPlacedModel) {
+        console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bewegen.");
+        return;
+      }
+
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.style.display = "flex";
+      dynamicMenu.innerHTML = `
+    <h3>Modell bewegen</h3>
+    <div>
+      <button onclick="moveModel('x', -0.1)">← X</button>
+      <button onclick="moveModel('x', 0.1)">→ X</button>
+    </div>
+    <div>
+      <button onclick="moveModel('y', -0.1)">↓ Y</button>
+      <button onclick="moveModel('y', 0.1)">↑ Y</button>
+    </div>
+    <div>
+      <button onclick="moveModel('z', -0.1)">- Z</button>
+      <button onclick="moveModel('z', 0.1)">+ Z</button>
+    </div>
+    <button onclick="closeDynamicMenu()">Zurück</button>
+  `;
+    }
+
+    function moveModel(axis, delta) {
+      if (selectedPlacedModel) {
+        selectedPlacedModel.position[axis] += delta;
+      }
+    }
+
+
     function deleteModel() {
       if (!selectedPlacedModel) {
-        showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es löschen.");
+        console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es löschen.");
         return;
       }
 
