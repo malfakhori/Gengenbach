@@ -308,6 +308,7 @@
 
     function highlightSelectedModel() {
       if (selectedPlacedModel) {
+        removeHighlightFromAllModels();
         selectedPlacedModel.traverse((child) => {
           if (child.isMesh) {
             child.material.emissive.setHex(0xff0000); // Rote Hervorhebung
@@ -322,6 +323,14 @@
           if (child.isMesh) child.material.emissive.setHex(0x000000); // Markierung entfernen
         });
       }
+    }
+
+    function removeHighlightFromAllModels() {
+      scene.traverse((child) => {
+        if (child.isMesh && child.material && child.material.emissive) {
+          child.material.emissive.setHex(0x000000); // Markierung entfernen
+        }
+      });
     }
 
     function deleteModel() {
@@ -427,6 +436,7 @@
 
 
     let moveDelta = 0.1; // Standardwert für die Verschiebungsgröße, kann mit dem Slider geändert werden
+
     function openMoveMenu() {
       if (!selectedPlacedModel) {
         console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bewegen.");
@@ -441,19 +451,16 @@
     <div id="position-info">
       <p>Aktuelle Position: X=${selectedPlacedModel.position.x.toFixed(2)}, Z=${selectedPlacedModel.position.z.toFixed(2)}</p>
     </div>
-    <div>
-      <p>Verschiebungsgröße: <span id="move-delta-display">${moveDelta.toFixed(2)}</span></p>
-      <input type="range" min="0.01" max="1.0" step="0.01" value="${moveDelta}" 
-        onchange="updateMoveDelta(this.value)">
-    </div>
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+    <label>Verschiebungsgröße: <span id="move-delta-display">${moveDelta.toFixed(2)}</span></label>
+    <input type="range" min="0.01" max="1.0" step="0.01" value="${moveDelta}" onchange="updateMoveDelta(this.value)">
+    <div style="display: flex; flex-direction: column; align-items: center;">
       <div>
-        <button onclick="moveModel('x', -moveDelta)">← X</button>
-        <button onclick="moveModel('x', moveDelta)">→ X</button>
+        <button onclick="moveModelDynamic('x', -1)">← X</button>
+        <button onclick="moveModelDynamic('x', 1)">→ X</button>
       </div>
       <div>
-        <button onclick="moveModel('z', -moveDelta)">- Z</button>
-        <button onclick="moveModel('z', moveDelta)">+ Z</button>
+        <button onclick="moveModelDynamic('z', -1)">- Z</button>
+        <button onclick="moveModelDynamic('z', 1)">+ Z</button>
       </div>
     </div>
     <button onclick="closeDynamicMenu()">Zurück</button>
@@ -468,11 +475,12 @@
       }
     }
 
-    function moveModel(axis, delta) {
+    function moveModelDynamic(axis, direction) {
       if (selectedPlacedModel) {
-        selectedPlacedModel.position[axis] += delta; // Bewegung durchführen
+        const delta = direction * moveDelta; // Dynamischer Wert basierend auf Slider
+        selectedPlacedModel.position[axis] += delta;
 
-        // Positionsanzeige im Dynamic-Menü aktualisieren
+        // Position im Menü aktualisieren
         const positionInfo = document.getElementById("position-info");
         if (positionInfo) {
           positionInfo.innerHTML = `
