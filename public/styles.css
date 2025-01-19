@@ -1,0 +1,207 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-image: url('https://www.hft-stuttgart.de/fileadmin/Dateien/Hochschule/-_R_Juergen_Pollak_HFT_18.04.18-0091.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+
+  .container {
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 50px;
+    border-radius: 10px;
+    color: #333;
+    max-width: 80%;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+    color: #444;
+  }
+
+  p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+  }
+
+  #add-menu {
+    overflow-y: auto;
+
+  }
+
+  #menu-bar,
+  .menu-placeholder {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 80px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: #121212;
+    padding: 10px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.8);
+    color: white;
+    z-index: 10;
+    border-top: 1px solid #2a2a2a;
+  }
+
+  .menu-item {
+    background: #2c2c2c;
+    border-radius: 20px;
+    padding: 8px;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  .menu-item:hover {
+    background-color: #3a3a3a;
+    transform: scale(1.1);
+  }
+
+  .menu-item img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .menu-placeholder .menu-item img {
+    width: 50px;
+    height: 50px;
+  }
+
+  button {
+    background-color: #4CAF50;
+    color: white;
+    font-size: 1em;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out, transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 10px;
+  }
+
+  button:hover {
+    background-color: #45a049;
+  }
+
+  button:active {
+    background-color: #387a39;
+  }
+
+  /* Confirmation Dialog */
+  #confirmation-dialog,
+  #delete-confirmation-dialog,
+  #info-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+  }
+
+  .dialog-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .dialog-box {
+    position: relative;
+    background: #2c2c2c;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8);
+  }
+
+  .dialog-box p {
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    color: #f0f0f0;
+  }
+
+  .dialog-box button {
+    margin: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+  }
+
+  .dialog-box button:first-child {
+    background-color: #e74c3c;
+    color: white;
+  }
+
+  .dialog-box button:first-child:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
+  }
+
+  .dialog-box button:last-child {
+    background-color: #3498db;
+    color: white;
+  }
+
+  .dialog-box button:last-child:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+  }
+
+
+  #dynamic-menu {
+    position: absolute;
+    bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: #1e1e1e;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.8);
+    color: white;
+    width: 100vw;
+    height: 200px;
+    z-index: 20;
+    overflow-y: auto;
+    border-radius: 8px;
+  }
+
+
+  #dynamic-menu input[type="range"] {
+    width: 100%;
+    margin: 10px auto;
+    background: #3a3a3a;
+    border-radius: 5px;
+  }
+
+  #dynamic-menu input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #555;
+    border-radius: 50%;
+    cursor: pointer;
+  }
