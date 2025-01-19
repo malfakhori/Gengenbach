@@ -1,3 +1,6 @@
+/* ========================= */
+/*   DEBUGGING UND START     */
+/* ========================= */
 if (navigator.xr) {
     let sceneData;
     const startButton = document.createElement('button');

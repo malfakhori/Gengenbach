@@ -1,11 +1,16 @@
-    // Variablen
-    let selectedModel = 'robot';
+    /* ========================= */
+    /*    GLOBALE VARIABLEN      */
+    /* ========================= */
     let selectedPlacedModel = null;
     let currentSession = null;
     let reticle = null;
     let scene, camera;
     let geoLocation;
-
+    const menus = ['menu-bar', 'add-menu', 'edit-menu', 'options-menu', 'map-window'];
+    
+    /* ========================= */
+    /*          MODELLE          */
+    /* ========================= */
     let models = {
       bench: {
         name: "Bench",
@@ -65,12 +70,13 @@
       }
     };
 
-    const menus = ['menu-bar', 'add-menu', 'edit-menu', 'options-menu', 'map-window'];
-
+    /* ========================= */
+    /*     INITIALISIERUNG       */
+    /* ========================= */
     window.onload = () => {
       initializeAddMenu();
 
-      // Fügt Sound zu allen Buttons hinzu
+      // Allen Buttons den Sound hinzufügen
       const buttons = document.querySelectorAll("button, .menu-item");
       buttons.forEach(button => {
         button.addEventListener("click", playButtonSound);
@@ -95,6 +101,9 @@
       `;
     }
 
+    /* ========================= */
+    /*     MENÜ-STEUERUNG        */
+    /* ========================= */
     function showMenu(menuId) {
       const isMapWindow = menuId === 'map-window';
       if (isMapWindow && !geoLocation) {
@@ -111,23 +120,16 @@
       else if (isMapWindow) init_map();
     }
 
-    function clearSelectedModel() {
-      if (selectedPlacedModel) {
-        selectedPlacedModel.traverse((child) => {
-          if (child.isMesh) {
-            child.material.emissive.setHex(0x000000); // Markierung entfernen
-          }
-        });
-        selectedPlacedModel = null; // Kein Modell mehr ausgewählt
-      }
+    function closeDynamicMenu() {
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.style.display = "none";
     }
 
-    function selectModel(modelId) {
-      const model = models[modelId];
-      if (model && model.file) {
-        loadModel(model.file);
-        showMenu('menu-bar');
-      }
+    /* ========================= */
+    /*     MODELL-HANDLING       */
+    /* ========================= */
+    function getAllPlacedModels() {
+      return scene.children.filter(child => child.isPlacedModel === true);
     }
 
     function loadModel(filePath) {
@@ -164,30 +166,11 @@
       );
     }
 
-    function highlightSelectedModel() {
-      if (selectedPlacedModel) {
-        removeHighlightFromAllModels();
-        selectedPlacedModel.traverse((child) => {
-          if (child.isMesh) {
-            child.material.emissive.setHex(0xff0000); // Rote Hervorhebung
-          }
-        });
-      }
-    }
-
-    function removeHighlightFromAllModels() {
-      scene.traverse((child) => {
-        if (child.isMesh && child.material && child.material.emissive) {
-          child.material.emissive.setHex(0x000000); // Markierung entfernen
-        }
-      });
-    }
-
-    function removeHighlightFromSelectedModel() {
-      if (selectedPlacedModel) {
-        selectedPlacedModel.traverse((child) => {
-          if (child.isMesh) child.material.emissive.setHex(0x000000); // Markierung entfernen
-        });
+    function selectModel(modelId) {
+      const model = models[modelId];
+      if (model && model.file) {
+        loadModel(model.file);
+        showMenu('menu-bar');
       }
     }
 
@@ -210,10 +193,76 @@
           selectedObject = selectedObject.parent;
         }
 
+        // Überprüfe, ob das ausgewählte Objekt das Reticle ist
+        if (selectedObject === reticle) {
+          console.log("Reticle kann nicht ausgewählt werden.");
+          return;
+        }
+
         // Markiere das gesamte Modell als ausgewählt
         selectedPlacedModel = selectedObject;
         highlightSelectedModel();
         showMenu("edit-menu");
+      }
+    }
+
+    function clearSelectedModel() {
+      if (selectedPlacedModel) {
+        selectedPlacedModel.traverse((child) => {
+          if (child.isMesh) {
+            child.material.emissive.setHex(0x000000); // Markierung entfernen
+          }
+        });
+        selectedPlacedModel = null;
+      }
+    }
+
+    function highlightSelectedModel() {
+      if (selectedPlacedModel) {
+        removeHighlightFromAllModels();
+        selectedPlacedModel.traverse((child) => {
+          if (child.isMesh) {
+            child.material.emissive.setHex(0xff0000); // Rote Hervorhebung
+          }
+        });
+      }
+    }
+
+    function removeHighlightFromSelectedModel() {
+      if (selectedPlacedModel) {
+        selectedPlacedModel.traverse((child) => {
+          if (child.isMesh) child.material.emissive.setHex(0x000000); // Markierung entfernen
+        });
+      }
+    }
+
+
+      function removeHighlightFromAllModels() {
+        scene.traverse((child) => {
+          if (child.isMesh && child.material && child.material.emissive) {
+            child.material.emissive.setHex(0x000000); // Markierung entfernen
+          }
+        });
+      }
+  
+      function deleteModel() {
+        if (!selectedPlacedModel) {
+          console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es löschen.");
+          return;
+        }
+  
+        const deleteDialog = document.getElementById('delete-confirmation-dialog');
+        deleteDialog.style.display = 'flex';
+      }
+
+    function confirmDelete(shouldDelete) {
+      const deleteDialog = document.getElementById('delete-confirmation-dialog');
+      deleteDialog.style.display = 'none';
+
+      if (shouldDelete && selectedPlacedModel) {
+        scene.remove(selectedPlacedModel);
+        selectedPlacedModel = null;
+        showMenu('menu-bar');
       }
     }
 
@@ -225,14 +274,16 @@
       document.getElementById('menu-bar').style.display = 'flex';
     }
 
+    /* ========================= */
+    /*    BEARBEITUNGS-MENÜS     */
+    /* ========================= */
     function openRotationMenu() {
       if (!selectedPlacedModel) {
-        showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
+        console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
         return;
       }
 
-      // Holen Sie die aktuelle Y-Rotation des Modells (in Grad)
-      const currentRotation = Math.round(THREE.MathUtils.radToDeg(selectedPlacedModel.rotation.y));
+      const currentRotation = Math.round(THREE.MathUtils.radToDeg(selectedPlacedModel.rotation.y)); // Aktuelle Y-Rotation des Modells (in Grad)
 
       const dynamicMenu = document.getElementById("dynamic-menu");
       dynamicMenu.style.display = "flex";
@@ -248,7 +299,7 @@
         const radians = (value / 180) * Math.PI;
         selectedPlacedModel.rotation[axis] = radians;
 
-        // Update der aktuellen Rotation im Menü
+        // Anzeige der aktuellen Rotation im Dynamic-Menü aktualisieren
         const currentRotationDisplay = document.getElementById("current-rotation");
         if (currentRotationDisplay) {
           currentRotationDisplay.textContent = value; // Zeige den aktuellen Wert in Grad an
@@ -256,127 +307,101 @@
       }
     }
 
-    function calculateBoundingBox(object) {
-      const box = new THREE.Box3().setFromObject(object);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      return size;
-    }
-
-
-    function calculateMaxScale(object) {
-      const boundingBox = calculateBoundingBox(object);
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      // Berechne die maximal mögliche Skalierung, um im Viewport zu bleiben
-      const scaleWidth = viewportWidth / boundingBox.x;
-      const scaleHeight = viewportHeight / boundingBox.y;
-
-      // Wähle den kleineren Wert und reduziere ihn leicht, um sicherzugehen, dass das Objekt nicht über den Rand hinausgeht
-      const safeScaleFactor = 0.95; // Puffer, um sicherzustellen, dass es nicht zu groß wird
-
-      return Math.min(scaleWidth, scaleHeight) * safeScaleFactor;
-    }
-
-
-    /**
-        function openScaleMenu() {
-          if (!selectedPlacedModel) {
-            showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
-            return;
-          }
-    
-          // Berechne die maximale Skalierung für das spezifische Objekt
-          const maxScale = calculateMaxScale(selectedPlacedModel);
-    
-          // Aktuelle Skalierung des Modells bestimmen
-          const currentScale = selectedPlacedModel.scale.x;
-    
-          const dynamicMenu = document.getElementById("dynamic-menu");
-          dynamicMenu.style.display = "flex";
-          dynamicMenu.innerHTML = `
-        <h3>Skalierung anpassen</h3>
-        <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span><input type="range" min="0.01" max="${maxScale.toFixed(2)}" step="0.0001" value="${currentScale}" onchange="updateScale(this.value)"></label>
-        <button onclick="closeDynamicMenu()">Zurück</button>
-      `;
-        } * */
-
-
-
-
-
     function openScaleMenu() {
       if (!selectedPlacedModel) {
-        showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
+        console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.");
         return;
       }
 
-      // Berechne die maximale Skalierung für das spezifische Objekt
-      // const maxScale = calculateMaxScale(selectedPlacedModel);
-
-      // Aktuelle Skalierung des Modells bestimmen
+      // Aktuelle Skalierung und Grenzen bestimmen
       const currentScale = selectedPlacedModel.scale.x;
       const minScale = selectedPlacedModel.modelConfig.minScale;
       const maxScale = selectedPlacedModel.modelConfig.maxScale;
       const step = (maxScale - minScale) / 100; // Dynamische Schrittgröße basierend auf Grenzen
 
-      console.log("Slider-Werte:", { minScale, maxScale, currentScale });
+      const currentScalePercent = ((currentScale - minScale) / (maxScale - minScale)) * 100; // Umrechnung der Werte in Prozent
 
       const dynamicMenu = document.getElementById("dynamic-menu");
       dynamicMenu.style.display = "flex";
       dynamicMenu.innerHTML = `
         <h3>Skalierung anpassen</h3>
-        <label>Größe: <span id="scale-value">${currentScale.toFixed(2)}</span>
-        <input type="range" min="${minScale}" max="${maxScale}" step="${step}" value="${currentScale}" onchange="updateScale(this.value)"></label>
+        <label>Größe: <span id="scale-value">${currentScalePercent.toFixed(0)}%</span>
+        <input type="range" min="0" max="100" step="1" value="${currentScalePercent}" onchange="updateScale(this.value, ${minScale}, ${maxScale})"></label>
         <button onclick="closeDynamicMenu()">Zurück</button>
       `;
     }
 
-    function updateScale(value) {
+    function updateScale(percentValue, minScale, maxScale) {
       if (selectedPlacedModel) {
-        const scale = parseFloat(value);
+        // Berechnung der Skalierung basierend auf dem Prozentwert
+        const scale = minScale + (percentValue / 100) * (maxScale - minScale);
         selectedPlacedModel.scale.set(scale, scale, scale);
 
-        // Anzeige des aktuellen Wertes aktualisieren
+        // Anzeige des aktuellen Prozentsatzes im Dynamic-Menü aktualisieren
         const scaleValueDisplay = document.getElementById("scale-value");
         if (scaleValueDisplay) {
-          scaleValueDisplay.textContent = `${scale.toFixed(2)}`;
+          scaleValueDisplay.textContent = `${parseInt(percentValue, 10)}%`;
         }
       }
     }
 
-    function deleteModel() {
+    let moveDelta = 0.1; // Standardwert für die Verschiebungsgröße, kann mit dem Slider geändert werden
+
+    function openMoveMenu() {
       if (!selectedPlacedModel) {
-        showInfoDialog("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es löschen.");
+        console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bewegen.");
         return;
       }
 
-      // Dialog anzeigen
-      const deleteDialog = document.getElementById('delete-confirmation-dialog');
-      deleteDialog.style.display = 'flex';
+      const dynamicMenu = document.getElementById("dynamic-menu");
+      dynamicMenu.style.display = "flex";
+
+      dynamicMenu.innerHTML = `
+    <h3>Modell bewegen</h3>
+    <div id="position-info">
+      <p>Aktuelle Position: X=${selectedPlacedModel.position.x.toFixed(2)}, Z=${selectedPlacedModel.position.z.toFixed(2)}</p>
+    </div>
+    <label>Verschiebungsgröße: <span id="move-delta-display">${moveDelta.toFixed(2)}</span></label>
+    <input type="range" min="0.01" max="1.0" step="0.01" value="${moveDelta}" onchange="updateMoveDelta(this.value)">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+      <div>
+        <button onclick="moveModelDynamic('x', -1)">← X</button>
+        <button onclick="moveModelDynamic('x', 1)">→ X</button>
+      </div>
+      <div>
+        <button onclick="moveModelDynamic('z', -1)">- Z</button>
+        <button onclick="moveModelDynamic('z', 1)">+ Z</button>
+      </div>
+    </div>
+    <button onclick="closeDynamicMenu()">Zurück</button>
+  `;
     }
 
-    function confirmDelete(shouldDelete) {
-      const deleteDialog = document.getElementById('delete-confirmation-dialog');
-      deleteDialog.style.display = 'none';
-
-      if (shouldDelete && selectedPlacedModel) {
-        scene.remove(selectedPlacedModel);
-        selectedPlacedModel = null;
-        showMenu('menu-bar');
+    function updateMoveDelta(value) {
+      moveDelta = parseFloat(value);
+      const moveDeltaDisplay = document.getElementById("move-delta-display");
+      if (moveDeltaDisplay) {
+        moveDeltaDisplay.textContent = moveDelta.toFixed(2);
       }
     }
 
-    function closeDynamicMenu() {
-      const dynamicMenu = document.getElementById("dynamic-menu");
-      dynamicMenu.style.display = "none";
+    function moveModelDynamic(axis, direction) {
+      if (selectedPlacedModel) {
+        const delta = direction * moveDelta; // Dynamischer Wert basierend auf Slider
+        selectedPlacedModel.position[axis] += delta;
+
+        // Position im Menü aktualisieren
+        const positionInfo = document.getElementById("position-info");
+        if (positionInfo) {
+          positionInfo.innerHTML = `
+        <p>Aktuelle Position: X=${selectedPlacedModel.position.x.toFixed(2)}, Z=${selectedPlacedModel.position.z.toFixed(2)}</p>`;
+        }
+      }
     }
 
-    function getAllPlacedModels() {
-      return scene.children.filter(child => child.isPlacedModel === true);
-    }    
-
+    /* ========================= */
+    /*      KARTENSTEUERUNG      */
+    /* ========================= */
     function refreshMapDialog() {
       const mapDialog = document.getElementById('map-dialog');
       mapDialog.style.display = 'flex';
@@ -387,6 +412,9 @@
       mapDialog.style.display = 'none';
     }
 
+    /* ========================= */
+    /*        AR-HANDLING        */
+    /* ========================= */
     async function activateXR(sceneData = null) {
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
@@ -424,6 +452,7 @@
 
       currentSession.addEventListener("end", () => {
         currentSession = null;
+        document.getElementById("dynamic-menu").style.display = "none";
         menus.forEach(id => {
           document.getElementById(id).style.display = 'none';
         });
@@ -441,7 +470,6 @@
           console.log("GeoLocation: " + JSON.stringify(geoLocation));
           if (sceneData) {
             sceneData.models.forEach((model) => {
-                const offSet = leafletToThree(sceneData.lat, sceneData.lng)
                 if (model.name) {
                     const filePath = Object.values(models).find(m => model.name === m.name).file;
                     const { x, z } = leafletToThree(model.lat, model.lng);
@@ -498,14 +526,14 @@
     }
 
     function confirmExit(shouldExit) {
-      if (shouldExit && currentSession) {
-        currentSession.end();
-      }
+      if (shouldExit && currentSession) currentSession.end();
       document.getElementById('confirmation-dialog').style.display = 'none';
     }
 
+    /* ========================= */
+    /*   BENUTZERINTERAKTIONEN   */
+    /* ========================= */
     let soundTimeout = false;
-
     function playButtonSound() {
       if (!soundTimeout) {
         const sound = document.getElementById("button-sound");
