@@ -356,32 +356,27 @@ function openMoveMenu() {
     const dynamicMenu = document.getElementById("dynamic-menu");
     dynamicMenu.style.display = "flex";
     dynamicMenu.innerHTML = `
-        <div id="move-menu">
-            <h3>Position anpassen</h3>
-            <label>
-                Verschiebungsgröße: <span id="move-delta-display">${moveDelta.toFixed(2)}</span>
-                <input type="range" min="0.01" max="1.0" step="0.01" value="${moveDelta}" onchange="updateMoveDelta(this.value)">
-            </label>
-            <div id="button-controls">
-                <button class="control-button" id="up" onclick="moveModelDynamic('z', -moveDelta)">
-                    <img src="assets/icons/up-arrow.png" alt="Up" />
-                </button>
-                <div class="middle-row">
-                    <button class="control-button" id="left" onclick="moveModelDynamic('x', -moveDelta)">
-                        <img src="assets/icons/left-arrow.png" alt="Left" />
-                    </button>
-                    <div class="spacer"></div>
-                    <button class="control-button" id="right" onclick="moveModelDynamic('x', moveDelta)">
-                        <img src="assets/icons/right-arrow.png" alt="Right" />
-                    </button>
-                </div>
-                <button class="control-button" id="down" onclick="moveModelDynamic('z', moveDelta)">
-                    <img src="assets/icons/down-arrow.png" alt="Down" />
-                </button>
-            </div>
-            <button onclick="closeDynamicMenu()">Zurück</button>
+    <h3>Position anpassen</h3>
+    <label>
+      Verschiebungsgröße: <span id="move-delta-display">${moveDelta.toFixed(2)}</span>
+      <input type="range" min="0.01" max="1.0" step="0.01" value="${moveDelta}" onchange="updateMoveDelta(this.value)">
+    </label>
+    <div style="display: flex; gap: 4px;">
+        <div class="control-button" id="left" onclick="moveModelDynamic('x', -moveDelta)">
+            <img src="assets/icons/left-arrow.png" alt="Up" />
         </div>
-    `;
+        <div class="control-button" id="right" onclick="moveModelDynamic('x', moveDelta)">
+            <img src="assets/icons/right-arrow.png" alt="Up" />
+        </div>
+        <div class="control-button" id="up" onclick="moveModelDynamic('z', -moveDelta)">
+            <img src="assets/icons/up-arrow.png" alt="Up" />
+        </div>
+        <div class="control-button" id="down" onclick="moveModelDynamic('z', moveDelta)">
+            <img src="assets/icons/down-arrow.png" alt="Up" />
+        </div>
+    </div>
+    <button onclick="closeDynamicMenu()">Zurück</button>
+  `;
 }
 
 function updateMoveDelta(value) {
