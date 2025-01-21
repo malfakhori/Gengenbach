@@ -248,21 +248,7 @@ button:active {
   gap: 10px;
 }
 
-#button-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-#button-controls .middle-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-}
-
-#button-controls .control-button {
+.control-button {
   width: 40px;
   height: 40px;
   border: none;
@@ -272,12 +258,12 @@ button:active {
   transition: background-color 0.3s, transform 0.2s;
 }
 
-#button-controls .control-button img {
+.control-button img {
   width: 40px;
   height: 40px;
 }
 
-#button-controls .control-button:active {
+.control-button:active {
   background-color: #0056b3;
   transform: scale(0.95);
 }
