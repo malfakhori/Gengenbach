@@ -25,7 +25,7 @@ function init_map() {
             CartoDB_Positron.addTo(mymap);
     
             userIcon = L.icon({
-                iconUrl: 'previewImages/map-user.png',
+                iconUrl: 'assets/previewImages/map-user.png',
                 iconSize: [32, 32],
                 iconAnchor: [16, 32],
                 popupAnchor: [0, -32]
