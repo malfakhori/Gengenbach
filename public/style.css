@@ -242,7 +242,7 @@ button:active {
 /* Style für Move Menu */
 .button-row {
   display: flex;
-  gap: 4px;
+  gap: 10px;
   justify-content: center;
   align-items: center;
 }
@@ -253,6 +253,7 @@ button:active {
   height: 40px;
   border: none;
   border-radius: 5px;
+  padding: 8px;
   background-color: #007BFF;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
