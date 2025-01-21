@@ -20,13 +20,13 @@
   <!-- Standardmenü -->
   <div id="menu-bar" style="display: none;">
     <div class="menu-item" id="add-section" onclick="showMenu('add-menu')">
-      <img src="previewImages/add-icon.png" alt="Hinzufügen" />
+      <img src="assets/icons/add-icon.png" alt="Hinzufügen" />
     </div>
     <div class="menu-item" onclick="showMenu('map-window')">
-      <img src="previewImages/map-icon.png" alt="Karte" />
+      <img src="assets/icons/map-icon.png" alt="Karte" />
     </div>
     <div class="menu-item" id="options-section" onclick="showMenu('options-menu')">
-      <img src="previewImages/options-icon.png" alt="Optionen" />
+      <img src="assets/icons/options-icon.png" alt="Optionen" />
     </div>
   </div>
 
@@ -36,32 +36,32 @@
   <!-- Bearbeiten-Menü -->
   <div id="edit-menu" class="menu-placeholder" style="display: none;">
     <div class="menu-item" onclick="openRotationMenu()">
-      <img src="previewImages/rotate-icon.png" alt="Rotation" />
+      <img src="assets/icons/rotate-icon.png" alt="Rotation" />
     </div>
     <div class="menu-item" onclick="openScaleMenu()">
-      <img src="previewImages/scale-icon.png" alt="Skalierung" />
+      <img src="assets/icons/scale-icon.png" alt="Skalierung" />
     </div>
     <div class="menu-item" onclick="openMoveMenu()">
-      <img src="previewImages/move-icon.png" alt="Bewegen" />
+      <img src="assets/icons/move-icon.png" alt="Bewegen" />
     </div>
     <div class="menu-item" onclick="deleteModel()">
-      <img src="previewImages/delete-icon.png" alt="Löschen" />
+      <img src="assets/icons/delete-icon.png" alt="Löschen" />
     </div>
     <div class="menu-item" onclick="completeEditing()">
-      <img src="previewImages/check-icon.png" alt="Fertigstellen" />
+      <img src="assets/icons/check-icon.png" alt="Fertigstellen" />
     </div>
   </div>
 
   <!-- Optionen-Menü -->
   <div id="options-menu" class="menu-placeholder" style="display: none;">
     <div class="menu-item" onclick="exitAR()">
-      <img src="previewImages/exit-icon.png" alt="Beenden" />
+      <img src="assets/icons/exit-icon.png" alt="Beenden" />
     </div>
     <div class="menu-item" onclick="downloadScene()">
-      <img src="previewImages/download-icon.png" alt="Download" />
+      <img src="assets/icons/download-icon.png" alt="Download" />
     </div>
     <div class="menu-item" onclick="showMenu('menu-bar')">
-      <img src="previewImages/back-icon.png" alt="Zurück" />
+      <img src="assets/icons/back-icon.png" alt="Zurück" />
     </div>
   </div>
 
@@ -93,7 +93,7 @@
     <div id="map-container" style="z-index: 1500; flex: 15; width: 100%; height: 100%;"></div>
     <div class="menu-item" onclick="showMenu('menu-bar')"
       style="cursor: pointer; flex: 1; align-items: center; justify-content: center;">
-      <img src="previewImages/back-icon.png" alt="Zurück" style="width: 30px; height: 30px;" />
+      <img src="assets/icons/back-icon.png" alt="Zurück" style="width: 30px; height: 30px;" />
     </div>
   </div>
 
@@ -107,7 +107,7 @@
   <script src="ar_download.js"></script>
 
   <!-- Audio-Element für Button-Klick -->
-  <audio id="button-sound" src="sounds/button-sound.mp3" preload="auto"></audio>
+  <audio id="button-sound" src="assets/sounds/button-sound.mp3" preload="auto"></audio>
 </body>
 
 </html>
