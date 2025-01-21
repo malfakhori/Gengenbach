@@ -15,23 +15,31 @@
       bench: {
         name: "Bench",
         image: "previewImages/bench.PNG",
-        file: "/assets/models/bench_model/scene.gltf",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf",
         scale: { x: 0.1, y: 0.1, z: 0.1 },
-        minScale: 0.05, // 50% der aktuellen Größe
-        maxScale: 0.5   // 500% der aktuellen Größe
+        minScale: 0.05,
+        maxScale: 0.5
       },
       trashbin: {
         name: "Trash bin",
         image: "previewImages/trash_can.PNG",
-        file: "/assets/models/trash_model/scene.gltf",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf",
         scale: { x: 0.03, y: 0.03, z: 0.03 },
-        minScale: 0.01, // 50% der aktuellen Größe
-        maxScale: 0.1   // 500% der aktuellen Größe
+        minScale: 0.01,
+        maxScale: 0.1
+      },
+      lantern: {
+        name: "Lantern",
+        image: "previewImages/park_light.png",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/park_light_model/scene.gltf",
+        scale: { x: 0.5, y: 0.5, z: 0.5 },
+        minScale: 0.2,
+        maxScale: 5
       },
       telephone_box: {
         name: "Telephone Box",
         image: "previewImages/telephone_box.PNG",
-        file: "/assets/models/telephone_box_model/scene.gltf",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/telephone_box_model/scene.gltf",
         scale: { x: 0.5, y: 0.5, z: 0.5 },
         minScale: 0.05,
         maxScale: 1
@@ -39,7 +47,7 @@
       fire_hydrant_model: {
         name: "Fire Hydrant",
         image: "previewImages/hydrant.PNG",
-        file: "/assets/models/fire_hydrant_model/scene.gltf",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fire_hydrant_model/scene.gltf",
         scale: { x: 0.3, y: 0.3, z: 0.3 },
         minScale: 0.1,
         maxScale: 1
@@ -47,7 +55,7 @@
       statue: {
         name: "Statue",
         image: "previewImages/statue.PNG",
-        file: "/assets/models/statue_model/scene.gltf",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/statue_model/scene.gltf",
         scale: { x: 0.5, y: 0.5, z: 0.5 },
         minScale: 0.05,
         maxScale: 2
@@ -55,18 +63,10 @@
       fountain: {
         name: "Fountain",
         image: "previewImages/fountain.PNG",
-        file: "/assets/models/fountain_model/scene.gltf",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fountain_model/scene.gltf",
         scale: { x: 0.001, y: 0.001, z: 0.001 },
         minScale: 0.0005,
         maxScale: 0.005
-      },
-      lantern: {
-        name: "Lantern",
-        image: "previewImages/lantern.jpg",
-        file: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/refs/heads/main/Models/Lantern/glTF/Lantern.gltf",
-        scale: { x: 0.15, y: 0.15, z: 0.15 },
-        minScale: 0.05,
-        maxScale: 0.3
       }
     };
 
@@ -347,7 +347,7 @@
 
     let moveDelta = 0.1; // Standardwert für die Verschiebungsgröße, kann mit dem Slider geändert werden
 
-    function openMoveMenu() {
+function openMoveMenu() {
       if (!selectedPlacedModel) {
         console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bewegen.");
         return;
@@ -358,20 +358,18 @@
 
       dynamicMenu.innerHTML = `
     <h3>Modell bewegen</h3>
-    <div id="position-info">
-      <p>Aktuelle Position: X=${selectedPlacedModel.position.x.toFixed(2)}, Z=${selectedPlacedModel.position.z.toFixed(2)}</p>
-    </div>
-    <label>Verschiebungsgröße: <span id="move-delta-display">${moveDelta.toFixed(2)}</span></label>
-    <input type="range" min="0.01" max="1.0" step="0.01" value="${moveDelta}" onchange="updateMoveDelta(this.value)">
-    <div style="display: flex; flex-direction: column; align-items: center;">
-      <div>
-        <button onclick="moveModelDynamic('x', -1)">← X</button>
-        <button onclick="moveModelDynamic('x', 1)">→ X</button>
-      </div>
-      <div>
-        <button onclick="moveModelDynamic('z', -1)">- Z</button>
-        <button onclick="moveModelDynamic('z', 1)">+ Z</button>
-      </div>
+    <label>
+      Aktuelle Position: X=${selectedPlacedModel.position.x.toFixed(2)}, Z=${selectedPlacedModel.position.z.toFixed(2)}
+    </label>
+    <label>
+      Verschiebungsgröße: <span id="move-delta-display">${moveDelta.toFixed(2)}</span>
+      <input type="range" min="0.01" max="1.0" step="0.01" value="${moveDelta}" onchange="updateMoveDelta(this.value)">
+    </label>
+    <div style="display: flex; gap: 4px;">
+      <button onclick="moveModelDynamic('x', -1)">← X</button>
+      <button onclick="moveModelDynamic('x', 1)">→ X</button>
+      <button onclick="moveModelDynamic('z', -1)">- Z</button>
+      <button onclick="moveModelDynamic('z', 1)">+ Z</button>
     </div>
     <button onclick="closeDynamicMenu()">Zurück</button>
   `;
