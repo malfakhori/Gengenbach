@@ -355,51 +355,20 @@ function openMoveMenu() {
     dynamicMenu.style.display = "flex";
 
     dynamicMenu.innerHTML = `
-          <h3>Modell bewegen</h3>
-          <div id="joystick-container" style="position: relative; width: 100px; height: 100px; border: 2px solid #ccc; border-radius: 50%; margin: 20px auto;">
-            <div id="joystick-knob" style="position: absolute; width: 30px; height: 30px; background: #007BFF; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-          </div>
-          <button onclick="closeDynamicMenu()">Zurück</button>
+        <div id="move-menu">
+            <h3>Modell bewegen</h3>
+            <div id="button-controls">
+                <button id="up" onclick="moveModelDynamic('z', -0.1)">↑</button>
+                <div class="middle-row">
+                    <button id="left" onclick="moveModelDynamic('x', -0.1)">←</button>
+                    <div class="spacer"></div>
+                    <button id="right" onclick="moveModelDynamic('x', 0.1)">→</button>
+                </div>
+                <button id="down" onclick="moveModelDynamic('z', 0.1)">↓</button>
+            </div>
+            <button onclick="closeDynamicMenu()">Zurück</button>
+        </div>
         `;
-
-    const container = document.getElementById("joystick-container");
-    const knob = document.getElementById("joystick-knob");
-    let isDragging = false;
-
-    const center = { x: container.offsetWidth / 2, y: container.offsetHeight / 2 };
-    const maxDistance = container.offsetWidth / 2;
-
-    knob.addEventListener("mousedown", () => (isDragging = true));
-    document.addEventListener("mouseup", () => {
-        isDragging = false;
-        knob.style.left = "50%";
-        knob.style.top = "50%";
-        moveModelDynamic('x', 0); // Bewegung stoppen, wenn Maus losgelassen wird
-        moveModelDynamic('z', 0);
-    });
-
-    document.addEventListener("mousemove", (event) => {
-        if (!isDragging) return;
-
-        const rect = container.getBoundingClientRect();
-        const dx = event.clientX - rect.left - center.x;
-        const dy = event.clientY - rect.top - center.y;
-        const distance = Math.min(Math.sqrt(dx * dx + dy * dy), maxDistance);
-
-        const angle = Math.atan2(dy, dx);
-        const offsetX = Math.cos(angle) * distance;
-        const offsetY = Math.sin(angle) * distance;
-
-        // Knopfposition aktualisieren
-        knob.style.left = `${center.x + offsetX}px`;
-        knob.style.top = `${center.y + offsetY}px`;
-
-        // Bewegung basierend auf Joystick-Position anwenden
-        const normalizedX = offsetX / maxDistance;
-        const normalizedY = offsetY / maxDistance;
-        moveModelDynamic('x', normalizedX * 0.1); // Feine Anpassung
-        moveModelDynamic('z', -normalizedY * 0.1); // Feine Anpassung
-    });
 }
 
 function moveModelDynamic(axis, value) {
