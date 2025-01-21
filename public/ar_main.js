@@ -345,6 +345,8 @@ function updateScale(percentValue, minScale, maxScale) {
     }
 }
 
+let moveDelta = 0.1; // Standardwert für die Verschiebungsgröße, kann mit dem Slider geändert werden
+
 function openMoveMenu() {
     if (!selectedPlacedModel) {
         console.log("Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bewegen.");
@@ -353,22 +355,29 @@ function openMoveMenu() {
 
     const dynamicMenu = document.getElementById("dynamic-menu");
     dynamicMenu.style.display = "flex";
-
     dynamicMenu.innerHTML = `
-        <div id="move-menu">
-            <h3>Modell bewegen</h3>
-            <div id="button-controls">
-                <button id="up" onclick="moveModelDynamic('z', -0.1)">↑</button>
-                <div class="middle-row">
-                    <button id="left" onclick="moveModelDynamic('x', -0.1)">←</button>
-                    <div class="spacer"></div>
-                    <button id="right" onclick="moveModelDynamic('x', 0.1)">→</button>
-                </div>
-                <button id="down" onclick="moveModelDynamic('z', 0.1)">↓</button>
+        <h3>Position anpassen</h3>
+        <label>Verschiebungsgröße: <span id="move-delta-display">${moveDelta.toFixed(2)}</span>
+        <input type="range" min="0.01" max="1.0" step="0.01" value="${moveDelta}" onchange="updateMoveDelta(this.value)"></label>
+        <div id="button-controls">
+            <button class="control-button" id="up" onclick="moveModelDynamic('z', -moveDelta)">↑</button>
+            <div class="middle-row">
+                <button class="control-button" id="left" onclick="moveModelDynamic('x', -moveDelta)">←</button>
+                <div class="spacer"></div>
+                <button class="control-button" id="right" onclick="moveModelDynamic('x', moveDelta)">→</button>
             </div>
-            <button onclick="closeDynamicMenu()">Zurück</button>
+            <button class="control-button" id="down" onclick="moveModelDynamic('z', moveDelta)">↓</button>
         </div>
-        `;
+        <button onclick="closeDynamicMenu()">Zurück</button>
+      `;
+}
+
+function updateMoveDelta(value) {
+    moveDelta = parseFloat(value);
+    const moveDeltaDisplay = document.getElementById("move-delta-display");
+    if (moveDeltaDisplay) {
+        moveDeltaDisplay.textContent = moveDelta.toFixed(2);
+    }
 }
 
 function moveModelDynamic(axis, value) {
