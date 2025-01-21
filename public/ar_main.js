@@ -125,6 +125,19 @@ function closeDynamicMenu() {
     dynamicMenu.style.display = "none";
 }
 
+function showInfoDialog(message) {
+    const infoDialog = document.getElementById("info-dialog");
+    const infoText = document.getElementById("info-text");
+
+    infoText.textContent = message; // Nachricht setzen
+    infoDialog.style.display = "flex";
+}
+
+function closeInfoDialog() {
+    const infoDialog = document.getElementById("info-dialog");
+    infoDialog.style.display = "none";
+}
+
 /* ========================= */
 /*     MODELL-HANDLING       */
 /* ========================= */
