@@ -240,34 +240,26 @@ button:active {
 
 
 /* Style für Move Menu */
-#move-menu {
+#button-controls {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 2px;
 }
 
-#move-menu #button-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-#move-menu .middle-row {
+#button-controls .middle-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 2px;
 }
 
-#move-menu button {
-  width: 50px;
-  height: 50px;
+#button-controls .control-button {
+  width: 40px;
+  height: 40px;
   border: none;
-  border-radius: 8px;
+  border-radius: 5px;
   background-color: #007BFF;
   color: white;
   font-size: 18px;
@@ -275,11 +267,11 @@ button:active {
   transition: background-color 0.3s, transform 0.2s;
 }
 
-#move-menu button:active {
+#button-controls .control-button:active {
   background-color: #0056b3;
   transform: scale(0.95);
 }
 
-#move-menu .spacer {
-  width: 50px; /* Platzhalter für die Lücke zwischen den Buttons */
+#button-controls .spacer {
+  width: 40px;
 }
