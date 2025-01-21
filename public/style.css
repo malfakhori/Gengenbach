@@ -253,7 +253,6 @@ button:active {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
 }
 
 #button-controls .middle-row {
@@ -274,9 +273,8 @@ button:active {
 }
 
 #button-controls .control-button img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: 40px;
+  height: 40px;
 }
 
 #button-controls .control-button:active {
