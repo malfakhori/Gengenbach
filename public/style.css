@@ -240,6 +240,14 @@ button:active {
 
 
 /* Style für Move Menu */
+#move-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
 #button-controls {
   display: flex;
   flex-direction: column;
@@ -261,10 +269,14 @@ button:active {
   border: none;
   border-radius: 5px;
   background-color: #007BFF;
-  color: white;
-  font-size: 18px;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
+}
+
+#button-controls .control-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 #button-controls .control-button:active {
