@@ -1084,7 +1084,7 @@ async function activateXR(
 // Soft overall illumination
     const ambientLight = new THREE.AmbientLight(
         0xffffff,
-        1.5
+        2.5
     );
 
     scene.add(ambientLight);
