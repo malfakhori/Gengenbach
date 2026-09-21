@@ -8,6 +8,8 @@ let reticle = null;
 let scene, camera;
 let geoLocation;
 
+const modelCache = new Map();
+
 const menus = [
     'menu-bar',
     'add-menu',
