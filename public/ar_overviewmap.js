@@ -30,7 +30,7 @@ function init_map() {
                 'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
                 {
                     maxZoom: 30,
-                    minZoom: 15,
+                    //minZoom: 15,
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }
             );
