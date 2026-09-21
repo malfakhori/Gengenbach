@@ -38,20 +38,15 @@ function init_map() {
             // Select one basemap from:
             // https://leaflet-extras.github.io/leaflet-providers/preview/
 
-            var CartoDB_Positron = L.tileLayer(
-                'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                {
-                    attribution:
-                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors ' +
-                        '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-                    subdomains: 'abcd',
-                    maxZoom: 30,
-                    minZoom: 15
-                }
+            var OpenStreetMap_DE = L.tileLayer(
+                'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+                    {
+                         maxZoom: 20,
+                         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                     }
             );
 
-            CartoDB_Positron.addTo(mymap);
-
+            OpenStreetMap_DE.addTo(mymap);
 
             // ====================================================
             // User icon
