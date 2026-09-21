@@ -366,32 +366,64 @@ function placeModel(
             );
 
 
-    const loader =
-        new THREE.GLTFLoader();
+const loader = new THREE.GLTFLoader();
 
+if (modelCache.has(filePath)) {
 
+    // Use the already loaded model
+    const cachedModel = modelCache.get(filePath);
+    const model = cachedModel.clone(true);
+
+    if (
+        modelConfig &&
+        modelConfig.scale
+    ) {
+        model.scale.set(
+            modelConfig.scale.x,
+            modelConfig.scale.y,
+            modelConfig.scale.z
+        );
+    }
+
+    model.position.copy(position);
+
+    model.isPlacedModel = true;
+    model.modelConfig = modelConfig;
+
+    scene.add(model);
+
+    if (onPlace) {
+        onPlace(model);
+    }
+
+} else {
+
+    // Model has not been loaded yet
     loader.load(
 
         filePath,
 
         (gltf) => {
 
-            const model =
-                gltf.scene;
+            // Store the original model in the cache
+            modelCache.set(
+                filePath,
+                gltf.scene
+            );
 
+            const model =
+                gltf.scene.clone(true);
 
             if (
                 modelConfig &&
                 modelConfig.scale
             ) {
-
                 model.scale.set(
                     modelConfig.scale.x,
                     modelConfig.scale.y,
                     modelConfig.scale.z
                 );
             }
-
 
             model.position.copy(position);
 
@@ -402,9 +434,7 @@ function placeModel(
 
             scene.add(model);
 
-
             if (onPlace) {
-
                 onPlace(model);
             }
         },
@@ -419,6 +449,8 @@ function placeModel(
             );
         }
     );
+}
+
 }
 
 
