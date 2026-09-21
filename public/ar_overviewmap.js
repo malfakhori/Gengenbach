@@ -7,8 +7,26 @@ let modeMarkers = [];
 // ============================================================
 // Proposed plan overlay
 // ============================================================
+
 let planOverlay = null;
 let planVisible = false;
+
+// Proposed plan geographic bounds
+// DHDN / Gauss-Krüger Zone 3
+// Converted to WGS84
+//
+// Southwest:
+// Latitude  = 48.405858385
+// Longitude = 7.997080070
+//
+// Northeast:
+// Latitude  = 48.414966828
+// Longitude = 8.010410216
+
+const planBounds = [
+    [48.405858385, 7.997080070],  // Southwest / bottom-left
+    [48.414966828, 8.010410216]   // Northeast / top-right
+];
 
 const earthRadius = 6378137; // Erdradius in Metern (WGS84)
 
@@ -16,6 +34,7 @@ const earthRadius = 6378137; // Erdradius in Metern (WGS84)
 // ============================================================
 // Initialize map
 // ============================================================
+
 function init_map() {
 
     const mapContainer = document.getElementById("map-container");
@@ -24,23 +43,28 @@ function init_map() {
 
         if (!init) {
 
+            // ====================================================
+            // Create Leaflet map
+            // ====================================================
+
             mymap = L.map(mapContainer);
 
+
+            // ====================================================
+            // OpenStreetMap Germany basemap
+            // ====================================================
+
             var OpenStreetMap_DE = L.tileLayer(
-                'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
+                'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
                 {
-                    //maxZoom: 30,
-                    //minZoom: 15,
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    maxZoom: 20,
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }
             );
 
-            // Select one basemap from:
-            // https://leaflet-extras.github.io/leaflet-providers/preview/
-
-
-
             OpenStreetMap_DE.addTo(mymap);
+
 
             // ====================================================
             // User icon
@@ -57,18 +81,17 @@ function init_map() {
             // ====================================================
             // Initial map position
             // ====================================================
+            //
+            // The map is centered on the proposed plan instead
+            // of the user's current GPS position.
+            //
+            // We use fitBounds() so the whole plan is visible.
+            //
 
-            //mymap.setView(
-            //    [geoLocation.latitude, geoLocation.longitude],
-            //    20
-            //);
+            mymap.fitBounds(planBounds, {
+                padding: [20, 20]
+            });
 
-            const planBounds = [
-                [48.405858385, 7.997080070],  // Southwest
-                [48.414966828, 8.010410216]   // Northeast
-            ];
-
-            mymap.fitBounds(planBounds);
 
             // ====================================================
             // User position marker
@@ -97,6 +120,10 @@ function init_map() {
         });
 
 
+        // Clear marker array
+        modeMarkers = [];
+
+
         // ========================================================
         // Add currently placed models to map
         // ========================================================
@@ -109,6 +136,7 @@ function init_map() {
                 model.position.x,
                 model.position.z
             );
+
 
             const modelMarker = L.marker(
                 [lat, lng],
@@ -126,6 +154,7 @@ function init_map() {
                 model.modelConfig?.name || "Unbenannt"
             );
 
+
             modeMarkers.push(modelMarker);
         });
 
@@ -138,11 +167,56 @@ function init_map() {
 
 
         // ========================================================
+        // Make sure Leaflet knows the map container dimensions
+        // ========================================================
+
+        setTimeout(() => {
+
+            centerOnPlan();
+
+        }, 100);
+
+
+        // ========================================================
         // Update map position continuously
         // ========================================================
 
         intervalId = setInterval(updateMap, 500);
     }
+}
+
+
+// ============================================================
+// Center map on proposed plan
+// ============================================================
+
+function centerOnPlan() {
+
+    if (!mymap) {
+
+        console.error(
+            "Map ist noch nicht initialisiert."
+        );
+
+        return;
+    }
+
+
+    // Tell Leaflet to recalculate the map container size.
+    // This is important because map-window may initially
+    // be hidden when the map is initialized.
+
+    mymap.invalidateSize();
+
+
+    // Center and zoom the map on the proposed plan.
+
+    mymap.fitBounds(
+        planBounds,
+        {
+            padding: [20, 20]
+        }
+    );
 }
 
 
@@ -173,39 +247,36 @@ function init_map() {
 // Northeast:
 // Latitude  = 48.414966828
 // Longitude = 8.010410216
+//
+// Image:
+//
+// assets/plans/proposed-plan.png
 // ============================================================
 
 function addPlanOverlay() {
 
     if (!mymap) {
-        console.error("Map ist noch nicht initialisiert.");
+
+        console.error(
+            "Map ist noch nicht initialisiert."
+        );
+
         return;
     }
 
 
-    // If the overlay already exists,
-    // simply make sure that it is visible.
+    // ========================================================
+    // If overlay already exists, show it
+    // ========================================================
+
     if (planOverlay) {
 
         planOverlay.addTo(mymap);
+
         planVisible = true;
 
         return;
     }
-
-
-    // ========================================================
-    // Geographic bounds of the plan
-    // ========================================================
-
-    const planBounds = [
-
-        // Southwest / bottom-left
-        [48.405858385, 7.997080070],
-
-        // Northeast / top-right
-        [48.414966828, 8.010410216]
-    ];
 
 
     // ========================================================
@@ -214,14 +285,12 @@ function addPlanOverlay() {
 
     planOverlay = L.imageOverlay(
         'assets/plans/proposed-plan.png',
-
         planBounds,
-
         {
-            // Transparency of the plan
+            // Transparency
             opacity: 0.7,
 
-            // Plan does not capture mouse/touch events
+            // The plan does not capture mouse/touch events
             interactive: false
         }
     );
@@ -249,6 +318,7 @@ function updateMap() {
     ) {
 
         clearInterval(intervalId);
+
         intervalId = null;
 
         return;
@@ -258,6 +328,7 @@ function updateMap() {
     let vec = new THREE.Vector3();
 
     const userPosition = camera.getWorldPosition(vec);
+
 
     const { lat, lng } = threeToLeaflet(
         userPosition.x,
@@ -305,7 +376,9 @@ function threeToLeaflet(threeX, threeZ) {
             threeX /
             (
                 earthRadius *
-                Math.cos(Math.PI * originLat / 180)
+                Math.cos(
+                    Math.PI * originLat / 180
+                )
             )
         ) *
         (180 / Math.PI);
@@ -364,7 +437,9 @@ function leafletToThree(lat, lng) {
         deltaLng *
         (Math.PI / 180) *
         earthRadius *
-        Math.cos(Math.PI * originLat / 180);
+        Math.cos(
+            Math.PI * originLat / 180
+        );
 
 
     return {
@@ -384,6 +459,7 @@ function roundTo(n, digits) {
 
 
     if (digits === undefined) {
+
         digits = 0;
     }
 
