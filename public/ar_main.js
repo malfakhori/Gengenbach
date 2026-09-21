@@ -1081,21 +1081,38 @@ async function activateXR(
     // AR lighting
     // ========================================================
 
-    const light =
-        new THREE.DirectionalLight(
-            0xffffff,
-            1
-        );
-
-
-    light.position.set(
-        10,
-        10,
-        10
+// Soft overall illumination
+    const ambientLight = new THREE.AmbientLight(
+        0xffffff,
+        1.5
     );
 
+    scene.add(ambientLight);
 
-    scene.add(light);
+
+    // Sky/ground illumination
+    const hemisphereLight = new THREE.HemisphereLight(
+        0xffffff,
+        0x888888,
+        1.5
+    );
+
+    scene.add(hemisphereLight);
+
+
+    // Directional light for shadows and form
+    const directionalLight = new THREE.DirectionalLight(
+        0xffffff,
+        1.5
+    );
+    
+    directionalLight.position.set(
+        10,
+        20,
+        10
+    );
+    
+    scene.add(directionalLight);
 
 
     // ========================================================
