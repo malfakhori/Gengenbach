@@ -366,90 +366,71 @@ function placeModel(
             );
 
 
-const loader = new THREE.GLTFLoader();
+    const loader = new THREE.GLTFLoader();
 
-if (modelCache.has(filePath)) {
+    if (modelCache.has(filePath)) {
+      // Use the already loaded model
+      const cachedModel = modelCache.get(filePath);
+      const model = cachedModel.clone(true);
 
-    // Use the already loaded model
-    const cachedModel = modelCache.get(filePath);
-    const model = cachedModel.clone(true);
-
-    if (
-        modelConfig &&
-        modelConfig.scale
-    ) {
+      if (modelConfig && modelConfig.scale) {
         model.scale.set(
-            modelConfig.scale.x,
-            modelConfig.scale.y,
-            modelConfig.scale.z
+          modelConfig.scale.x,
+          modelConfig.scale.y,
+          modelConfig.scale.z,
         );
-    }
+      }
 
-    model.position.copy(position);
+      model.position.copy(position);
 
-    model.isPlacedModel = true;
-    model.modelConfig = modelConfig;
+      model.isPlacedModel = true;
+      model.modelConfig = modelConfig;
 
-    scene.add(model);
+      scene.add(model);
 
-    if (onPlace) {
+      if (onPlace) {
         onPlace(model);
-    }
-
-} else {
-
-    // Model has not been loaded yet
-    loader.load(
-
+      }
+    } else {
+      // Model has not been loaded yet
+      loader.load(
         filePath,
 
         (gltf) => {
+          // Store the original model in the cache
+          modelCache.set(filePath, gltf.scene);
 
-            // Store the original model in the cache
-            modelCache.set(
-                filePath,
-                gltf.scene
+          const model = gltf.scene.clone(true);
+
+          if (modelConfig && modelConfig.scale) {
+            model.scale.set(
+              modelConfig.scale.x,
+              modelConfig.scale.y,
+              modelConfig.scale.z,
             );
+          }
 
-            const model =
-                gltf.scene.clone(true);
+          model.position.copy(position);
 
-            if (
-                modelConfig &&
-                modelConfig.scale
-            ) {
-                model.scale.set(
-                    modelConfig.scale.x,
-                    modelConfig.scale.y,
-                    modelConfig.scale.z
-                );
-            }
+          model.isPlacedModel = true;
 
-            model.position.copy(position);
+          model.modelConfig = modelConfig;
 
-            model.isPlacedModel = true;
+          scene.add(model);
 
-            model.modelConfig =
-                modelConfig;
-
-            scene.add(model);
-
-            if (onPlace) {
-                onPlace(model);
-            }
+          if (onPlace) {
+            onPlace(model);
+          }
         },
 
         undefined,
 
         (error) => {
-
-            console.error(
-                "Fehler beim Laden des Modells:",
-                error
-            );
-        }
-    );
-}
+          console.error("Fehler beim Laden des Modells:", error);
+        },
+      );
+    }
+            
 
 }
 
