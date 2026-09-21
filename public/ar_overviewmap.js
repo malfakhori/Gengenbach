@@ -29,7 +29,7 @@ function init_map() {
             var OpenStreetMap_DE = L.tileLayer(
                 'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
                 {
-                    maxZoom: 30,
+                    //maxZoom: 30,
                     //minZoom: 15,
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }
@@ -58,11 +58,17 @@ function init_map() {
             // Initial map position
             // ====================================================
 
-            mymap.setView(
-                [geoLocation.latitude, geoLocation.longitude],
-                20
-            );
+            //mymap.setView(
+            //    [geoLocation.latitude, geoLocation.longitude],
+            //    20
+            //);
 
+            const planBounds = [
+                [48.405858385, 7.997080070],  // Southwest
+                [48.414966828, 8.010410216]   // Northeast
+            ];
+
+            mymap.fitBounds(planBounds);
 
             // ====================================================
             // User position marker
