@@ -148,6 +148,17 @@ button:active {
   text-align: center;
 }
 
+/* ==========================================================
+   HFT LOGO
+   ========================================================== */
+
+.start-screen-logo {
+  width: 110px;
+  height: auto;
+  display: block;
+  margin: 0 auto 18px auto;
+  object-fit: contain;
+}
 
 /* ============================================================
    START SCREEN TITLE

@@ -67,6 +67,20 @@ function showStartScreen() {
   document.body.appendChild(startScreen);
 
   /* ==========================================================
+   HFT LOGO
+   ========================================================== */
+
+  const hftLogo = document.createElement("img");
+
+  hftLogo.src = "assets/images/logo-HFT.svg";
+  hftLogo.alt = "HFT Stuttgart";
+
+  hftLogo.classList.add("start-screen-logo");
+
+  startScreen.appendChild(hftLogo);
+
+
+  /* ==========================================================
      TITLE
      ========================================================== */
 
