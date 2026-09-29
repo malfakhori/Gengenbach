@@ -1204,28 +1204,67 @@ async function activateXR(sceneData = null) {
   // Show main menu
   // ========================================================
 
-  menuElements["menu-bar"].style.display = "flex";
+  document.getElementById("menu-bar").style.display = "flex";
 
   // ========================================================
   // AR session ended
   // ========================================================
 
   currentSession.addEventListener("end", () => {
+    console.log("AR session ended");
+
+    // ====================================================
+    // Stop the AR session reference
+    // ====================================================
+
     currentSession = null;
 
-    // Hide dynamic menu
+    // ====================================================
+    // Remove the XR canvas
+    //
+    // This prevents the dark/black screen from remaining
+    // over the normal start page.
+    // ====================================================
 
-    document.getElementById("dynamic-menu").style.display = "none";
+    if (canvas && canvas.parentNode) {
+      canvas.parentNode.removeChild(canvas);
+    }
 
-    // Hide all application menus
+    // ====================================================
+    // Hide dynamic AR menu
+    // ====================================================
+
+    const dynamicMenu = document.getElementById("dynamic-menu");
+
+    if (dynamicMenu) {
+      dynamicMenu.style.display = "none";
+    }
+
+    // ====================================================
+    // Hide AR menus
+    // ====================================================
 
     menus.forEach((id) => {
-      const element = menuElements[id];
+      const element = document.getElementById(id);
 
       if (element) {
         element.style.display = "none";
       }
     });
+
+    // ====================================================
+    // Clear selected model
+    // ====================================================
+
+    selectedPlacedModel = null;
+
+    // ====================================================
+    // Return to the normal start page
+    // ====================================================
+
+    if (typeof showStartScreen === "function") {
+      showStartScreen();
+    }
   });
 
   // ========================================================
