@@ -5,6 +5,8 @@
 let sceneData = null;
 let sceneFileName = null;
 
+let startScreen = null;
+
 let startButton = null;
 let loadButton = null;
 
@@ -39,18 +41,68 @@ async function loadPredefinedScene(filePath, fileName) {
 }
 
 /* ============================================================ */
-/* Create the Start AR / Load Scene buttons                     */
+/* Create the Start Screen                                     */
 /* ============================================================ */
 
 function showStartScreen() {
-  // Prevent duplicate buttons
-  if (startButton || loadButton || predefinedButton1 || predefinedButton2) {
+  // Prevent duplicate start screens
+  if (
+    startScreen ||
+    startButton ||
+    loadButton ||
+    predefinedButton1 ||
+    predefinedButton2
+  ) {
     return;
   }
 
-  /* ========================= */
-  /*       START AR            */
-  /* ========================= */
+  /* ==========================================================
+     START SCREEN CONTAINER
+     ========================================================== */
+
+  startScreen = document.createElement("div");
+
+  startScreen.classList.add("start-screen");
+
+  document.body.appendChild(startScreen);
+
+  /* ==========================================================
+     TITLE
+     ========================================================== */
+
+  const title = document.createElement("h1");
+
+  title.textContent = "GENGENBACH";
+
+  title.classList.add("start-screen-title");
+
+  startScreen.appendChild(title);
+
+  /* ==========================================================
+     SUBTITLE
+     ========================================================== */
+
+  const subtitle = document.createElement("div");
+
+  subtitle.textContent = "AR Urban Planning";
+
+  subtitle.classList.add("start-screen-subtitle");
+
+  startScreen.appendChild(subtitle);
+
+  /* ==========================================================
+     DIVIDER
+     ========================================================== */
+
+  const divider = document.createElement("div");
+
+  divider.classList.add("start-screen-divider");
+
+  startScreen.appendChild(divider);
+
+  /* ==========================================================
+     START AR
+     ========================================================== */
 
   startButton = document.createElement("button");
 
@@ -58,11 +110,11 @@ function showStartScreen() {
 
   startButton.classList.add("start-screen-button", "start-ar-button");
 
-  document.body.appendChild(startButton);
+  startScreen.appendChild(startButton);
 
-  /* ========================= */
-  /*      LOAD SCENE           */
-  /* ========================= */
+  /* ==========================================================
+     LOAD SCENE
+     ========================================================== */
 
   loadButton = document.createElement("button");
 
@@ -74,56 +126,11 @@ function showStartScreen() {
     "scene-button",
   );
 
-  document.body.appendChild(loadButton);
+  startScreen.appendChild(loadButton);
 
-  /* ========================= */
-  /*       START AR CLICK      */
-  /* ========================= */
-
-  startButton.onclick = () => {
-    // Remove start-page buttons
-    startButton.remove();
-    loadButton.remove();
-    predefinedButton1.remove();
-    predefinedButton2.remove();
-
-    // Reset references
-    startButton = null;
-    loadButton = null;
-    predefinedButton1 = null;
-    predefinedButton2 = null;
-
-    // Start AR
-    activateXR(sceneData);
-  };
-
-  /* ========================= */
-  /*      LOAD SCENE CLICK     */
-  /* ========================= */
-
-  loadButton.onclick = () => {
-    loadSceneFromFile((data, fileName) => {
-      if (data && fileName) {
-        sceneData = data;
-        sceneFileName = fileName;
-
-        loadButton.textContent = fileName;
-
-        // Mark uploaded scene as selected
-        loadButton.classList.add("selected");
-
-        // Deselect predefined scenes
-        predefinedButton1.classList.remove("selected");
-        predefinedButton2.classList.remove("selected");
-      } else {
-        loadButton.textContent = sceneFileName || "Umgebung Laden";
-      }
-    });
-  };
-
-  /* ========================= */
-  /*   PREDEFINED SCENE 1      */
-  /* ========================= */
+  /* ==========================================================
+     PREDEFINED SCENE 1
+     ========================================================== */
 
   predefinedButton1 = document.createElement("button");
 
@@ -135,7 +142,70 @@ function showStartScreen() {
     "scene-button",
   );
 
-  document.body.appendChild(predefinedButton1);
+  startScreen.appendChild(predefinedButton1);
+
+  /* ==========================================================
+     PREDEFINED SCENE 2
+     ========================================================== */
+
+  predefinedButton2 = document.createElement("button");
+
+  predefinedButton2.textContent = "Gengenbach Street";
+
+  predefinedButton2.classList.add(
+    "start-screen-button",
+    "predefined-scene-button-2",
+    "scene-button",
+  );
+
+  startScreen.appendChild(predefinedButton2);
+
+  /* ==========================================================
+     START AR CLICK
+     ========================================================== */
+
+  startButton.onclick = () => {
+    // Remove complete start screen
+    startScreen.remove();
+
+    // Reset references
+    startScreen = null;
+    startButton = null;
+    loadButton = null;
+    predefinedButton1 = null;
+    predefinedButton2 = null;
+
+    // Start AR
+    activateXR(sceneData);
+  };
+
+  /* ==========================================================
+     LOAD SCENE CLICK
+     ========================================================== */
+
+  loadButton.onclick = () => {
+    loadSceneFromFile((data, fileName) => {
+      if (data && fileName) {
+        sceneData = data;
+        sceneFileName = fileName;
+
+        loadButton.textContent = fileName;
+
+        // Select uploaded scene
+        loadButton.classList.add("selected");
+
+        // Deselect predefined scenes
+        predefinedButton1.classList.remove("selected");
+        predefinedButton2.classList.remove("selected");
+      } else {
+        loadButton.textContent = sceneFileName || "Umgebung Laden";
+      }
+    });
+  };
+
+  /* ==========================================================
+     PREDEFINED SCENE 1
+     ========================================================== */
 
   predefinedButton1.onclick = async () => {
     const success = await loadPredefinedScene(
@@ -155,21 +225,9 @@ function showStartScreen() {
     }
   };
 
-  /* ========================= */
-  /*   PREDEFINED SCENE 2      */
-  /* ========================= */
-
-  predefinedButton2 = document.createElement("button");
-
-  predefinedButton2.textContent = "Gengenbach Street";
-
-  predefinedButton2.classList.add(
-    "start-screen-button",
-    "predefined-scene-button-2",
-    "scene-button",
-  );
-
-  document.body.appendChild(predefinedButton2);
+  /* ==========================================================
+     PREDEFINED SCENE 2
+     ========================================================== */
 
   predefinedButton2.onclick = async () => {
     const success = await loadPredefinedScene(
@@ -190,9 +248,9 @@ function showStartScreen() {
   };
 }
 
-/* ========================= */
-/*       INITIAL START       */
-/* ========================= */
+/* ============================================================ */
+/* INITIAL START                                                */
+/* ============================================================ */
 
 if (navigator.xr) {
   showStartScreen();

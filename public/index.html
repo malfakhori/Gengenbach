@@ -4,119 +4,336 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Gengenbach AR Projekt</title>
+
   <link rel="stylesheet" href="style.css">
+
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 
 <body>
-  <!-- Debug -->
+
+  <!-- ============================================================
+       DEBUG
+       ============================================================ -->
+
   <div id="debug-container">
     <div id="debug-console"></div>
     <button id="debug-toggle-btn"></button>
   </div>
 
-  <!-- Standardmenü -->
-  <div id="menu-bar" style="display: none;">
-    <div class="menu-item" id="add-section" onclick="showMenu('add-menu')">
-      <img src="assets/icons/add-icon.png" alt="Hinzufügen" />
+
+  <!-- ============================================================
+       STANDARDMENÜ
+       ============================================================ -->
+
+  <div id="menu-bar">
+
+    <div
+      class="menu-item"
+      id="add-section"
+      onclick="showMenu('add-menu')">
+
+      <img
+        src="assets/icons/add-icon.png"
+        alt="Hinzufügen" />
+
     </div>
-    <div class="menu-item" onclick="showMenu('map-window')">
-      <img src="assets/icons/map-icon.png" alt="Karte" />
+
+
+    <div
+      class="menu-item"
+      onclick="showMenu('map-window')">
+
+      <img
+        src="assets/icons/map-icon.png"
+        alt="Karte" />
+
     </div>
-    <div class="menu-item" id="options-section" onclick="showMenu('options-menu')">
-      <img src="assets/icons/options-icon.png" alt="Optionen" />
+
+
+    <div
+      class="menu-item"
+      id="options-section"
+      onclick="showMenu('options-menu')">
+
+      <img
+        src="assets/icons/options-icon.png"
+        alt="Optionen" />
+
     </div>
+
   </div>
 
-  <!-- Hinzufügen-Menü für das Auswählen der Modelle-->
-  <div id="add-menu" class="menu-placeholder" style="display: none;"></div>
 
-  <!-- Bearbeiten-Menü -->
-  <div id="edit-menu" class="menu-placeholder" style="display: none;">
-    <div class="menu-item" onclick="openRotationMenu()">
-      <img src="assets/icons/rotate-icon.png" alt="Rotation" />
-    </div>
-    <div class="menu-item" onclick="openScaleMenu()">
-      <img src="assets/icons/scale-icon.png" alt="Skalierung" />
-    </div>
-    <div class="menu-item" onclick="openMoveMenu()">
-      <img src="assets/icons/move-icon.png" alt="Bewegen" />
-    </div>
-    <div class="menu-item" onclick="deleteModel()">
-      <img src="assets/icons/delete-icon.png" alt="Löschen" />
-    </div>
-    <div class="menu-item" onclick="completeEditing()">
-      <img src="assets/icons/check-icon.png" alt="Fertigstellen" />
-    </div>
+  <!-- ============================================================
+       HINZUFÜGEN-MENÜ
+       ============================================================ -->
+
+  <div
+    id="add-menu"
+    class="menu-placeholder">
   </div>
 
-  <!-- Optionen-Menü -->
-  <div id="options-menu" class="menu-placeholder" style="display: none;">
-    <div class="menu-item" onclick="exitAR()">
-      <img src="assets/icons/exit-icon.png" alt="Beenden" />
+
+  <!-- ============================================================
+       BEARBEITEN-MENÜ
+       ============================================================ -->
+
+  <div
+    id="edit-menu"
+    class="menu-placeholder">
+
+    <div
+      class="menu-item"
+      onclick="openRotationMenu()">
+
+      <img
+        src="assets/icons/rotate-icon.png"
+        alt="Rotation" />
+
     </div>
-    <div class="menu-item" onclick="downloadScene()">
-      <img src="assets/icons/download-icon.png" alt="Download" />
+
+
+    <div
+      class="menu-item"
+      onclick="openScaleMenu()">
+
+      <img
+        src="assets/icons/scale-icon.png"
+        alt="Skalierung" />
+
     </div>
-    <div class="menu-item" onclick="showMenu('menu-bar')">
-      <img src="assets/icons/back-icon.png" alt="Zurück" />
+
+
+    <div
+      class="menu-item"
+      onclick="openMoveMenu()">
+
+      <img
+        src="assets/icons/move-icon.png"
+        alt="Bewegen" />
+
     </div>
+
+
+    <div
+      class="menu-item"
+      onclick="deleteModel()">
+
+      <img
+        src="assets/icons/delete-icon.png"
+        alt="Löschen" />
+
+    </div>
+
+
+    <div
+      class="menu-item"
+      onclick="completeEditing()">
+
+      <img
+        src="assets/icons/check-icon.png"
+        alt="Fertigstellen" />
+
+    </div>
+
   </div>
 
-  <!-- Dynamisches Menü für Rotation und Scaling-->
-  <div id="dynamic-menu" style="display: none;"></div>
 
-  <!-- Bestätigungsdialog für Löschen -->
-  <div id="delete-confirmation-dialog" style="display: none;">
+  <!-- ============================================================
+       OPTIONEN-MENÜ
+       ============================================================ -->
+
+  <div
+    id="options-menu"
+    class="menu-placeholder">
+
+    <div
+      class="menu-item"
+      onclick="exitAR()">
+
+      <img
+        src="assets/icons/exit-icon.png"
+        alt="Beenden" />
+
+    </div>
+
+
+    <div
+      class="menu-item"
+      onclick="downloadScene()">
+
+      <img
+        src="assets/icons/download-icon.png"
+        alt="Download" />
+
+    </div>
+
+
+    <div
+      class="menu-item"
+      onclick="showMenu('menu-bar')">
+
+      <img
+        src="assets/icons/back-icon.png"
+        alt="Zurück" />
+
+    </div>
+
+  </div>
+
+
+  <!-- ============================================================
+       DYNAMISCHES MENÜ
+       ============================================================ -->
+
+  <div id="dynamic-menu"></div>
+
+
+  <!-- ============================================================
+       BESTÄTIGUNGSDIALOG LÖSCHEN
+       ============================================================ -->
+
+  <div id="delete-confirmation-dialog">
+
     <div class="dialog-overlay"></div>
+
     <div class="dialog-box">
-      <p id="delete-confirmation-text">Möchten Sie das Modell wirklich löschen?</p>
-      <button onclick="confirmDelete(true)">Ja</button>
-      <button onclick="confirmDelete(false)">Nein</button>
+
+      <p id="delete-confirmation-text">
+        Möchten Sie das Modell wirklich löschen?
+      </p>
+
+      <button onclick="confirmDelete(true)">
+        Ja
+      </button>
+
+      <button onclick="confirmDelete(false)">
+        Nein
+      </button>
+
     </div>
+
   </div>
 
-  <!-- Bestätigungsdialog für Beenden -->
-  <div id="confirmation-dialog" style="display: none;">
+
+  <!-- ============================================================
+       BESTÄTIGUNGSDIALOG BEENDEN
+       ============================================================ -->
+
+  <div id="confirmation-dialog">
+
     <div class="dialog-overlay"></div>
+
     <div class="dialog-box">
-      <p>Möchten Sie die AR-Session wirklich verlassen?</p>
-      <button onclick="confirmExit(true)">Ja</button>
-      <button onclick="confirmExit(false)">Nein</button>
+
+      <p>
+        Möchten Sie die AR-Session wirklich verlassen?
+      </p>
+
+      <button onclick="confirmExit(true)">
+        Ja
+      </button>
+
+      <button onclick="confirmExit(false)">
+        Nein
+      </button>
+
     </div>
+
   </div>
 
-  <!-- Informations-Dialog -->
-  <div id="info-dialog" style="display: none;">
+
+  <!-- ============================================================
+       INFORMATIONS-DIALOG
+       ============================================================ -->
+
+  <div id="info-dialog">
+
     <div class="dialog-overlay"></div>
+
     <div class="dialog-box">
-      <p id="info-text">Hier kommt die Nachricht hin</p>
-      <button onclick="closeInfoDialog()">OK</button>
+
+      <p id="info-text">
+        Hier kommt die Nachricht hin
+      </p>
+
+      <button onclick="closeInfoDialog()">
+        OK
+      </button>
+
     </div>
+
   </div>
 
-  <div id="map-window" class="menu-placeholder"
-    style="display: none; flex-direction: column; width: 100vw; height: 100vh;">
-    <div id="map-container" style="z-index: 1500; flex: 15; width: 100%; height: 100%;"></div>
-    <div class="menu-item" onclick="showMenu('menu-bar')"
-      style="cursor: pointer; flex: 1; align-items: center; justify-content: center;">
-      <img src="assets/icons/back-icon.png" alt="Zurück" style="width: 30px; height: 30px;" />
+
+  <!-- ============================================================
+       MAP WINDOW
+       ============================================================ -->
+
+  <div
+    id="map-window"
+    class="menu-placeholder">
+
+    <div id="map-container"></div>
+
+    <div
+      class="menu-item map-back-button"
+      onclick="showMenu('menu-bar')">
+
+      <img
+        src="assets/icons/back-icon.png"
+        alt="Zurück" />
+
     </div>
+
   </div>
 
+
+  <!-- ============================================================
+       APP VERSION
+       Change this manually when needed.
+       ============================================================ -->
+
+  <div id="app-version">
+    v0.1.0
+  </div>
+
+
+  <!-- ============================================================
+       JAVASCRIPT
+       ============================================================ -->
 
   <script src="ar_start.js"></script>
+
   <script src="ar_main.js"></script>
+
   <script src="ar_debug_console.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script> <!-- Leaflet einbinden -->
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <script src="ar_overviewmap.js"></script>
+
   <script src="ar_download.js"></script>
 
-  <!-- Audio-Element für Button-Klick -->
-  <audio id="button-sound" src="assets/sounds/button-sound.mp3" preload="auto"></audio>
+
+  <!-- ============================================================
+       BUTTON SOUND
+       ============================================================ -->
+
+  <audio
+    id="button-sound"
+    src="assets/sounds/button-sound.mp3"
+    preload="auto">
+  </audio>
+
 </body>
 
 </html>
