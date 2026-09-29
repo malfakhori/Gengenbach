@@ -56,6 +56,7 @@ function init_map() {
       var OpenStreetMap_DE = L.tileLayer(
         "https://tile.openstreetmap.de/{z}/{x}/{y}.png",
         {
+          maxZoom: 25,
           attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         },
