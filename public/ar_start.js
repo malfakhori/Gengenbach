@@ -18,6 +18,11 @@ let predefinedButton2 = null;
 async function loadPredefinedScene(filePath, fileName) {
   try {
     const response = await fetch(filePath);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
     const data = await response.json();
 
     sceneData = data;
@@ -25,11 +30,11 @@ async function loadPredefinedScene(filePath, fileName) {
 
     console.log("Vordefinierte Szene geladen:", fileName);
 
+    return true;
   } catch (error) {
-    console.error(
-      "Fehler beim Laden der vordefinierten Szene:",
-      error
-    );
+    console.error("Fehler beim Laden der vordefinierten Szene:", error);
+
+    return false;
   }
 }
 
@@ -51,54 +56,46 @@ function showStartScreen() {
 
   startButton.textContent = "Start AR";
 
-  startButton.style.cssText =
-    "position: fixed; " +
-    "top: 45%; " +
-    "left: 50%; " +
-    "transform: translate(-50%, -50%); " +
-    "padding: 15px; " +
-    "font-size: 18px;";
+  startButton.classList.add("start-screen-button", "start-ar-button");
 
   document.body.appendChild(startButton);
 
   /* ========================= */
-  /*      LOAD SCENE            */
+  /*      LOAD SCENE           */
   /* ========================= */
 
   loadButton = document.createElement("button");
 
   loadButton.textContent = sceneFileName || "Umgebung Laden";
 
-  loadButton.style.cssText =
-    "position: fixed; " +
-    "top: 55%; " +
-    "left: 50%; " +
-    "transform: translate(-50%, -50%); " +
-    "padding: 15px; " +
-    "font-size: 18px;";
+  loadButton.classList.add(
+    "start-screen-button",
+    "load-scene-button",
+    "scene-button",
+  );
 
   document.body.appendChild(loadButton);
 
   /* ========================= */
-  /*       START AR CLICK       */
+  /*       START AR CLICK      */
   /* ========================= */
 
-startButton.onclick = () => {
-  // Remove start-page buttons
-  startButton.remove();
-  loadButton.remove();
-  predefinedButton1.remove();
-  predefinedButton2.remove();
+  startButton.onclick = () => {
+    // Remove start-page buttons
+    startButton.remove();
+    loadButton.remove();
+    predefinedButton1.remove();
+    predefinedButton2.remove();
 
-  // Reset references
-  startButton = null;
-  loadButton = null;
-  predefinedButton1 = null;
-  predefinedButton2 = null;
+    // Reset references
+    startButton = null;
+    loadButton = null;
+    predefinedButton1 = null;
+    predefinedButton2 = null;
 
-  // Start AR
-  activateXR(sceneData);
-};
+    // Start AR
+    activateXR(sceneData);
+  };
 
   /* ========================= */
   /*      LOAD SCENE CLICK     */
@@ -111,11 +108,19 @@ startButton.onclick = () => {
         sceneFileName = fileName;
 
         loadButton.textContent = fileName;
+
+        // Mark uploaded scene as selected
+        loadButton.classList.add("selected");
+
+        // Deselect predefined scenes
+        predefinedButton1.classList.remove("selected");
+        predefinedButton2.classList.remove("selected");
       } else {
         loadButton.textContent = sceneFileName || "Umgebung Laden";
       }
     });
   };
+
   /* ========================= */
   /*   PREDEFINED SCENE 1      */
   /* ========================= */
@@ -124,23 +129,30 @@ startButton.onclick = () => {
 
   predefinedButton1.textContent = "Gengenbach Plaza";
 
-  predefinedButton1.style.cssText =
-    "position: fixed; " +
-    "top: 65%; " +
-    "left: 50%; " +
-    "transform: translate(-50%, -50%); " +
-    "padding: 15px; " +
-    "font-size: 18px;";
+  predefinedButton1.classList.add(
+    "start-screen-button",
+    "predefined-scene-button-1",
+    "scene-button",
+  );
 
   document.body.appendChild(predefinedButton1);
 
   predefinedButton1.onclick = async () => {
-    await loadPredefinedScene(
+    const success = await loadPredefinedScene(
       "scenes/gengenbach-plaza.json",
       "Gengenbach Plaza",
     );
 
-    predefinedButton1.textContent = sceneFileName;
+    if (success) {
+      // Select Plaza
+      predefinedButton1.classList.add("selected");
+
+      // Deselect Street
+      predefinedButton2.classList.remove("selected");
+
+      // Deselect uploaded scene
+      loadButton.classList.remove("selected");
+    }
   };
 
   /* ========================= */
@@ -151,28 +163,35 @@ startButton.onclick = () => {
 
   predefinedButton2.textContent = "Gengenbach Street";
 
-  predefinedButton2.style.cssText =
-    "position: fixed; " +
-    "top: 75%; " +
-    "left: 50%; " +
-    "transform: translate(-50%, -50%); " +
-    "padding: 15px; " +
-    "font-size: 18px;";
+  predefinedButton2.classList.add(
+    "start-screen-button",
+    "predefined-scene-button-2",
+    "scene-button",
+  );
 
   document.body.appendChild(predefinedButton2);
 
   predefinedButton2.onclick = async () => {
-    await loadPredefinedScene(
+    const success = await loadPredefinedScene(
       "scenes/gengenbach-street.json",
       "Gengenbach Street",
     );
 
-    predefinedButton2.textContent = sceneFileName;
+    if (success) {
+      // Select Street
+      predefinedButton2.classList.add("selected");
+
+      // Deselect Plaza
+      predefinedButton1.classList.remove("selected");
+
+      // Deselect uploaded scene
+      loadButton.classList.remove("selected");
+    }
   };
 }
 
 /* ========================= */
-/*       INITIAL START        */
+/*       INITIAL START       */
 /* ========================= */
 
 if (navigator.xr) {

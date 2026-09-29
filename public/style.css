@@ -7,8 +7,7 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-image: url('https://www.hft-stuttgart.de/fileadmin/Dateien/Hochschule/-_R_Juergen_Pollak_HFT_18.04.18-0091.jpg');
-  background-size: cover;
+  background-image: url('assets/images/gengenbach.png');  background-size: cover;
   background-position: center;
 }
 
@@ -35,7 +34,6 @@ p {
 
 #add-menu {
   overflow-y: auto;
-
 }
 
 #menu-bar,
@@ -98,7 +96,69 @@ button:active {
   background-color: #387a39;
 }
 
-/* Confirmation Dialog */
+
+/* ============================================================
+   START SCREEN BUTTONS
+   ============================================================ */
+
+.start-screen-button {
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+  font-size: 18px;
+}
+
+.start-ar-button {
+  top: 45%;
+  background-color: #4CAF50;
+  color: white;
+}
+
+.load-scene-button {
+  top: 55%;
+}
+
+.predefined-scene-button-1 {
+  top: 65%;
+}
+
+.predefined-scene-button-2 {
+  top: 75%;
+}
+
+
+/* ============================================================
+   SCENE SELECTION COLORS
+   ============================================================ */
+
+/* Scene buttons are gray when no scene is selected */
+.scene-button {
+  background-color: #808080;
+  color: white;
+}
+
+/* Gray hover */
+.scene-button:hover {
+  background-color: #707070;
+}
+
+/* Selected scene becomes green */
+.scene-button.selected {
+  background-color: #4CAF50;
+  color: white;
+}
+
+/* Selected scene hover */
+.scene-button.selected:hover {
+  background-color: #45a049;
+}
+
+
+/* ============================================================
+   CONFIRMATION DIALOG
+   ============================================================ */
+
 #confirmation-dialog,
 #delete-confirmation-dialog {
   position: fixed;
@@ -168,6 +228,10 @@ button:active {
 }
 
 
+/* ============================================================
+   DYNAMIC MENU
+   ============================================================ */
+
 #dynamic-menu {
   position: absolute;
   bottom: 90px;
@@ -186,7 +250,6 @@ button:active {
   border-radius: 8px;
 }
 
-
 #dynamic-menu input[type="range"] {
   width: 100%;
   margin: 10px auto;
@@ -204,6 +267,11 @@ button:active {
   border-radius: 50%;
   cursor: pointer;
 }
+
+
+/* ============================================================
+   DEBUG CONSOLE
+   ============================================================ */
 
 #debug-container {
   position: fixed;
@@ -239,7 +307,10 @@ button:active {
 }
 
 
-/* Style für Move Menu */
+/* ============================================================
+   MOVE MENU
+   ============================================================ */
+
 .button-row {
   display: flex;
   gap: 15px;
@@ -266,6 +337,8 @@ button:active {
   background-color: #0056b3;
   transform: scale(0.95);
 }
+
+
 /* ============================================================
    MAP WINDOW
    ============================================================ */
