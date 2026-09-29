@@ -1208,63 +1208,16 @@ async function activateXR(sceneData = null) {
 
   // ========================================================
   // AR session ended
+  // Reload the complete website
   // ========================================================
 
   currentSession.addEventListener("end", () => {
     console.log("AR session ended");
 
-    // ====================================================
-    // Stop the AR session reference
-    // ====================================================
-
-    currentSession = null;
-
-    // ====================================================
-    // Remove the XR canvas
-    //
-    // This prevents the dark/black screen from remaining
-    // over the normal start page.
-    // ====================================================
-
-    if (canvas && canvas.parentNode) {
-      canvas.parentNode.removeChild(canvas);
-    }
-
-    // ====================================================
-    // Hide dynamic AR menu
-    // ====================================================
-
-    const dynamicMenu = document.getElementById("dynamic-menu");
-
-    if (dynamicMenu) {
-      dynamicMenu.style.display = "none";
-    }
-
-    // ====================================================
-    // Hide AR menus
-    // ====================================================
-
-    menus.forEach((id) => {
-      const element = document.getElementById(id);
-
-      if (element) {
-        element.style.display = "none";
-      }
-    });
-
-    // ====================================================
-    // Clear selected model
-    // ====================================================
-
-    selectedPlacedModel = null;
-
-    // ====================================================
-    // Return to the normal start page
-    // ====================================================
-
-    if (typeof showStartScreen === "function") {
-      showStartScreen();
-    }
+    // Completely reload the website.
+    // This resets the AR canvas, menus, scene, map,
+    // variables, and all other application state.
+    window.location.reload();
   });
 
   // ========================================================
