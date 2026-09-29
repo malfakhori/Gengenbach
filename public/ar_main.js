@@ -1076,11 +1076,6 @@ async function activateXR(
             context: gl
         });
 
-        renderer.setPixelRatio(
-            math.min(
-                window.devicePixelRatio, 1.5
-            )
-        ); 
 
     renderer.autoClear = false;
 
