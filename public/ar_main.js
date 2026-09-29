@@ -1210,43 +1210,23 @@ async function activateXR(sceneData = null) {
   // AR session ended
   // ========================================================
 
-currentSession.addEventListener("end", () => {
-  // ========================================================
-  // AR session ended
-  // ========================================================
+  currentSession.addEventListener("end", () => {
+    currentSession = null;
 
-  currentSession = null;
+    // Hide dynamic menu
 
-  // Hide dynamic menu
-  const dynamicMenu = document.getElementById("dynamic-menu");
+    document.getElementById("dynamic-menu").style.display = "none";
 
-  if (dynamicMenu) {
-    dynamicMenu.style.display = "none";
-  }
+    // Hide all application menus
 
-  // Hide AR-specific menus
-  menus.forEach((id) => {
-    const element = document.getElementById(id);
+    menus.forEach((id) => {
+      const element = menuElements[id];
 
-    if (element) {
-      element.style.display = "none";
-    }
+      if (element) {
+        element.style.display = "none";
+      }
+    });
   });
-
-  // ========================================================
-  // Return to the main page
-  // Show Start AR / Load Scene buttons again
-  // ========================================================
-
-  const menuBar = document.getElementById("menu-bar");
-
-  if (menuBar) {
-    menuBar.style.display = "flex";
-  }
-
-  // Clear selected model
-  selectedPlacedModel = null;
-});
 
   // ========================================================
   // Select objects in AR
