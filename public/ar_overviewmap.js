@@ -4,6 +4,18 @@ let userIcon;
 let intervalId;
 let modeMarkers = [];
 
+// PERFORMANCE: Reuse one Vector3 instead of allocating a new
+// Vector3 every time updateMap() runs.
+let cameraPosition = new THREE.Vector3();
+
+// PERFORMANCE: Cache the map window element once.
+let mapWindow = document.getElementById("map-window");
+
+// PERFORMANCE: Remember the last mapped camera position so Leaflet
+// is updated only after the user has actually moved.
+let lastMapX = null;
+let lastMapZ = null;
+
 // ============================================================
 // Proposed plan overlay
 // ============================================================
@@ -24,476 +36,289 @@ let planVisible = false;
 // Longitude = 8.010410216
 
 const planBounds = [
-    [48.405858385, 7.997080070],  // Southwest / bottom-left
-    [48.414966828, 8.010410216]   // Northeast / top-right
+  [48.405858385, 7.99708007],
+  [48.414966828, 8.010410216],
 ];
 
-const earthRadius = 6378137; // Erdradius in Metern (WGS84)
-
+const earthRadius = 6378137;
 
 // ============================================================
 // Initialize map
 // ============================================================
 
 function init_map() {
+  const mapContainer = document.getElementById("map-container");
 
-    const mapContainer = document.getElementById("map-container");
+  if (mapContainer) {
+    if (!init) {
+      mymap = L.map(mapContainer);
 
-    if (mapContainer) {
+      var OpenStreetMap_DE = L.tileLayer(
+        "https://tile.openstreetmap.de/{z}/{x}/{y}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        },
+      );
 
-        if (!init) {
+      OpenStreetMap_DE.addTo(mymap);
 
-            // ====================================================
-            // Create Leaflet map
-            // ====================================================
+      userIcon = L.icon({
+        iconUrl: "assets/previewImages/map-user.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+      });
 
-            mymap = L.map(mapContainer);
+      mymap.fitBounds(planBounds, {
+        padding: [20, 20],
+      });
 
+      userIcon = L.marker([geoLocation.latitude, geoLocation.longitude], {
+        icon: userIcon,
+      })
+        .bindPopup("Ihre Position")
+        .addTo(mymap);
 
-            // ====================================================
-            // OpenStreetMap Germany basemap
-            // ====================================================
-
-            var OpenStreetMap_DE = L.tileLayer(
-                'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
-                {
-                    //maxZoom: 20,
-                    attribution:
-                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                }
-            );
-
-            OpenStreetMap_DE.addTo(mymap);
-
-
-            // ====================================================
-            // User icon
-            // ====================================================
-
-            userIcon = L.icon({
-                iconUrl: 'assets/previewImages/map-user.png',
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32]
-            });
-
-
-            // ====================================================
-            // Initial map position
-            // ====================================================
-            //
-            // The map is centered on the proposed plan instead
-            // of the user's current GPS position.
-            //
-            // We use fitBounds() so the whole plan is visible.
-            //
-
-            mymap.fitBounds(planBounds, {
-                padding: [20, 20]
-            });
-
-
-            // ====================================================
-            // User position marker
-            // ====================================================
-
-            userIcon = L.marker(
-                [geoLocation.latitude, geoLocation.longitude],
-                {
-                    icon: userIcon
-                }
-            )
-            .bindPopup('Ihre Position')
-            .addTo(mymap);
-
-
-            init = true;
-        }
-
-
-        // ========================================================
-        // Remove old model markers
-        // ========================================================
-
-        modeMarkers.forEach(marker => {
-            marker.remove();
-        });
-
-
-        // Clear marker array
-        modeMarkers = [];
-
-
-        // ========================================================
-        // Add currently placed models to map
-        // ========================================================
-
-        const models = getAllPlacedModels();
-
-        models.forEach(model => {
-
-            const { lat, lng } = threeToLeaflet(
-                model.position.x,
-                model.position.z
-            );
-
-
-            const modelMarker = L.marker(
-                [lat, lng],
-                {
-                    icon: L.icon({
-                        iconUrl: model.modelConfig.image,
-                        iconSize: [16, 16],
-                        iconAnchor: [16, 32],
-                        popupAnchor: [0, -32]
-                    })
-                }
-            )
-            .addTo(mymap)
-            .bindPopup(
-                model.modelConfig?.name || "Unbenannt"
-            );
-
-
-            modeMarkers.push(modelMarker);
-        });
-
-
-        // ========================================================
-        // Add proposed plan
-        // ========================================================
-
-        addPlanOverlay();
-
-
-        // ========================================================
-        // Make sure Leaflet knows the map container dimensions
-        // ========================================================
-
-        setTimeout(() => {
-
-            centerOnPlan();
-
-        }, 100);
-
-
-        // ========================================================
-        // Update map position continuously
-        // ========================================================
-
-        intervalId = setInterval(updateMap, 500);
+      init = true;
     }
-}
 
+    // ========================================================
+    // Remove old model markers
+    // ========================================================
+
+    modeMarkers.forEach((marker) => {
+      marker.remove();
+    });
+
+    modeMarkers = [];
+
+    // ========================================================
+    // Add currently placed models to map
+    // ========================================================
+
+    const models = getAllPlacedModels();
+
+    models.forEach((model) => {
+      const { lat, lng } = threeToLeaflet(model.position.x, model.position.z);
+
+      const modelMarker = L.marker([lat, lng], {
+        icon: L.icon({
+          iconUrl: model.modelConfig.image,
+          iconSize: [16, 16],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32],
+        }),
+      })
+        .addTo(mymap)
+        .bindPopup(model.modelConfig?.name || "Unbenannt");
+
+      modeMarkers.push(modelMarker);
+    });
+
+    // ========================================================
+    // Add proposed plan
+    // ========================================================
+
+    addPlanOverlay();
+
+    // ========================================================
+    // Make sure Leaflet knows the map container dimensions
+    // ========================================================
+
+    setTimeout(() => {
+      centerOnPlan();
+    }, 100);
+
+    // ========================================================
+    // Update map position continuously
+    // ========================================================
+
+    // PERFORMANCE: Start only one map update interval.
+    if (!intervalId) {
+      intervalId = setInterval(updateMap, 500);
+    }
+  }
+}
 
 // ============================================================
 // Center map on proposed plan
 // ============================================================
 
 function centerOnPlan() {
+  if (!mymap) {
+    console.error("Map ist noch nicht initialisiert.");
 
-    if (!mymap) {
+    return;
+  }
 
-        console.error(
-            "Map ist noch nicht initialisiert."
-        );
+  mymap.invalidateSize();
 
-        return;
-    }
-
-
-    // Tell Leaflet to recalculate the map container size.
-    // This is important because map-window may initially
-    // be hidden when the map is initialized.
-
-    mymap.invalidateSize();
-
-
-    // Center and zoom the map on the proposed plan.
-
-    mymap.fitBounds(
-        planBounds,
-        {
-            padding: [20, 20]
-        }
-    );
+  mymap.fitBounds(planBounds, {
+    padding: [20, 20],
+  });
 }
-
 
 // ============================================================
 // Add georeferenced proposed plan
 // ============================================================
-//
-// Original coordinate system:
-// DHDN / Gauss-Krüger Zone 3
-// EPSG:31467
-//
-// Image extent:
-//
-// Southwest:
-// X = 3425822.00
-// Y = 5363602.00
-//
-// Northeast:
-// X = 3426822.00
-// Y = 5364602.00
-//
-// Converted to WGS84:
-//
-// Southwest:
-// Latitude  = 48.405858385
-// Longitude = 7.997080070
-//
-// Northeast:
-// Latitude  = 48.414966828
-// Longitude = 8.010410216
-//
-// Image:
-//
-// assets/plans/proposed-plan.png
-// ============================================================
 
 function addPlanOverlay() {
+  if (!mymap) {
+    console.error("Map ist noch nicht initialisiert.");
 
-    if (!mymap) {
+    return;
+  }
 
-        console.error(
-            "Map ist noch nicht initialisiert."
-        );
-
-        return;
-    }
-
-
-    // ========================================================
-    // If overlay already exists, show it
-    // ========================================================
-
-    if (planOverlay) {
-
-        planOverlay.addTo(mymap);
-
-        planVisible = true;
-
-        return;
-    }
-
-
-    // ========================================================
-    // Create image overlay
-    // ========================================================
-
-    planOverlay = L.imageOverlay(
-        'assets/plans/proposed-plan.png',
-        planBounds,
-        {
-            // Transparency
-            opacity: 0.7,
-
-            // The plan does not capture mouse/touch events
-            interactive: false
-        }
-    );
-
-
-    // ========================================================
-    // Add overlay to map
-    // ========================================================
-
+  if (planOverlay) {
     planOverlay.addTo(mymap);
 
     planVisible = true;
-}
 
+    return;
+  }
+
+  planOverlay = L.imageOverlay("assets/plans/proposed-plan.png", planBounds, {
+    opacity: 0.7,
+    interactive: false,
+  });
+
+  planOverlay.addTo(mymap);
+
+  planVisible = true;
+}
 
 // ============================================================
 // Update map
 // ============================================================
 
 function updateMap() {
+  // The interval is normally stopped by closeMap().
+  // This guard also handles cases where the map is hidden
+  // by another UI action.
+  if (mapWindow && mapWindow.style.display === "none" && intervalId) {
+    clearInterval(intervalId);
 
-    if (
-        document.getElementById("map-window").style.display === 'none'
-        && intervalId
-    ) {
+    intervalId = null;
 
-        clearInterval(intervalId);
+    return;
+  }
 
-        intervalId = null;
+  if (!camera || !userIcon) {
+    return;
+  }
 
-        return;
-    }
+  // PERFORMANCE: Reuse the same Vector3 object.
+  camera.getWorldPosition(cameraPosition);
 
+  // PERFORMANCE: Do not update Leaflet if the user
+  // has not moved.
+  if (
+    lastMapX !== null &&
+    Math.abs(cameraPosition.x - lastMapX) < 0.1 &&
+    Math.abs(cameraPosition.z - lastMapZ) < 0.1
+  ) {
+    return;
+  }
 
-    let vec = new THREE.Vector3();
+  lastMapX = cameraPosition.x;
+  lastMapZ = cameraPosition.z;
 
-    const userPosition = camera.getWorldPosition(vec);
+  const { lat, lng } = threeToLeaflet(cameraPosition.x, cameraPosition.z);
 
-
-    const { lat, lng } = threeToLeaflet(
-        userPosition.x,
-        userPosition.z
-    );
-
-
-    if (userIcon) {
-
-        userIcon.setLatLng([
-            lat,
-            lng
-        ]);
-    }
+  userIcon.setLatLng([lat, lng]);
 }
-
 
 // ============================================================
 // Convert Three.js coordinates to Leaflet coordinates
 // ============================================================
 
 function threeToLeaflet(threeX, threeZ) {
+  if (!geoLocation) {
+    console.error("GeoLocation ist noch nicht verfügbar");
 
-    if (!geoLocation) {
+    return;
+  }
 
-        console.error(
-            "GeoLocation ist noch nicht verfügbar"
-        );
+  const originLat = geoLocation.latitude;
 
-        return;
-    }
+  const originLng = geoLocation.longitude;
 
+  const deltaLat = (threeZ / earthRadius) * (180 / Math.PI);
 
-    const originLat = geoLocation.latitude;
-    const originLng = geoLocation.longitude;
+  const deltaLng =
+    (threeX / (earthRadius * Math.cos((Math.PI * originLat) / 180))) *
+    (180 / Math.PI);
 
+  const globalLat = originLat + deltaLat;
 
-    const deltaLat =
-        (threeZ / earthRadius) *
-        (180 / Math.PI);
+  const globalLng = originLng + deltaLng;
 
-
-    const deltaLng =
-        (
-            threeX /
-            (
-                earthRadius *
-                Math.cos(
-                    Math.PI * originLat / 180
-                )
-            )
-        ) *
-        (180 / Math.PI);
-
-
-    const globalLat =
-        originLat + deltaLat;
-
-
-    const globalLng =
-        originLng + deltaLng;
-
-
-    return {
-        lat: globalLat,
-        lng: globalLng
-    };
+  return {
+    lat: globalLat,
+    lng: globalLng,
+  };
 }
-
 
 // ============================================================
 // Convert Leaflet coordinates to Three.js coordinates
 // ============================================================
 
 function leafletToThree(lat, lng) {
+  if (!geoLocation) {
+    console.error("GeoLocation ist noch nicht verfügbar");
 
-    if (!geoLocation) {
+    return;
+  }
 
-        console.error(
-            "GeoLocation ist noch nicht verfügbar"
-        );
+  const originLat = geoLocation.latitude;
 
-        return;
-    }
+  const originLng = geoLocation.longitude;
 
+  const deltaLat = lat - originLat;
 
-    const originLat = geoLocation.latitude;
-    const originLng = geoLocation.longitude;
+  const deltaLng = lng - originLng;
 
+  const threeZ = deltaLat * (Math.PI / 180) * earthRadius;
 
-    const deltaLat =
-        lat - originLat;
+  const threeX =
+    deltaLng *
+    (Math.PI / 180) *
+    earthRadius *
+    Math.cos((Math.PI * originLat) / 180);
 
-
-    const deltaLng =
-        lng - originLng;
-
-
-    const threeZ =
-        deltaLat *
-        (Math.PI / 180) *
-        earthRadius;
-
-
-    const threeX =
-        deltaLng *
-        (Math.PI / 180) *
-        earthRadius *
-        Math.cos(
-            Math.PI * originLat / 180
-        );
-
-
-    return {
-        x: threeX,
-        z: threeZ
-    };
+  return {
+    x: threeX,
+    z: threeZ,
+  };
 }
-
 
 // ============================================================
 // Round number
 // ============================================================
 
 function roundTo(n, digits) {
+  var negative = false;
 
-    var negative = false;
+  if (digits === undefined) {
+    digits = 0;
+  }
 
+  if (n < 0) {
+    negative = true;
 
-    if (digits === undefined) {
+    n = n * -1;
+  }
 
-        digits = 0;
-    }
+  var multiplicator = Math.pow(10, digits);
 
+  n = parseFloat((n * multiplicator).toFixed(11));
 
-    if (n < 0) {
+  n = (Math.round(n) / multiplicator).toFixed(digits);
 
-        negative = true;
+  if (negative) {
+    n = (n * -1).toFixed(digits);
+  }
 
-        n = n * -1;
-    }
-
-
-    var multiplicator =
-        Math.pow(10, digits);
-
-
-    n = parseFloat(
-        (n * multiplicator).toFixed(11)
-    );
-
-
-    n =
-        (
-            Math.round(n) /
-            multiplicator
-        ).toFixed(digits);
-
-
-    if (negative) {
-
-        n =
-            (n * -1).toFixed(digits);
-    }
-
-
-    return parseFloat(n);
+  return parseFloat(n);
 }

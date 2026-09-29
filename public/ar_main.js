@@ -10,6 +10,10 @@ let geoLocation;
 
 const modelCache = new Map();
 
+// PERFORMANCE: Reuse one GLTFLoader instead of creating
+// a new loader every time a model is placed.
+const gltfLoader = new THREE.GLTFLoader();
+
 const menus = [
     'menu-bar',
     'add-menu',
@@ -17,6 +21,14 @@ const menus = [
     'options-menu',
     'map-window'
 ];
+
+// PERFORMANCE: Cache menu DOM elements once instead of
+// repeatedly calling document.getElementById() in showMenu().
+const menuElements = {};
+
+menus.forEach(id => {
+    menuElements[id] = document.getElementById(id);
+});
 
 
 /* ========================= */
@@ -158,11 +170,7 @@ function showMenu(menuId) {
     const isMapWindow =
         menuId === 'map-window';
 
-
-    // ========================================================
     // Check location before opening map
-    // ========================================================
-
     if (isMapWindow && !geoLocation) {
 
         console.log("Standort nicht geladen");
@@ -175,14 +183,12 @@ function showMenu(menuId) {
     }
 
 
-    // ========================================================
-    // Hide all menus
-    // ========================================================
-
+    // PERFORMANCE: Use cached menu elements instead of
+    // repeatedly querying the DOM.
     menus.forEach(id => {
 
         const element =
-            document.getElementById(id);
+            menuElements[id];
 
         if (element) {
 
@@ -194,17 +200,10 @@ function showMenu(menuId) {
     });
 
 
-    // ========================================================
-    // Close dynamic menu
-    // ========================================================
-
     closeDynamicMenu();
 
 
-    // ========================================================
     // Menu-specific actions
-    // ========================================================
-
     if (menuId === 'menu-bar') {
 
         clearSelectedModel();
@@ -214,10 +213,8 @@ function showMenu(menuId) {
         // Initialize map
         init_map();
 
-
         // Leaflet needs to know the actual size of the
         // visible map container.
-
         setTimeout(() => {
 
             if (
@@ -239,29 +236,30 @@ function showMenu(menuId) {
 function closeMap() {
 
     const mapWindow =
-        document.getElementById("map-window");
-
+        menuElements['map-window'];
 
     if (mapWindow) {
 
-        mapWindow.style.display = "none";
+        mapWindow.style.display =
+            "none";
     }
 
 
     // Show the main AR menu again
-
     const menuBar =
-        document.getElementById("menu-bar");
+        menuElements['menu-bar'];
 
     if (menuBar) {
 
-        menuBar.style.display = "flex";
+        menuBar.style.display =
+            "flex";
     }
 
 
     // Stop the map update interval
-
-    if (typeof intervalId !== 'undefined') {
+    if (
+        typeof intervalId !== 'undefined'
+    ) {
 
         if (intervalId) {
 
@@ -273,7 +271,6 @@ function closeMap() {
 
 
     // Clear selected model
-
     clearSelectedModel();
 }
 
@@ -287,7 +284,8 @@ function closeDynamicMenu() {
 
     if (dynamicMenu) {
 
-        dynamicMenu.style.display = "none";
+        dynamicMenu.style.display =
+            "none";
     }
 }
 
@@ -304,10 +302,11 @@ function showInfoDialog(message) {
             "info-text"
         );
 
+    infoText.textContent =
+        message;
 
-    infoText.textContent = message;
-
-    infoDialog.style.display = "flex";
+    infoDialog.style.display =
+        "flex";
 }
 
 
@@ -318,7 +317,8 @@ function closeInfoDialog() {
             "info-dialog"
         );
 
-    infoDialog.style.display = "none";
+    infoDialog.style.display =
+        "none";
 }
 
 
@@ -342,7 +342,8 @@ function loadModel(filePath) {
         reticle.position,
         (model) => {
 
-            selectedPlacedModel = model;
+            selectedPlacedModel =
+                model;
 
             highlightSelectedModel();
 
@@ -366,72 +367,109 @@ function placeModel(
             );
 
 
-    const loader = new THREE.GLTFLoader();
-
+    // PERFORMANCE: Reuse the global GLTFLoader.
+    // Do not create a new loader for every model.
     if (modelCache.has(filePath)) {
-      // Use the already loaded model
-      const cachedModel = modelCache.get(filePath);
-      const model = cachedModel.clone(true);
 
-      if (modelConfig && modelConfig.scale) {
-        model.scale.set(
-          modelConfig.scale.x,
-          modelConfig.scale.y,
-          modelConfig.scale.z,
-        );
-      }
+        // Use the already loaded model
+        const cachedModel =
+            modelCache.get(filePath);
 
-      model.position.copy(position);
+        const model =
+            cachedModel.clone(true);
 
-      model.isPlacedModel = true;
-      model.modelConfig = modelConfig;
 
-      scene.add(model);
+        if (
+            modelConfig &&
+            modelConfig.scale
+        ) {
 
-      if (onPlace) {
-        onPlace(model);
-      }
-    } else {
-      // Model has not been loaded yet
-      loader.load(
-        filePath,
-
-        (gltf) => {
-          // Store the original model in the cache
-          modelCache.set(filePath, gltf.scene);
-
-          const model = gltf.scene.clone(true);
-
-          if (modelConfig && modelConfig.scale) {
             model.scale.set(
-              modelConfig.scale.x,
-              modelConfig.scale.y,
-              modelConfig.scale.z,
+                modelConfig.scale.x,
+                modelConfig.scale.y,
+                modelConfig.scale.z
             );
-          }
+        }
 
-          model.position.copy(position);
 
-          model.isPlacedModel = true;
+        model.position.copy(
+            position
+        );
 
-          model.modelConfig = modelConfig;
+        model.isPlacedModel =
+            true;
 
-          scene.add(model);
+        model.modelConfig =
+            modelConfig;
 
-          if (onPlace) {
+        scene.add(model);
+
+
+        if (onPlace) {
             onPlace(model);
-          }
-        },
+        }
 
-        undefined,
+    } else {
 
-        (error) => {
-          console.error("Fehler beim Laden des Modells:", error);
-        },
-      );
+        // Model has not been loaded yet
+        gltfLoader.load(
+
+            filePath,
+
+            (gltf) => {
+
+                // Store the original model in the cache
+                modelCache.set(
+                    filePath,
+                    gltf.scene
+                );
+
+                const model =
+                    gltf.scene.clone(true);
+
+
+                if (
+                    modelConfig &&
+                    modelConfig.scale
+                ) {
+
+                    model.scale.set(
+                        modelConfig.scale.x,
+                        modelConfig.scale.y,
+                        modelConfig.scale.z
+                    );
+                }
+
+
+                model.position.copy(
+                    position
+                );
+
+                model.isPlacedModel =
+                    true;
+
+                model.modelConfig =
+                    modelConfig;
+
+                scene.add(model);
+
+
+                if (onPlace) {
+                    onPlace(model);
+                }
+            },
+
+            undefined,
+
+            (error) => {
+
+                console.error(
+                    "Fehler beim Laden des Modells:",
+                    error
+                );
+            }
+        );
     }
-            
-
 }
 
 
@@ -446,9 +484,13 @@ function selectModel(modelId) {
         model.file
     ) {
 
-        loadModel(model.file);
+        loadModel(
+            model.file
+        );
 
-        showMenu('menu-bar');
+        showMenu(
+            'menu-bar'
+        );
     }
 }
 
@@ -485,7 +527,9 @@ function selectModelFromScene(event) {
         );
 
 
-    if (intersects.length > 0) {
+    if (
+        intersects.length > 0
+    ) {
 
         let selectedObject =
             intersects[0].object;
@@ -502,7 +546,6 @@ function selectModelFromScene(event) {
 
 
         // Reticle cannot be selected
-
         if (
             selectedObject === reticle
         ) {
@@ -521,7 +564,9 @@ function selectModelFromScene(event) {
 
         highlightSelectedModel();
 
-        showMenu("edit-menu");
+        showMenu(
+            "edit-menu"
+        );
     }
 }
 
@@ -536,13 +581,16 @@ function clearSelectedModel() {
                 if (child.isMesh) {
 
                     child.material.emissive
-                        .setHex(0x000000);
+                        .setHex(
+                            0x000000
+                        );
                 }
             }
         );
 
 
-        selectedPlacedModel = null;
+        selectedPlacedModel =
+            null;
     }
 }
 
@@ -560,7 +608,9 @@ function highlightSelectedModel() {
                 if (child.isMesh) {
 
                     child.material.emissive
-                        .setHex(0xff0000);
+                        .setHex(
+                            0xff0000
+                        );
                 }
             }
         );
@@ -578,7 +628,9 @@ function removeHighlightFromSelectedModel() {
                 if (child.isMesh) {
 
                     child.material.emissive
-                        .setHex(0x000000);
+                        .setHex(
+                            0x000000
+                        );
                 }
             }
         );
@@ -598,7 +650,9 @@ function removeHighlightFromAllModels() {
             ) {
 
                 child.material.emissive
-                    .setHex(0x000000);
+                    .setHex(
+                        0x000000
+                    );
             }
         }
     );
@@ -628,7 +682,9 @@ function deleteModel() {
 }
 
 
-function confirmDelete(shouldDelete) {
+function confirmDelete(
+    shouldDelete
+) {
 
     const deleteDialog =
         document.getElementById(
@@ -649,9 +705,12 @@ function confirmDelete(shouldDelete) {
             selectedPlacedModel
         );
 
-        selectedPlacedModel = null;
+        selectedPlacedModel =
+            null;
 
-        showMenu('menu-bar');
+        showMenu(
+            'menu-bar'
+        );
     }
 }
 
@@ -662,15 +721,18 @@ function completeEditing() {
 
     closeDynamicMenu();
 
-    selectedPlacedModel = null;
+    selectedPlacedModel =
+        null;
 
     document.getElementById(
         'edit-menu'
-    ).style.display = 'none';
+    ).style.display =
+        'none';
 
     document.getElementById(
         'menu-bar'
-    ).style.display = 'flex';
+    ).style.display =
+        'flex';
 }
 
 
@@ -734,12 +796,16 @@ function openRotationMenu() {
 }
 
 
-function updateRotation(axis, value) {
+function updateRotation(
+    axis,
+    value
+) {
 
     if (selectedPlacedModel) {
 
         const radians =
-            (value / 180) * Math.PI;
+            (value / 180) *
+            Math.PI;
 
 
         selectedPlacedModel.rotation[axis] =
@@ -786,7 +852,8 @@ function openScaleMenu() {
 
 
     const step =
-        (maxScale - minScale) / 100;
+        (maxScale - minScale) /
+        100;
 
 
     const currentScalePercent =
@@ -967,7 +1034,6 @@ function openMoveMenu() {
                     src="assets/icons/down-arrow.png"
                     alt="Down"
                 />
-
             </div>
 
         </div>
@@ -979,7 +1045,9 @@ function openMoveMenu() {
 }
 
 
-function updateMoveDelta(value) {
+function updateMoveDelta(
+    value
+) {
 
     moveDelta =
         parseFloat(value);
@@ -1044,520 +1112,275 @@ function closeMapDialog() {
 /*        AR-HANDLING        */
 /* ========================= */
 
-async function activateXR(
-    sceneData = null
-) {
+async function activateXR(sceneData = null) {
+  const canvas = document.createElement("canvas");
 
-    const canvas =
-        document.createElement('canvas');
+  document.body.appendChild(canvas);
 
+  const gl = canvas.getContext("webgl", {
+    xrCompatible: true,
+  });
 
-    document.body.appendChild(
-        canvas
-    );
+  const renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    canvas,
+    context: gl,
+  });
 
+  renderer.autoClear = false;
 
-    const gl =
-        canvas.getContext(
-            'webgl',
-            {
-                xrCompatible: true
-            }
-        );
+  scene = new THREE.Scene();
 
+  camera = new THREE.PerspectiveCamera();
 
-    const renderer =
-        new THREE.WebGLRenderer({
+  camera.matrixAutoUpdate = false;
 
-            alpha: true,
+  // ========================================================
+  // AR lighting
+  // ========================================================
 
-            canvas,
+  // Soft overall illumination
+  const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
 
-            context: gl
-        });
+  scene.add(ambientLight);
 
+  // Sky/ground illumination
+  const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x888888, 1.5);
 
-    renderer.autoClear = false;
+  scene.add(hemisphereLight);
 
+  // Directional light for shadows and form
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
 
-    scene =
-        new THREE.Scene();
+  directionalLight.position.set(10, 20, 10);
 
+  scene.add(directionalLight);
 
-    camera =
-        new THREE.PerspectiveCamera();
+  // ========================================================
+  // Reticle
+  // ========================================================
 
+  const loader = new THREE.GLTFLoader();
 
-    camera.matrixAutoUpdate =
-        false;
+  loader.load(
+    "https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf",
 
+    (gltf) => {
+      reticle = gltf.scene;
 
-    // ========================================================
-    // AR lighting
-    // ========================================================
+      reticle.visible = false;
 
-// Soft overall illumination
-    const ambientLight = new THREE.AmbientLight(
-        0xffffff,
-        2.5
-    );
+      scene.add(reticle);
+    },
+  );
 
-    scene.add(ambientLight);
+  // ========================================================
+  // Start WebXR AR session
+  // ========================================================
 
+  currentSession = await navigator.xr.requestSession("immersive-ar", {
+    optionalFeatures: ["dom-overlay"],
 
-    // Sky/ground illumination
-    const hemisphereLight = new THREE.HemisphereLight(
-        0xffffff,
-        0x888888,
-        1.5
-    );
+    domOverlay: {
+      root: document.body,
+    },
 
-    scene.add(hemisphereLight);
+    requiredFeatures: ["hit-test"],
+  });
 
+  currentSession.updateRenderState({
+    baseLayer: new XRWebGLLayer(currentSession, gl),
+  });
 
-    // Directional light for shadows and form
-    const directionalLight = new THREE.DirectionalLight(
-        0xffffff,
-        1.5
-    );
-    
-    directionalLight.position.set(
-        10,
-        20,
-        10
-    );
-    
-    scene.add(directionalLight);
+  const referenceSpace = await currentSession.requestReferenceSpace("local");
 
+  const viewerSpace = await currentSession.requestReferenceSpace("viewer");
 
-    // ========================================================
-    // Reticle
-    // ========================================================
+  const hitTestSource = await currentSession.requestHitTestSource({
+    space: viewerSpace,
+  });
 
-    const loader =
-        new THREE.GLTFLoader();
+  // ========================================================
+  // Show main menu
+  // ========================================================
 
+  menuElements["menu-bar"].style.display = "flex";
 
-    loader.load(
+  // ========================================================
+  // AR session ended
+  // ========================================================
 
-        "https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf",
+  currentSession.addEventListener("end", () => {
+    currentSession = null;
 
-        (gltf) => {
+    // Hide dynamic menu
 
-            reticle =
-                gltf.scene;
+    document.getElementById("dynamic-menu").style.display = "none";
 
-            reticle.visible =
-                false;
+    // Hide all application menus
 
-            scene.add(reticle);
-        }
-    );
+    menus.forEach((id) => {
+      const element = menuElements[id];
 
-
-    // ========================================================
-    // Start WebXR AR session
-    // ========================================================
-
-    currentSession =
-        await navigator.xr.requestSession(
-            'immersive-ar',
-            {
-                optionalFeatures: [
-                    "dom-overlay"
-                ],
-
-                domOverlay: {
-                    root: document.body
-                },
-
-                requiredFeatures: [
-                    'hit-test'
-                ]
-            }
-        );
-
-
-    currentSession.updateRenderState({
-
-        baseLayer:
-            new XRWebGLLayer(
-                currentSession,
-                gl
-            )
+      if (element) {
+        element.style.display = "none";
+      }
     });
+  });
 
+  // ========================================================
+  // Select objects in AR
+  // ========================================================
 
-    const referenceSpace =
-        await currentSession.requestReferenceSpace(
-            'local'
-        );
+  canvas.addEventListener("pointerdown", selectModelFromScene);
 
+  // ========================================================
+  // Geolocation
+  // ========================================================
 
-    const viewerSpace =
-        await currentSession.requestReferenceSpace(
-            'viewer'
-        );
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        geoLocation = {
+          latitude: roundTo(position.coords.latitude, 5),
 
+          longitude: roundTo(position.coords.longitude, 5),
+        };
 
-    const hitTestSource =
-        await currentSession.requestHitTestSource({
-            space: viewerSpace
-        });
+        console.log("GeoLocation: " + JSON.stringify(geoLocation));
 
+        // =================================================
+        // Load saved scene models
+        // =================================================
 
-    // ========================================================
-    // Show main menu
-    // ========================================================
+        if (sceneData) {
+          sceneData.models.forEach((model) => {
+            if (model.name) {
+              const modelDefinition = Object.values(models).find(
+                (m) => model.name === m.name,
+              );
 
-    document.getElementById(
-        'menu-bar'
-    ).style.display = 'flex';
+              if (!modelDefinition) {
+                console.error("Modell nicht gefunden:", model.name);
 
+                return;
+              }
 
-    // ========================================================
-    // AR session ended
-    // ========================================================
+              const filePath = modelDefinition.file;
 
-    currentSession.addEventListener(
-        "end",
-        () => {
+              const { x, z } = leafletToThree(model.lat, model.lng);
 
-            currentSession =
-                null;
+              const positionVector = new THREE.Vector3(x, model.position.y, z);
 
+              placeModel(filePath, positionVector, (placed) => {
+                if (model.rotation) {
+                  placed.rotation._x = model.rotation._x;
 
-            // Hide dynamic menu
+                  placed.rotation._y = model.rotation._y;
 
-            document.getElementById(
-                "dynamic-menu"
-            ).style.display =
-                "none";
-
-
-            // Hide all application menus
-
-            menus.forEach(id => {
-
-                const element =
-                    document.getElementById(id);
-
-                if (element) {
-
-                    element.style.display =
-                        'none';
+                  placed.rotation._z = model.rotation._z;
                 }
-            });
-        }
-    );
 
+                if (model.scale) {
+                  placed.scale.x = model.scale.x;
 
-    // ========================================================
-    // Select objects in AR
-    // ========================================================
+                  placed.scale.y = model.scale.y;
 
-    canvas.addEventListener(
-        "pointerdown",
-        selectModelFromScene
-    );
-
-
-    // ========================================================
-    // Geolocation
-    // ========================================================
-
-    if (navigator.geolocation) {
-
-        navigator.geolocation.getCurrentPosition(
-
-            position => {
-
-                geoLocation = {
-
-                    latitude:
-                        roundTo(
-                            position.coords.latitude,
-                            5
-                        ),
-
-                    longitude:
-                        roundTo(
-                            position.coords.longitude,
-                            5
-                        )
-                };
-
-
-                console.log(
-                    "GeoLocation: " +
-                    JSON.stringify(
-                        geoLocation
-                    )
-                );
-
-
-                // =================================================
-                // Load saved scene models
-                // =================================================
-
-                if (sceneData) {
-
-                    sceneData.models.forEach(
-                        (model) => {
-
-                            if (model.name) {
-
-                                const modelDefinition =
-                                    Object.values(models)
-                                        .find(
-                                            m =>
-                                                model.name ===
-                                                m.name
-                                        );
-
-
-                                if (!modelDefinition) {
-
-                                    console.error(
-                                        "Modell nicht gefunden:",
-                                        model.name
-                                    );
-
-                                    return;
-                                }
-
-
-                                const filePath =
-                                    modelDefinition.file;
-
-
-                                const {
-                                    x,
-                                    z
-                                } =
-                                    leafletToThree(
-                                        model.lat,
-                                        model.lng
-                                    );
-
-
-                                const positionVector =
-                                    new THREE.Vector3(
-                                        x,
-                                        model.position.y,
-                                        z
-                                    );
-
-
-                                placeModel(
-                                    filePath,
-                                    positionVector,
-                                    (placed) => {
-
-                                        if (
-                                            model.rotation
-                                        ) {
-
-                                            placed.rotation._x =
-                                                model.rotation._x;
-
-                                            placed.rotation._y =
-                                                model.rotation._y;
-
-                                            placed.rotation._z =
-                                                model.rotation._z;
-                                        }
-
-
-                                        if (
-                                            model.scale
-                                        ) {
-
-                                            placed.scale.x =
-                                                model.scale.x;
-
-                                            placed.scale.y =
-                                                model.scale.y;
-
-                                            placed.scale.z =
-                                                model.scale.z;
-                                        }
-                                    }
-                                );
-                            }
-                        }
-                    );
+                  placed.scale.z = model.scale.z;
                 }
-            },
-
-            error => {
-
-                console.error(
-                    "Fehler bei der Geolokalisierung:",
-                    JSON.stringify(error)
-                );
-            },
-
-            {
-                enableHighAccuracy: true,
-                maximumAge: 2000,
-                timeout: 5000
+              });
             }
+          });
+        }
+      },
+
+      (error) => {
+        console.error(
+          "Fehler bei der Geolokalisierung:",
+          JSON.stringify(error),
         );
+      },
+
+      {
+        enableHighAccuracy: true,
+        maximumAge: 2000,
+        timeout: 5000,
+      },
+    );
+  }
+  // ========================================================
+  // XR render loop
+  // ========================================================
+
+  currentSession.requestAnimationFrame(function onXRFrame(time, frame) {
+    currentSession.requestAnimationFrame(onXRFrame);
+
+    gl.bindFramebuffer(
+      gl.FRAMEBUFFER,
+      currentSession.renderState.baseLayer.framebuffer,
+    );
+
+    const pose = frame.getViewerPose(referenceSpace);
+
+    if (pose) {
+      const view = pose.views[0];
+
+      const viewport = currentSession.renderState.baseLayer.getViewport(view);
+
+      renderer.setSize(viewport.width, viewport.height);
+
+      camera.matrix.fromArray(view.transform.matrix);
+
+      camera.projectionMatrix.fromArray(view.projectionMatrix);
+
+      camera.updateMatrixWorld(true);
+
+      // =================================================
+      // Hit testing
+      // =================================================
+
+      const hitTestResults = frame.getHitTestResults(hitTestSource);
+
+      if (hitTestResults.length > 0) {
+        const hitPose = hitTestResults[0].getPose(referenceSpace);
+
+        reticle.visible = true;
+
+        reticle.position.set(
+          hitPose.transform.position.x,
+
+          hitPose.transform.position.y,
+
+          hitPose.transform.position.z,
+        );
+
+        reticle.updateMatrixWorld(true);
+      }
+
+      // =================================================
+      // Render AR scene
+      // =================================================
+
+      renderer.render(scene, camera);
     }
-
-
-    // ========================================================
-    // XR render loop
-    // ========================================================
-
-    currentSession.requestAnimationFrame(
-        function onXRFrame(
-            time,
-            frame
-        ) {
-
-            currentSession.requestAnimationFrame(
-                onXRFrame
-            );
-
-
-            gl.bindFramebuffer(
-                gl.FRAMEBUFFER,
-                currentSession
-                    .renderState
-                    .baseLayer
-                    .framebuffer
-            );
-
-
-            const pose =
-                frame.getViewerPose(
-                    referenceSpace
-                );
-
-
-            if (pose) {
-
-                const view =
-                    pose.views[0];
-
-
-                const viewport =
-                    currentSession
-                        .renderState
-                        .baseLayer
-                        .getViewport(view);
-
-
-                renderer.setSize(
-                    viewport.width,
-                    viewport.height
-                );
-
-
-                camera.matrix.fromArray(
-                    view.transform.matrix
-                );
-
-
-                camera.projectionMatrix.fromArray(
-                    view.projectionMatrix
-                );
-
-
-                camera.updateMatrixWorld(
-                    true
-                );
-
-
-                // =================================================
-                // Hit testing
-                // =================================================
-
-                const hitTestResults =
-                    frame.getHitTestResults(
-                        hitTestSource
-                    );
-
-
-                if (
-                    hitTestResults.length > 0
-                ) {
-
-                    const hitPose =
-                        hitTestResults[0]
-                            .getPose(
-                                referenceSpace
-                            );
-
-
-                    reticle.visible =
-                        true;
-
-
-                    reticle.position.set(
-
-                        hitPose.transform.position.x,
-
-                        hitPose.transform.position.y,
-
-                        hitPose.transform.position.z
-                    );
-
-
-                    reticle.updateMatrixWorld(
-                        true
-                    );
-                }
-
-
-                // =================================================
-                // Render AR scene
-                // =================================================
-
-                renderer.render(
-                    scene,
-                    camera
-                );
-            }
-        }
-    );
+  });
 }
-
 
 /* ========================= */
 /*       AR EXIT             */
 /* ========================= */
 
 function exitAR() {
-
-    document.getElementById(
-        'confirmation-dialog'
-    ).style.display =
-        'flex';
+  document.getElementById("confirmation-dialog").style.display = "flex";
 }
 
+function confirmExit(shouldExit) {
+  if (shouldExit && currentSession) {
+    currentSession.end();
+  }
 
-function confirmExit(
-    shouldExit
-) {
-
-    if (
-        shouldExit &&
-        currentSession
-    ) {
-
-        currentSession.end();
-    }
-
-
-    document.getElementById(
-        'confirmation-dialog'
-    ).style.display =
-        'none';
+  document.getElementById("confirmation-dialog").style.display = "none";
 }
-
 
 /* ========================= */
 /*   BENUTZERINTERAKTIONEN   */
@@ -1565,36 +1388,18 @@ function confirmExit(
 
 let soundTimeout = false;
 
-
 function playButtonSound() {
+  if (!soundTimeout) {
+    const sound = document.getElementById("button-sound");
 
-    if (!soundTimeout) {
+    sound.currentTime = 0;
 
-        const sound =
-            document.getElementById(
-                "button-sound"
-            );
+    sound.play();
 
+    soundTimeout = true;
 
-        sound.currentTime =
-            0;
-
-
-        sound.play();
-
-
-        soundTimeout =
-            true;
-
-
-        setTimeout(
-            () => {
-
-                soundTimeout =
-                    false;
-
-            },
-            200
-        );
-    }
+    setTimeout(() => {
+      soundTimeout = false;
+    }, 200);
+  }
 }
