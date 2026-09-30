@@ -179,7 +179,7 @@ function addPlanOverlay() {
     return;
   }
 
-  planOverlay = L.imageOverlay("assets/plans/proposed-plan.png", planBounds, {
+  planOverlay = L.imageOverlay("assets/plans/proposed-plan8k.png", planBounds, {
     opacity: 0.7,
     interactive: false,
   });
