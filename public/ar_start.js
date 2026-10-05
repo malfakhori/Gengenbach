@@ -1,3 +1,5 @@
+import { activateXR } from './ar_main.js';
+import { loadSceneFromFile } from './ar_download.js';
 /* ========================= */
 /*   DEBUGGING UND START     */
 /* ========================= */

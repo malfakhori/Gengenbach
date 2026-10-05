@@ -1,3 +1,4 @@
+import { showInfoDialog } from './ar_main.js';
 function downloadScene() {
     const placedModels = window.getAllPlacedModels().map(model => {
       const { lat, lng } = window.threeToLeaflet(model.position.x, model.position.z);
@@ -17,6 +18,7 @@ function downloadScene() {
       return;
     }
 
+    const geoLocation = window.getGeoLocation();
     if (!geoLocation) {
       console.log("Standort nicht geladen");
       showInfoDialog("Ihr Standort wurde noch nicht geladen");

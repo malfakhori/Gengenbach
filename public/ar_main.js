@@ -294,7 +294,7 @@ function closeDynamicMenu() {
 }
 
 
-function showInfoDialog(message) {
+export function showInfoDialog(message) {
 
     const infoDialog =
         document.getElementById(
@@ -1123,131 +1123,86 @@ function closeMapDialog() {
 
 async function activateXR(sceneData = null) {
   const canvas = document.createElement("canvas");
-
   document.body.appendChild(canvas);
 
-  // ========================================================
-  // Three.js WebXR renderer
-  // ========================================================
+  // Keep the original WebXR rendering architecture.
+  // Three.js r186 is used only as the renderer/scene library;
+  // WebXR session, hit-test source, framebuffer and camera pose
+  // are still controlled explicitly as in the working r126 version.
+  const gl = canvas.getContext("webgl", {
+    xrCompatible: true,
+    alpha: true,
+    antialias: true,
+  });
+
+  if (!gl) {
+    throw new Error("WebGL konnte nicht initialisiert werden.");
+  }
 
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
-    antialias: true,
     canvas,
+    context: gl,
+    antialias: true,
   });
 
   renderer.autoClear = false;
-  renderer.xr.enabled = true;
   xrRenderer = renderer;
-
-  // Keep the same reference-space type used by the previous
-  // manual WebXR implementation.
-  renderer.xr.setReferenceSpaceType("local");
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera();
-
-  // ========================================================
-  // AR lighting
-  // ========================================================
+  camera.matrixAutoUpdate = false;
 
   const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
   scene.add(ambientLight);
 
-  const hemisphereLight =
-    new THREE.HemisphereLight(0xffffff, 0x888888, 1.5);
-
+  const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x888888, 1.5);
   scene.add(hemisphereLight);
 
-  const directionalLight =
-    new THREE.DirectionalLight(0xffffff, 1.5);
-
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
   directionalLight.position.set(10, 20, 10);
   scene.add(directionalLight);
 
-  // ========================================================
   // Reticle
-  // ========================================================
-
   const loader = new GLTFLoader();
-
   loader.load(
     "https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf",
-
     (gltf) => {
       reticle = gltf.scene;
       reticle.visible = false;
       scene.add(reticle);
     },
-
     undefined,
-
-    (error) => {
-      console.error("Fehler beim Laden des Reticles:", error);
-    },
+    (error) => console.error("Fehler beim Laden des Reticles:", error)
   );
 
-  // ========================================================
-  // Start WebXR AR session
-  // ========================================================
-
+  // WebXR session
   currentSession = await navigator.xr.requestSession("immersive-ar", {
-    optionalFeatures: ["dom-overlay"],
-
-    domOverlay: {
-      root: document.body,
-    },
-
     requiredFeatures: ["hit-test"],
+    optionalFeatures: ["dom-overlay"],
+    domOverlay: { root: document.body },
   });
 
-  // Let Three.js manage the XR render state / framebuffer.
-  await renderer.xr.setSession(currentSession);
+  currentSession.updateRenderState({
+    baseLayer: new XRWebGLLayer(currentSession, gl),
+  });
 
-  const referenceSpace = renderer.xr.getReferenceSpace();
-
-  if (!referenceSpace) {
-    throw new Error("XR reference space konnte nicht erstellt werden.");
-  }
-
-  const viewerSpace =
-    await currentSession.requestReferenceSpace("viewer");
-
-  const hitTestSource =
-    await currentSession.requestHitTestSource({
-      space: viewerSpace,
-    });
-
-  // ========================================================
-  // Show main menu
-  // ========================================================
+  const referenceSpace = await currentSession.requestReferenceSpace("local");
+  const viewerSpace = await currentSession.requestReferenceSpace("viewer");
+  const hitTestSource = await currentSession.requestHitTestSource({
+    space: viewerSpace,
+  });
 
   document.getElementById("menu-bar").style.display = "flex";
 
-  // ========================================================
-  // AR session ended
-  // Reload the complete website
-  // ========================================================
-
   currentSession.addEventListener("end", () => {
     console.log("AR session ended");
-
-    // Completely reload the website.
-    // This resets the AR canvas, menus, scene, map,
-    // variables, and all other application state.
     window.location.reload();
   });
 
-  // ========================================================
-  // Select objects in AR
-  // ========================================================
-
   canvas.addEventListener("pointerdown", selectModelFromScene);
 
-  // ========================================================
   // Geolocation
-  // ========================================================
-
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -1256,124 +1211,106 @@ async function activateXR(sceneData = null) {
           longitude: window.roundTo(position.coords.longitude, 5),
         };
 
-        console.log(
-          "GeoLocation: " + JSON.stringify(geoLocation)
-        );
-
-        // =================================================
-        // Load saved scene models
-        // =================================================
+        console.log("GeoLocation: " + JSON.stringify(geoLocation));
 
         if (sceneData && Array.isArray(sceneData.models)) {
           sceneData.models.forEach((model) => {
-            if (model.name) {
-              const modelDefinition =
-                Object.values(models).find(
-                  (m) => model.name === m.name
-                );
+            if (!model.name) return;
 
-              if (!modelDefinition) {
-                console.error(
-                  "Modell nicht gefunden:",
-                  model.name
-                );
+            const modelDefinition = Object.values(models).find(
+              (m) => model.name === m.name
+            );
 
-                return;
+            if (!modelDefinition) {
+              console.error("Modell nicht gefunden:", model.name);
+              return;
+            }
+
+            const { x, z } = window.leafletToThree(model.lat, model.lng);
+            const positionVector = new THREE.Vector3(
+              x,
+              model.position?.y ?? 0,
+              z
+            );
+
+            placeModel(modelDefinition.file, positionVector, (placed) => {
+              if (model.rotation) {
+                placed.rotation.set(
+                  model.rotation._x ?? model.rotation.x ?? 0,
+                  model.rotation._y ?? model.rotation.y ?? 0,
+                  model.rotation._z ?? model.rotation.z ?? 0
+                );
               }
 
-              const filePath = modelDefinition.file;
-
-              // ar_overviewmap.js is loaded before user interaction,
-              // and exposes this conversion function on window.
-              const coordinates =
-                window.leafletToThree(model.lat, model.lng);
-
-              const positionVector =
-                new THREE.Vector3(
-                  coordinates.x,
-                  model.position.y,
-                  coordinates.z
+              if (model.scale) {
+                placed.scale.set(
+                  model.scale.x,
+                  model.scale.y,
+                  model.scale.z
                 );
-
-              placeModel(
-                filePath,
-                positionVector,
-                (placed) => {
-                  if (model.rotation) {
-                    placed.rotation.set(
-                      model.rotation._x ?? model.rotation.x ?? 0,
-                      model.rotation._y ?? model.rotation.y ?? 0,
-                      model.rotation._z ?? model.rotation.z ?? 0
-                    );
-                  }
-
-                  if (model.scale) {
-                    placed.scale.set(
-                      model.scale.x,
-                      model.scale.y,
-                      model.scale.z
-                    );
-                  }
-                }
-              );
-            }
+              }
+            });
           });
         }
       },
-
       (error) => {
-        console.error(
-          "Fehler bei der Geolokalisierung:",
-          JSON.stringify(error),
-        );
+        console.error("Fehler bei der Geolokalisierung:", error);
       },
-
       {
         enableHighAccuracy: true,
         maximumAge: 2000,
         timeout: 5000,
-      },
+      }
     );
   }
 
-  // ========================================================
-  // Modern Three.js XR render loop
-  // ========================================================
+  // Keep the original explicit XR frame loop.
+  currentSession.requestAnimationFrame(function onXRFrame(time, frame) {
+    currentSession.requestAnimationFrame(onXRFrame);
 
-  renderer.setAnimationLoop((time, frame) => {
-    if (!frame) {
-      return;
-    }
+    const session = frame.session;
+    const baseLayer = session.renderState.baseLayer;
 
-    // ======================================================
-    // Hit testing
-    // ======================================================
+    if (!baseLayer) return;
 
-    const hitTestResults =
-      frame.getHitTestResults(hitTestSource);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, baseLayer.framebuffer);
+
+    const pose = frame.getViewerPose(referenceSpace);
+    if (!pose) return;
+
+    // This application uses one camera/view, as in the original version.
+    const view = pose.views[0];
+    const viewport = baseLayer.getViewport(view);
+    if (!viewport) return;
+
+    renderer.setViewport(
+      viewport.x,
+      viewport.y,
+      viewport.width,
+      viewport.height
+    );
+
+    camera.matrix.fromArray(view.transform.matrix);
+    camera.projectionMatrix.fromArray(view.projectionMatrix);
+    camera.updateMatrixWorld(true);
+
+    const hitTestResults = frame.getHitTestResults(hitTestSource);
 
     if (hitTestResults.length > 0) {
-      const hitPose =
-        hitTestResults[0].getPose(referenceSpace);
+      const hitPose = hitTestResults[0].getPose(referenceSpace);
 
       if (hitPose && reticle) {
         reticle.visible = true;
-
         reticle.position.set(
           hitPose.transform.position.x,
           hitPose.transform.position.y,
-          hitPose.transform.position.z,
+          hitPose.transform.position.z
         );
-
         reticle.updateMatrixWorld(true);
       }
     } else if (reticle) {
       reticle.visible = false;
     }
-
-    // ======================================================
-    // Render AR scene
-    // ======================================================
 
     renderer.render(scene, camera);
   });
@@ -1424,7 +1361,6 @@ window.updateScale = updateScale;
 window.updateMoveDelta = updateMoveDelta;
 window.moveModelDynamic = moveModelDynamic;
 window.closeDynamicMenu = closeDynamicMenu;
-window.roundTo = window.roundTo;
 
 /* ============================================================
    GLOBAL API BRIDGE
@@ -1446,7 +1382,5 @@ window.confirmExit = confirmExit;
 window.closeInfoDialog = closeInfoDialog;
 window.getAllPlacedModels = getAllPlacedModels;
 window.activateXR = activateXR;
-window.getXRRenderCamera = () =>
-    xrRenderer && xrRenderer.xr.isPresenting
-        ? xrRenderer.xr.getCamera(camera)
-        : camera;
+window.getXRRenderCamera = () => camera;
+window.getGeoLocation = () => geoLocation;
