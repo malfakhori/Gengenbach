@@ -79,7 +79,6 @@ function showStartScreen() {
 
   startScreen.appendChild(hftLogo);
 
-
   /* ==========================================================
      TITLE
      ========================================================== */
@@ -190,7 +189,7 @@ function showStartScreen() {
     predefinedButton2 = null;
 
     // Start AR
-    activateXR(sceneData);
+    window.activateXR(sceneData);
   };
 
   /* ==========================================================
@@ -198,7 +197,7 @@ function showStartScreen() {
      ========================================================== */
 
   loadButton.onclick = () => {
-    loadSceneFromFile((data, fileName) => {
+    window.loadSceneFromFile((data, fileName) => {
       if (data && fileName) {
         sceneData = data;
         sceneFileName = fileName;

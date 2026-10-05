@@ -1,3 +1,6 @@
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
 /* ========================= */
 /*    GLOBALE VARIABLEN      */
 /* ========================= */
@@ -6,133 +9,122 @@ let selectedPlacedModel = null;
 let currentSession = null;
 let reticle = null;
 let scene, camera;
+let xrRenderer = null;
 let geoLocation;
 
 const modelCache = new Map();
 
 // PERFORMANCE: Reuse one GLTFLoader instead of creating
 // a new loader every time a model is placed.
-const gltfLoader = new THREE.GLTFLoader();
+const gltfLoader = new GLTFLoader();
 
 const menus = [
-    'menu-bar',
-    'add-menu',
-    'edit-menu',
-    'options-menu',
-    'map-window'
+  "menu-bar",
+  "add-menu",
+  "edit-menu",
+  "options-menu",
+  "map-window",
 ];
 
 // PERFORMANCE: Cache menu DOM elements once instead of
 // repeatedly calling document.getElementById() in showMenu().
 const menuElements = {};
 
-menus.forEach(id => {
-    menuElements[id] = document.getElementById(id);
+menus.forEach((id) => {
+  menuElements[id] = document.getElementById(id);
 });
-
 
 /* ========================= */
 /*          MODELLE          */
 /* ========================= */
 
 let models = {
+  bench: {
+    name: "Bench",
+    image: "assets/previewImages/bench.PNG",
+    file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf",
+    scale: { x: 0.1, y: 0.1, z: 0.1 },
+    minScale: 0.05,
+    maxScale: 0.5,
+  },
 
-    bench: {
-        name: "Bench",
-        image: "assets/previewImages/bench.PNG",
-        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf",
-        scale: { x: 0.1, y: 0.1, z: 0.1 },
-        minScale: 0.05,
-        maxScale: 0.5
-    },
+  trashbin: {
+    name: "Trash bin",
+    image: "assets/previewImages/trash_can.PNG",
+    file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf",
+    scale: { x: 0.03, y: 0.03, z: 0.03 },
+    minScale: 0.01,
+    maxScale: 0.1,
+  },
 
-    trashbin: {
-        name: "Trash bin",
-        image: "assets/previewImages/trash_can.PNG",
-        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf",
-        scale: { x: 0.03, y: 0.03, z: 0.03 },
-        minScale: 0.01,
-        maxScale: 0.1
-    },
+  lantern: {
+    name: "Lantern",
+    image: "assets/previewImages/park_light.png",
+    file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/park_light_model/scene.gltf",
+    scale: { x: 0.5, y: 0.5, z: 0.5 },
+    minScale: 0.2,
+    maxScale: 5,
+  },
 
-    lantern: {
-        name: "Lantern",
-        image: "assets/previewImages/park_light.png",
-        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/park_light_model/scene.gltf",
-        scale: { x: 0.5, y: 0.5, z: 0.5 },
-        minScale: 0.2,
-        maxScale: 5
-    },
+  telephone_box: {
+    name: "Telephone Box",
+    image: "assets/previewImages/telephone_box.PNG",
+    file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/telephone_box_model/scene.gltf",
+    scale: { x: 0.5, y: 0.5, z: 0.5 },
+    minScale: 0.05,
+    maxScale: 1,
+  },
 
-    telephone_box: {
-        name: "Telephone Box",
-        image: "assets/previewImages/telephone_box.PNG",
-        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/telephone_box_model/scene.gltf",
-        scale: { x: 0.5, y: 0.5, z: 0.5 },
-        minScale: 0.05,
-        maxScale: 1
-    },
+  fire_hydrant_model: {
+    name: "Fire Hydrant",
+    image: "assets/previewImages/hydrant.PNG",
+    file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fire_hydrant_model/scene.gltf",
+    scale: { x: 0.3, y: 0.3, z: 0.3 },
+    minScale: 0.1,
+    maxScale: 1,
+  },
 
-    fire_hydrant_model: {
-        name: "Fire Hydrant",
-        image: "assets/previewImages/hydrant.PNG",
-        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fire_hydrant_model/scene.gltf",
-        scale: { x: 0.3, y: 0.3, z: 0.3 },
-        minScale: 0.1,
-        maxScale: 1
-    },
+  statue: {
+    name: "Statue",
+    image: "assets/previewImages/statue.PNG",
+    file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/statue_model/scene.gltf",
+    scale: { x: 0.5, y: 0.5, z: 0.5 },
+    minScale: 0.05,
+    maxScale: 2,
+  },
 
-    statue: {
-        name: "Statue",
-        image: "assets/previewImages/statue.PNG",
-        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/statue_model/scene.gltf",
-        scale: { x: 0.5, y: 0.5, z: 0.5 },
-        minScale: 0.05,
-        maxScale: 2
-    },
-
-    fountain: {
-        name: "Fountain",
-        image: "assets/previewImages/fountain.PNG",
-        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fountain_model/scene.gltf",
-        scale: { x: 0.001, y: 0.001, z: 0.001 },
-        minScale: 0.0005,
-        maxScale: 0.005
-    }
+  fountain: {
+    name: "Fountain",
+    image: "assets/previewImages/fountain.PNG",
+    file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fountain_model/scene.gltf",
+    scale: { x: 0.001, y: 0.001, z: 0.001 },
+    minScale: 0.0005,
+    maxScale: 0.005,
+  },
 };
-
 
 /* ========================= */
 /*     INITIALISIERUNG       */
 /* ========================= */
 
 window.onload = () => {
+  initializeAddMenu();
 
-    initializeAddMenu();
+  // Allen Buttons den Sound hinzufügen
+  const buttons = document.querySelectorAll("button, .menu-item");
 
-    // Allen Buttons den Sound hinzufügen
-    const buttons = document.querySelectorAll(
-        "button, .menu-item"
-    );
-
-    buttons.forEach(button => {
-        button.addEventListener(
-            "click",
-            playButtonSound
-        );
-    });
+  buttons.forEach((button) => {
+    button.addEventListener("click", playButtonSound);
+  });
 };
 
-
 function initializeAddMenu() {
+  const addMenu = document.getElementById("add-menu");
 
-    const addMenu =
-        document.getElementById('add-menu');
-
-    addMenu.innerHTML =
-        Object.entries(models)
-            .map(
-                ([key, model]) => `
+  addMenu.innerHTML =
+    Object.entries(models)
+      .map(
+        ([key, model]) => `
                 <div
                     class="menu-item"
                     id="${key}-item"
@@ -143,11 +135,10 @@ function initializeAddMenu() {
                         alt="${model.name}"
                     />
                 </div>
-                `
-            )
-            .join('') +
-
-        `
+                `,
+      )
+      .join("") +
+    `
         <div
             class="menu-item"
             onclick="showMenu('menu-bar')"
@@ -160,617 +151,351 @@ function initializeAddMenu() {
         `;
 }
 
-
 /* ========================= */
 /*     MENÜ-STEUERUNG        */
 /* ========================= */
 
 function showMenu(menuId) {
+  const isMapWindow = menuId === "map-window";
 
-    const isMapWindow =
-        menuId === 'map-window';
+  // Check location before opening map
+  if (isMapWindow && !geoLocation) {
+    console.log("Standort nicht geladen");
 
-    // Check location before opening map
-    if (isMapWindow && !geoLocation) {
+    showInfoDialog("Ihr Standort wurde noch nicht geladen");
 
-        console.log("Standort nicht geladen");
+    return;
+  }
 
-        showInfoDialog(
-            "Ihr Standort wurde noch nicht geladen"
-        );
+  // PERFORMANCE: Use cached menu elements instead of
+  // repeatedly querying the DOM.
+  menus.forEach((id) => {
+    const element = menuElements[id];
 
-        return;
+    if (element) {
+      element.style.display = id === menuId ? "flex" : "none";
     }
+  });
 
+  closeDynamicMenu();
 
-    // PERFORMANCE: Use cached menu elements instead of
-    // repeatedly querying the DOM.
-    menus.forEach(id => {
+  // Menu-specific actions
+  if (menuId === "menu-bar") {
+    clearSelectedModel();
+  } else if (isMapWindow) {
+    // Initialize map
+    init_map();
 
-        const element =
-            menuElements[id];
-
-        if (element) {
-
-            element.style.display =
-                id === menuId
-                    ? 'flex'
-                    : 'none';
-        }
-    });
-
-
-    closeDynamicMenu();
-
-
-    // Menu-specific actions
-    if (menuId === 'menu-bar') {
-
-        clearSelectedModel();
-
-    } else if (isMapWindow) {
-
-        // Initialize map
-        init_map();
-
-        // Leaflet needs to know the actual size of the
-        // visible map container.
-        setTimeout(() => {
-
-            if (
-                typeof centerOnPlan === 'function'
-            ) {
-
-                centerOnPlan();
-            }
-
-        }, 100);
-    }
+    // Leaflet needs to know the actual size of the
+    // visible map container.
+    setTimeout(() => {
+      if (typeof centerOnPlan === "function") {
+        centerOnPlan();
+      }
+    }, 100);
+  }
 }
-
 
 /* ============================================================ */
 /* Close map and return to AR scene */
 /* ============================================================ */
 
 function closeMap() {
+  const mapWindow = menuElements["map-window"];
 
-    const mapWindow =
-        menuElements['map-window'];
+  if (mapWindow) {
+    mapWindow.style.display = "none";
+  }
 
-    if (mapWindow) {
+  // Show the main AR menu again
+  const menuBar = menuElements["menu-bar"];
 
-        mapWindow.style.display =
-            "none";
+  if (menuBar) {
+    menuBar.style.display = "flex";
+  }
+
+  // Stop the map update interval
+  if (typeof intervalId !== "undefined") {
+    if (intervalId) {
+      clearInterval(intervalId);
+
+      intervalId = null;
     }
+  }
 
-
-    // Show the main AR menu again
-    const menuBar =
-        menuElements['menu-bar'];
-
-    if (menuBar) {
-
-        menuBar.style.display =
-            "flex";
-    }
-
-
-    // Stop the map update interval
-    if (
-        typeof intervalId !== 'undefined'
-    ) {
-
-        if (intervalId) {
-
-            clearInterval(intervalId);
-
-            intervalId = null;
-        }
-    }
-
-
-    // Clear selected model
-    clearSelectedModel();
+  // Clear selected model
+  clearSelectedModel();
 }
-
 
 function closeDynamicMenu() {
+  const dynamicMenu = document.getElementById("dynamic-menu");
 
-    const dynamicMenu =
-        document.getElementById(
-            "dynamic-menu"
-        );
-
-    if (dynamicMenu) {
-
-        dynamicMenu.style.display =
-            "none";
-    }
+  if (dynamicMenu) {
+    dynamicMenu.style.display = "none";
+  }
 }
-
 
 function showInfoDialog(message) {
+  const infoDialog = document.getElementById("info-dialog");
 
-    const infoDialog =
-        document.getElementById(
-            "info-dialog"
-        );
+  const infoText = document.getElementById("info-text");
 
-    const infoText =
-        document.getElementById(
-            "info-text"
-        );
+  infoText.textContent = message;
 
-    infoText.textContent =
-        message;
-
-    infoDialog.style.display =
-        "flex";
+  infoDialog.style.display = "flex";
 }
-
 
 function closeInfoDialog() {
+  const infoDialog = document.getElementById("info-dialog");
 
-    const infoDialog =
-        document.getElementById(
-            "info-dialog"
-        );
-
-    infoDialog.style.display =
-        "none";
+  infoDialog.style.display = "none";
 }
-
 
 /* ========================= */
 /*     MODELL-HANDLING       */
 /* ========================= */
 
 function getAllPlacedModels() {
-
-    return scene.children.filter(
-        child =>
-            child.isPlacedModel === true
-    );
+  return scene.children.filter((child) => child.isPlacedModel === true);
 }
-
 
 function loadModel(filePath) {
+  placeModel(filePath, reticle.position, (model) => {
+    selectedPlacedModel = model;
 
-    placeModel(
-        filePath,
-        reticle.position,
-        (model) => {
+    highlightSelectedModel();
 
-            selectedPlacedModel =
-                model;
-
-            highlightSelectedModel();
-
-            showMenu('edit-menu');
-        }
-    );
+    showMenu("edit-menu");
+  });
 }
 
+function placeModel(filePath, position, onPlace = null) {
+  const modelConfig = Object.values(models).find(
+    (model) => model.file === filePath,
+  );
 
-function placeModel(
-    filePath,
-    position,
-    onPlace = null
-) {
+  // PERFORMANCE: Reuse the global GLTFLoader.
+  // Do not create a new loader for every model.
+  if (modelCache.has(filePath)) {
+    // Use the already loaded model
+    const cachedModel = modelCache.get(filePath);
 
-    const modelConfig =
-        Object.values(models)
-            .find(
-                model =>
-                    model.file === filePath
-            );
+    const model = cachedModel.clone(true);
 
+    if (modelConfig && modelConfig.scale) {
+      model.scale.set(
+        modelConfig.scale.x,
+        modelConfig.scale.y,
+        modelConfig.scale.z,
+      );
+    }
 
-    // PERFORMANCE: Reuse the global GLTFLoader.
-    // Do not create a new loader for every model.
-    if (modelCache.has(filePath)) {
+    model.position.copy(position);
 
-        // Use the already loaded model
-        const cachedModel =
-            modelCache.get(filePath);
+    model.isPlacedModel = true;
 
-        const model =
-            cachedModel.clone(true);
+    model.modelConfig = modelConfig;
 
+    scene.add(model);
 
-        if (
-            modelConfig &&
-            modelConfig.scale
-        ) {
+    if (onPlace) {
+      onPlace(model);
+    }
+  } else {
+    // Model has not been loaded yet
+    gltfLoader.load(
+      filePath,
 
-            model.scale.set(
-                modelConfig.scale.x,
-                modelConfig.scale.y,
-                modelConfig.scale.z
-            );
+      (gltf) => {
+        // Store the original model in the cache
+        modelCache.set(filePath, gltf.scene);
+
+        const model = gltf.scene.clone(true);
+
+        if (modelConfig && modelConfig.scale) {
+          model.scale.set(
+            modelConfig.scale.x,
+            modelConfig.scale.y,
+            modelConfig.scale.z,
+          );
         }
 
+        model.position.copy(position);
 
-        model.position.copy(
-            position
-        );
+        model.isPlacedModel = true;
 
-        model.isPlacedModel =
-            true;
-
-        model.modelConfig =
-            modelConfig;
+        model.modelConfig = modelConfig;
 
         scene.add(model);
 
-
         if (onPlace) {
-            onPlace(model);
+          onPlace(model);
         }
+      },
 
-    } else {
+      undefined,
 
-        // Model has not been loaded yet
-        gltfLoader.load(
-
-            filePath,
-
-            (gltf) => {
-
-                // Store the original model in the cache
-                modelCache.set(
-                    filePath,
-                    gltf.scene
-                );
-
-                const model =
-                    gltf.scene.clone(true);
-
-
-                if (
-                    modelConfig &&
-                    modelConfig.scale
-                ) {
-
-                    model.scale.set(
-                        modelConfig.scale.x,
-                        modelConfig.scale.y,
-                        modelConfig.scale.z
-                    );
-                }
-
-
-                model.position.copy(
-                    position
-                );
-
-                model.isPlacedModel =
-                    true;
-
-                model.modelConfig =
-                    modelConfig;
-
-                scene.add(model);
-
-
-                if (onPlace) {
-                    onPlace(model);
-                }
-            },
-
-            undefined,
-
-            (error) => {
-
-                console.error(
-                    "Fehler beim Laden des Modells:",
-                    error
-                );
-            }
-        );
-    }
+      (error) => {
+        console.error("Fehler beim Laden des Modells:", error);
+      },
+    );
+  }
 }
-
 
 function selectModel(modelId) {
+  const model = models[modelId];
 
-    const model =
-        models[modelId];
+  if (model && model.file) {
+    loadModel(model.file);
 
-
-    if (
-        model &&
-        model.file
-    ) {
-
-        loadModel(
-            model.file
-        );
-
-        showMenu(
-            'menu-bar'
-        );
-    }
+    showMenu("menu-bar");
+  }
 }
-
 
 function selectModelFromScene(event) {
+  const mouse = new THREE.Vector2(
+    (event.clientX / window.innerWidth) * 2 - 1,
 
-    const mouse =
-        new THREE.Vector2(
+    -(event.clientY / window.innerHeight) * 2 + 1,
+  );
 
-            (event.clientX /
-                window.innerWidth) *
-                2 - 1,
+  const raycaster = new THREE.Raycaster();
 
-            -(event.clientY /
-                window.innerHeight) *
-                2 + 1
-        );
+  const rayCamera =
+    xrRenderer && xrRenderer.xr.isPresenting
+      ? xrRenderer.xr.getCamera(camera)
+      : camera;
 
+  raycaster.setFromCamera(mouse, rayCamera);
 
-    const raycaster =
-        new THREE.Raycaster();
+  const intersects = raycaster.intersectObjects(scene.children, true);
 
+  if (intersects.length > 0) {
+    let selectedObject = intersects[0].object;
 
-    raycaster.setFromCamera(
-        mouse,
-        camera
-    );
-
-
-    const intersects =
-        raycaster.intersectObjects(
-            scene.children,
-            true
-        );
-
-
-    if (
-        intersects.length > 0
-    ) {
-
-        let selectedObject =
-            intersects[0].object;
-
-
-        while (
-            selectedObject.parent &&
-            selectedObject.parent !== scene
-        ) {
-
-            selectedObject =
-                selectedObject.parent;
-        }
-
-
-        // Reticle cannot be selected
-        if (
-            selectedObject === reticle
-        ) {
-
-            console.log(
-                "Reticle kann nicht ausgewählt werden."
-            );
-
-            return;
-        }
-
-
-        selectedPlacedModel =
-            selectedObject;
-
-
-        highlightSelectedModel();
-
-        showMenu(
-            "edit-menu"
-        );
+    while (selectedObject.parent && selectedObject.parent !== scene) {
+      selectedObject = selectedObject.parent;
     }
-}
 
+    // Reticle cannot be selected
+    if (selectedObject === reticle) {
+      console.log("Reticle kann nicht ausgewählt werden.");
+
+      return;
+    }
+
+    selectedPlacedModel = selectedObject;
+
+    highlightSelectedModel();
+
+    showMenu("edit-menu");
+  }
+}
 
 function clearSelectedModel() {
+  if (selectedPlacedModel) {
+    selectedPlacedModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material.emissive.setHex(0x000000);
+      }
+    });
 
-    if (selectedPlacedModel) {
-
-        selectedPlacedModel.traverse(
-            (child) => {
-
-                if (child.isMesh) {
-
-                    child.material.emissive
-                        .setHex(
-                            0x000000
-                        );
-                }
-            }
-        );
-
-
-        selectedPlacedModel =
-            null;
-    }
+    selectedPlacedModel = null;
+  }
 }
-
 
 function highlightSelectedModel() {
+  if (selectedPlacedModel) {
+    removeHighlightFromAllModels();
 
-    if (selectedPlacedModel) {
-
-        removeHighlightFromAllModels();
-
-
-        selectedPlacedModel.traverse(
-            (child) => {
-
-                if (child.isMesh) {
-
-                    child.material.emissive
-                        .setHex(
-                            0xff0000
-                        );
-                }
-            }
-        );
-    }
+    selectedPlacedModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material.emissive.setHex(0xff0000);
+      }
+    });
+  }
 }
-
 
 function removeHighlightFromSelectedModel() {
-
-    if (selectedPlacedModel) {
-
-        selectedPlacedModel.traverse(
-            (child) => {
-
-                if (child.isMesh) {
-
-                    child.material.emissive
-                        .setHex(
-                            0x000000
-                        );
-                }
-            }
-        );
-    }
+  if (selectedPlacedModel) {
+    selectedPlacedModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material.emissive.setHex(0x000000);
+      }
+    });
+  }
 }
-
 
 function removeHighlightFromAllModels() {
-
-    scene.traverse(
-        (child) => {
-
-            if (
-                child.isMesh &&
-                child.material &&
-                child.material.emissive
-            ) {
-
-                child.material.emissive
-                    .setHex(
-                        0x000000
-                    );
-            }
-        }
-    );
+  scene.traverse((child) => {
+    if (child.isMesh && child.material && child.material.emissive) {
+      child.material.emissive.setHex(0x000000);
+    }
+  });
 }
-
 
 function deleteModel() {
+  if (!selectedPlacedModel) {
+    console.log(
+      "Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es löschen.",
+    );
 
-    if (!selectedPlacedModel) {
+    return;
+  }
 
-        console.log(
-            "Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es löschen."
-        );
+  const deleteDialog = document.getElementById("delete-confirmation-dialog");
 
-        return;
-    }
-
-
-    const deleteDialog =
-        document.getElementById(
-            'delete-confirmation-dialog'
-        );
-
-
-    deleteDialog.style.display =
-        'flex';
+  deleteDialog.style.display = "flex";
 }
 
+function confirmDelete(shouldDelete) {
+  const deleteDialog = document.getElementById("delete-confirmation-dialog");
 
-function confirmDelete(
-    shouldDelete
-) {
+  deleteDialog.style.display = "none";
 
-    const deleteDialog =
-        document.getElementById(
-            'delete-confirmation-dialog'
-        );
+  if (shouldDelete && selectedPlacedModel) {
+    scene.remove(selectedPlacedModel);
 
+    selectedPlacedModel = null;
 
-    deleteDialog.style.display =
-        'none';
-
-
-    if (
-        shouldDelete &&
-        selectedPlacedModel
-    ) {
-
-        scene.remove(
-            selectedPlacedModel
-        );
-
-        selectedPlacedModel =
-            null;
-
-        showMenu(
-            'menu-bar'
-        );
-    }
+    showMenu("menu-bar");
+  }
 }
-
 
 function completeEditing() {
+  removeHighlightFromSelectedModel();
 
-    removeHighlightFromSelectedModel();
+  closeDynamicMenu();
 
-    closeDynamicMenu();
+  selectedPlacedModel = null;
 
-    selectedPlacedModel =
-        null;
+  document.getElementById("edit-menu").style.display = "none";
 
-    document.getElementById(
-        'edit-menu'
-    ).style.display =
-        'none';
-
-    document.getElementById(
-        'menu-bar'
-    ).style.display =
-        'flex';
+  document.getElementById("menu-bar").style.display = "flex";
 }
-
 
 /* ========================= */
 /*    BEARBEITUNGS-MENÜS     */
 /* ========================= */
 
 function openRotationMenu() {
+  if (!selectedPlacedModel) {
+    console.log(
+      "Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.",
+    );
 
-    if (!selectedPlacedModel) {
+    return;
+  }
 
-        console.log(
-            "Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten."
-        );
+  const currentRotation = Math.round(
+    THREE.MathUtils.radToDeg(selectedPlacedModel.rotation.y),
+  );
 
-        return;
-    }
+  const dynamicMenu = document.getElementById("dynamic-menu");
 
+  dynamicMenu.style.display = "flex";
 
-    const currentRotation =
-        Math.round(
-            THREE.MathUtils.radToDeg(
-                selectedPlacedModel.rotation.y
-            )
-        );
-
-
-    const dynamicMenu =
-        document.getElementById(
-            "dynamic-menu"
-        );
-
-
-    dynamicMenu.style.display =
-        "flex";
-
-
-    dynamicMenu.innerHTML = `
+  dynamicMenu.innerHTML = `
 
         <h3>Rotation anpassen</h3>
 
@@ -795,85 +520,45 @@ function openRotationMenu() {
     `;
 }
 
+function updateRotation(axis, value) {
+  if (selectedPlacedModel) {
+    const radians = (value / 180) * Math.PI;
 
-function updateRotation(
-    axis,
-    value
-) {
+    selectedPlacedModel.rotation[axis] = radians;
 
-    if (selectedPlacedModel) {
+    const currentRotationDisplay = document.getElementById("current-rotation");
 
-        const radians =
-            (value / 180) *
-            Math.PI;
-
-
-        selectedPlacedModel.rotation[axis] =
-            radians;
-
-
-        const currentRotationDisplay =
-            document.getElementById(
-                "current-rotation"
-            );
-
-
-        if (currentRotationDisplay) {
-
-            currentRotationDisplay.textContent =
-                value;
-        }
+    if (currentRotationDisplay) {
+      currentRotationDisplay.textContent = value;
     }
+  }
 }
 
-
 function openScaleMenu() {
+  if (!selectedPlacedModel) {
+    console.log(
+      "Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.",
+    );
 
-    if (!selectedPlacedModel) {
+    return;
+  }
 
-        console.log(
-            "Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten."
-        );
+  const currentScale = selectedPlacedModel.scale.x;
 
-        return;
-    }
+  const minScale = selectedPlacedModel.modelConfig.minScale;
 
+  const maxScale = selectedPlacedModel.modelConfig.maxScale;
 
-    const currentScale =
-        selectedPlacedModel.scale.x;
+  const step = (maxScale - minScale) / 100;
 
+  const currentScalePercent =
+    ((currentScale - minScale) / (maxScale - minScale)) * 100;
 
-    const minScale =
-        selectedPlacedModel.modelConfig.minScale;
+  const dynamicMenu = document.getElementById("dynamic-menu");
 
+  dynamicMenu.style.display = "flex";
 
-    const maxScale =
-        selectedPlacedModel.modelConfig.maxScale;
-
-
-    const step =
-        (maxScale - minScale) /
-        100;
-
-
-    const currentScalePercent =
-        (
-            (currentScale - minScale) /
-            (maxScale - minScale)
-        ) * 100;
-
-
-    const dynamicMenu =
-        document.getElementById(
-            "dynamic-menu"
-        );
-
-
-    dynamicMenu.style.display =
-        "flex";
-
-
-    dynamicMenu.innerHTML = `
+  dynamicMenu.innerHTML = `
 
         <h3>Skalierung anpassen</h3>
 
@@ -903,69 +588,36 @@ function openScaleMenu() {
     `;
 }
 
+function updateScale(percentValue, minScale, maxScale) {
+  if (selectedPlacedModel) {
+    const scale = minScale + (percentValue / 100) * (maxScale - minScale);
 
-function updateScale(
-    percentValue,
-    minScale,
-    maxScale
-) {
+    selectedPlacedModel.scale.set(scale, scale, scale);
 
-    if (selectedPlacedModel) {
+    const scaleValueDisplay = document.getElementById("scale-value");
 
-        const scale =
-            minScale +
-            (percentValue / 100) *
-            (maxScale - minScale);
-
-
-        selectedPlacedModel.scale.set(
-            scale,
-            scale,
-            scale
-        );
-
-
-        const scaleValueDisplay =
-            document.getElementById(
-                "scale-value"
-            );
-
-
-        if (scaleValueDisplay) {
-
-            scaleValueDisplay.textContent =
-                `${parseInt(percentValue, 10)}%`;
-        }
+    if (scaleValueDisplay) {
+      scaleValueDisplay.textContent = `${parseInt(percentValue, 10)}%`;
     }
+  }
 }
-
 
 let moveDelta = 0.1;
 
-
 function openMoveMenu() {
+  if (!selectedPlacedModel) {
+    console.log(
+      "Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten.",
+    );
 
-    if (!selectedPlacedModel) {
+    return;
+  }
 
-        console.log(
-            "Kein Modell ausgewählt. Bitte wählen Sie ein Modell aus, bevor Sie es bearbeiten."
-        );
+  const dynamicMenu = document.getElementById("dynamic-menu");
 
-        return;
-    }
+  dynamicMenu.style.display = "flex";
 
-
-    const dynamicMenu =
-        document.getElementById(
-            "dynamic-menu"
-        );
-
-
-    dynamicMenu.style.display =
-        "flex";
-
-
-    dynamicMenu.innerHTML = `
+  dynamicMenu.innerHTML = `
 
         <h3>Position anpassen</h3>
 
@@ -1044,69 +696,37 @@ function openMoveMenu() {
     `;
 }
 
+function updateMoveDelta(value) {
+  moveDelta = parseFloat(value);
 
-function updateMoveDelta(
-    value
-) {
+  const moveDeltaDisplay = document.getElementById("move-delta-display");
 
-    moveDelta =
-        parseFloat(value);
-
-
-    const moveDeltaDisplay =
-        document.getElementById(
-            "move-delta-display"
-        );
-
-
-    if (moveDeltaDisplay) {
-
-        moveDeltaDisplay.textContent =
-            moveDelta.toFixed(2);
-    }
+  if (moveDeltaDisplay) {
+    moveDeltaDisplay.textContent = moveDelta.toFixed(2);
+  }
 }
 
-
-function moveModelDynamic(
-    axis,
-    value
-) {
-
-    if (selectedPlacedModel) {
-
-        selectedPlacedModel.position[axis] +=
-            value;
-    }
+function moveModelDynamic(axis, value) {
+  if (selectedPlacedModel) {
+    selectedPlacedModel.position[axis] += value;
+  }
 }
-
 
 /* ========================= */
 /*      KARTENSTEUERUNG      */
 /* ========================= */
 
 function refreshMapDialog() {
+  const mapDialog = document.getElementById("map-dialog");
 
-    const mapDialog =
-        document.getElementById(
-            'map-dialog'
-        );
-
-    mapDialog.style.display =
-        'flex';
+  mapDialog.style.display = "flex";
 }
-
 
 function closeMapDialog() {
+  const mapDialog = document.getElementById("map-dialog");
 
-    const mapDialog =
-        document.getElementById(
-            'map-dialog'
-        );
-
-    mapDialog.style.display =
-        'none';
+  mapDialog.style.display = "none";
 }
-
 
 /* ========================= */
 /*        AR-HANDLING        */
@@ -1117,60 +737,62 @@ async function activateXR(sceneData = null) {
 
   document.body.appendChild(canvas);
 
-  const gl = canvas.getContext("webgl", {
-    xrCompatible: true,
-  });
+  // ========================================================
+  // Three.js WebXR renderer
+  // ========================================================
 
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
+    antialias: true,
     canvas,
-    context: gl,
   });
 
   renderer.autoClear = false;
+  renderer.xr.enabled = true;
+  xrRenderer = renderer;
+
+  // Keep the same reference-space type used by the previous
+  // manual WebXR implementation.
+  renderer.xr.setReferenceSpaceType("local");
 
   scene = new THREE.Scene();
-
   camera = new THREE.PerspectiveCamera();
-
-  camera.matrixAutoUpdate = false;
 
   // ========================================================
   // AR lighting
   // ========================================================
 
-  // Soft overall illumination
   const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
-
   scene.add(ambientLight);
 
-  // Sky/ground illumination
   const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x888888, 1.5);
 
   scene.add(hemisphereLight);
 
-  // Directional light for shadows and form
   const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
 
   directionalLight.position.set(10, 20, 10);
-
   scene.add(directionalLight);
 
   // ========================================================
   // Reticle
   // ========================================================
 
-  const loader = new THREE.GLTFLoader();
+  const loader = new GLTFLoader();
 
   loader.load(
     "https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf",
 
     (gltf) => {
       reticle = gltf.scene;
-
       reticle.visible = false;
-
       scene.add(reticle);
+    },
+
+    undefined,
+
+    (error) => {
+      console.error("Fehler beim Laden des Reticles:", error);
     },
   );
 
@@ -1188,11 +810,14 @@ async function activateXR(sceneData = null) {
     requiredFeatures: ["hit-test"],
   });
 
-  currentSession.updateRenderState({
-    baseLayer: new XRWebGLLayer(currentSession, gl),
-  });
+  // Let Three.js manage the XR render state / framebuffer.
+  await renderer.xr.setSession(currentSession);
 
-  const referenceSpace = await currentSession.requestReferenceSpace("local");
+  const referenceSpace = renderer.xr.getReferenceSpace();
+
+  if (!referenceSpace) {
+    throw new Error("XR reference space konnte nicht erstellt werden.");
+  }
 
   const viewerSpace = await currentSession.requestReferenceSpace("viewer");
 
@@ -1235,7 +860,6 @@ async function activateXR(sceneData = null) {
       (position) => {
         geoLocation = {
           latitude: roundTo(position.coords.latitude, 5),
-
           longitude: roundTo(position.coords.longitude, 5),
         };
 
@@ -1245,7 +869,7 @@ async function activateXR(sceneData = null) {
         // Load saved scene models
         // =================================================
 
-        if (sceneData) {
+        if (sceneData && Array.isArray(sceneData.models)) {
           sceneData.models.forEach((model) => {
             if (model.name) {
               const modelDefinition = Object.values(models).find(
@@ -1260,25 +884,27 @@ async function activateXR(sceneData = null) {
 
               const filePath = modelDefinition.file;
 
-              const { x, z } = leafletToThree(model.lat, model.lng);
+              // ar_overviewmap.js is loaded before user interaction,
+              // and exposes this conversion function on window.
+              const coordinates = window.leafletToThree(model.lat, model.lng);
 
-              const positionVector = new THREE.Vector3(x, model.position.y, z);
+              const positionVector = new THREE.Vector3(
+                coordinates.x,
+                model.position.y,
+                coordinates.z,
+              );
 
               placeModel(filePath, positionVector, (placed) => {
                 if (model.rotation) {
-                  placed.rotation._x = model.rotation._x;
-
-                  placed.rotation._y = model.rotation._y;
-
-                  placed.rotation._z = model.rotation._z;
+                  placed.rotation.set(
+                    model.rotation._x ?? model.rotation.x ?? 0,
+                    model.rotation._y ?? model.rotation.y ?? 0,
+                    model.rotation._z ?? model.rotation.z ?? 0,
+                  );
                 }
 
                 if (model.scale) {
-                  placed.scale.x = model.scale.x;
-
-                  placed.scale.y = model.scale.y;
-
-                  placed.scale.z = model.scale.z;
+                  placed.scale.set(model.scale.x, model.scale.y, model.scale.z);
                 }
               });
             }
@@ -1300,61 +926,45 @@ async function activateXR(sceneData = null) {
       },
     );
   }
+
   // ========================================================
-  // XR render loop
+  // Modern Three.js XR render loop
   // ========================================================
 
-  currentSession.requestAnimationFrame(function onXRFrame(time, frame) {
-    currentSession.requestAnimationFrame(onXRFrame);
+  renderer.setAnimationLoop((time, frame) => {
+    if (!frame) {
+      return;
+    }
 
-    gl.bindFramebuffer(
-      gl.FRAMEBUFFER,
-      currentSession.renderState.baseLayer.framebuffer,
-    );
+    // ======================================================
+    // Hit testing
+    // ======================================================
 
-    const pose = frame.getViewerPose(referenceSpace);
+    const hitTestResults = frame.getHitTestResults(hitTestSource);
 
-    if (pose) {
-      const view = pose.views[0];
+    if (hitTestResults.length > 0) {
+      const hitPose = hitTestResults[0].getPose(referenceSpace);
 
-      const viewport = currentSession.renderState.baseLayer.getViewport(view);
-
-      renderer.setSize(viewport.width, viewport.height);
-
-      camera.matrix.fromArray(view.transform.matrix);
-
-      camera.projectionMatrix.fromArray(view.projectionMatrix);
-
-      camera.updateMatrixWorld(true);
-
-      // =================================================
-      // Hit testing
-      // =================================================
-
-      const hitTestResults = frame.getHitTestResults(hitTestSource);
-
-      if (hitTestResults.length > 0) {
-        const hitPose = hitTestResults[0].getPose(referenceSpace);
-
+      if (hitPose && reticle) {
         reticle.visible = true;
 
         reticle.position.set(
           hitPose.transform.position.x,
-
           hitPose.transform.position.y,
-
           hitPose.transform.position.z,
         );
 
         reticle.updateMatrixWorld(true);
       }
-
-      // =================================================
-      // Render AR scene
-      // =================================================
-
-      renderer.render(scene, camera);
+    } else if (reticle) {
+      reticle.visible = false;
     }
+
+    // ======================================================
+    // Render AR scene
+    // ======================================================
+
+    renderer.render(scene, camera);
   });
 }
 
@@ -1395,3 +1005,28 @@ function playButtonSound() {
     }, 200);
   }
 }
+
+/* ============================================================
+   GLOBAL API BRIDGE
+   ------------------------------------------------------------
+   ES modules have their own scope. The existing HTML UI uses
+   inline onclick handlers, so expose the existing application
+   functions explicitly on window.
+   ============================================================ */
+
+window.showMenu = showMenu;
+window.openRotationMenu = openRotationMenu;
+window.openScaleMenu = openScaleMenu;
+window.openMoveMenu = openMoveMenu;
+window.deleteModel = deleteModel;
+window.completeEditing = completeEditing;
+window.confirmDelete = confirmDelete;
+window.exitAR = exitAR;
+window.confirmExit = confirmExit;
+window.closeInfoDialog = closeInfoDialog;
+window.getAllPlacedModels = getAllPlacedModels;
+window.activateXR = activateXR;
+window.getXRRenderCamera = () =>
+  xrRenderer && xrRenderer.xr.isPresenting
+    ? xrRenderer.xr.getCamera(camera)
+    : camera;
