@@ -1,3 +1,6 @@
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
 /* ========================= */
 /*    GLOBALE VARIABLEN      */
 /* ========================= */
@@ -6,13 +9,14 @@ let selectedPlacedModel = null;
 let currentSession = null;
 let reticle = null;
 let scene, camera;
+let xrRenderer = null;
 let geoLocation;
 
 const modelCache = new Map();
 
 // PERFORMANCE: Reuse one GLTFLoader instead of creating
 // a new loader every time a model is placed.
-const gltfLoader = new THREE.GLTFLoader();
+const gltfLoader = new GLTFLoader();
 
 const menus = [
     'menu-bar',
@@ -514,9 +518,14 @@ function selectModelFromScene(event) {
         new THREE.Raycaster();
 
 
+    const rayCamera =
+        xrRenderer && xrRenderer.xr.isPresenting
+            ? xrRenderer.xr.getCamera(camera)
+            : camera;
+
     raycaster.setFromCamera(
         mouse,
-        camera
+        rayCamera
     );
 
 
@@ -1117,60 +1126,64 @@ async function activateXR(sceneData = null) {
 
   document.body.appendChild(canvas);
 
-  const gl = canvas.getContext("webgl", {
-    xrCompatible: true,
-  });
+  // ========================================================
+  // Three.js WebXR renderer
+  // ========================================================
 
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
+    antialias: true,
     canvas,
-    context: gl,
   });
 
   renderer.autoClear = false;
+  renderer.xr.enabled = true;
+  xrRenderer = renderer;
+
+  // Keep the same reference-space type used by the previous
+  // manual WebXR implementation.
+  renderer.xr.setReferenceSpaceType("local");
 
   scene = new THREE.Scene();
-
   camera = new THREE.PerspectiveCamera();
-
-  camera.matrixAutoUpdate = false;
 
   // ========================================================
   // AR lighting
   // ========================================================
 
-  // Soft overall illumination
   const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
-
   scene.add(ambientLight);
 
-  // Sky/ground illumination
-  const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x888888, 1.5);
+  const hemisphereLight =
+    new THREE.HemisphereLight(0xffffff, 0x888888, 1.5);
 
   scene.add(hemisphereLight);
 
-  // Directional light for shadows and form
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  const directionalLight =
+    new THREE.DirectionalLight(0xffffff, 1.5);
 
   directionalLight.position.set(10, 20, 10);
-
   scene.add(directionalLight);
 
   // ========================================================
   // Reticle
   // ========================================================
 
-  const loader = new THREE.GLTFLoader();
+  const loader = new GLTFLoader();
 
   loader.load(
     "https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf",
 
     (gltf) => {
       reticle = gltf.scene;
-
       reticle.visible = false;
-
       scene.add(reticle);
+    },
+
+    undefined,
+
+    (error) => {
+      console.error("Fehler beim Laden des Reticles:", error);
     },
   );
 
@@ -1188,17 +1201,22 @@ async function activateXR(sceneData = null) {
     requiredFeatures: ["hit-test"],
   });
 
-  currentSession.updateRenderState({
-    baseLayer: new XRWebGLLayer(currentSession, gl),
-  });
+  // Let Three.js manage the XR render state / framebuffer.
+  await renderer.xr.setSession(currentSession);
 
-  const referenceSpace = await currentSession.requestReferenceSpace("local");
+  const referenceSpace = renderer.xr.getReferenceSpace();
 
-  const viewerSpace = await currentSession.requestReferenceSpace("viewer");
+  if (!referenceSpace) {
+    throw new Error("XR reference space konnte nicht erstellt werden.");
+  }
 
-  const hitTestSource = await currentSession.requestHitTestSource({
-    space: viewerSpace,
-  });
+  const viewerSpace =
+    await currentSession.requestReferenceSpace("viewer");
+
+  const hitTestSource =
+    await currentSession.requestHitTestSource({
+      space: viewerSpace,
+    });
 
   // ========================================================
   // Show main menu
@@ -1234,53 +1252,70 @@ async function activateXR(sceneData = null) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         geoLocation = {
-          latitude: roundTo(position.coords.latitude, 5),
-
-          longitude: roundTo(position.coords.longitude, 5),
+          latitude: window.roundTo(position.coords.latitude, 5),
+          longitude: window.roundTo(position.coords.longitude, 5),
         };
 
-        console.log("GeoLocation: " + JSON.stringify(geoLocation));
+        console.log(
+          "GeoLocation: " + JSON.stringify(geoLocation)
+        );
 
         // =================================================
         // Load saved scene models
         // =================================================
 
-        if (sceneData) {
+        if (sceneData && Array.isArray(sceneData.models)) {
           sceneData.models.forEach((model) => {
             if (model.name) {
-              const modelDefinition = Object.values(models).find(
-                (m) => model.name === m.name,
-              );
+              const modelDefinition =
+                Object.values(models).find(
+                  (m) => model.name === m.name
+                );
 
               if (!modelDefinition) {
-                console.error("Modell nicht gefunden:", model.name);
+                console.error(
+                  "Modell nicht gefunden:",
+                  model.name
+                );
 
                 return;
               }
 
               const filePath = modelDefinition.file;
 
-              const { x, z } = leafletToThree(model.lat, model.lng);
+              // ar_overviewmap.js is loaded before user interaction,
+              // and exposes this conversion function on window.
+              const coordinates =
+                window.leafletToThree(model.lat, model.lng);
 
-              const positionVector = new THREE.Vector3(x, model.position.y, z);
+              const positionVector =
+                new THREE.Vector3(
+                  coordinates.x,
+                  model.position.y,
+                  coordinates.z
+                );
 
-              placeModel(filePath, positionVector, (placed) => {
-                if (model.rotation) {
-                  placed.rotation._x = model.rotation._x;
+              placeModel(
+                filePath,
+                positionVector,
+                (placed) => {
+                  if (model.rotation) {
+                    placed.rotation.set(
+                      model.rotation._x ?? model.rotation.x ?? 0,
+                      model.rotation._y ?? model.rotation.y ?? 0,
+                      model.rotation._z ?? model.rotation.z ?? 0
+                    );
+                  }
 
-                  placed.rotation._y = model.rotation._y;
-
-                  placed.rotation._z = model.rotation._z;
+                  if (model.scale) {
+                    placed.scale.set(
+                      model.scale.x,
+                      model.scale.y,
+                      model.scale.z
+                    );
+                  }
                 }
-
-                if (model.scale) {
-                  placed.scale.x = model.scale.x;
-
-                  placed.scale.y = model.scale.y;
-
-                  placed.scale.z = model.scale.z;
-                }
-              });
+              );
             }
           });
         }
@@ -1300,61 +1335,47 @@ async function activateXR(sceneData = null) {
       },
     );
   }
+
   // ========================================================
-  // XR render loop
+  // Modern Three.js XR render loop
   // ========================================================
 
-  currentSession.requestAnimationFrame(function onXRFrame(time, frame) {
-    currentSession.requestAnimationFrame(onXRFrame);
+  renderer.setAnimationLoop((time, frame) => {
+    if (!frame) {
+      return;
+    }
 
-    gl.bindFramebuffer(
-      gl.FRAMEBUFFER,
-      currentSession.renderState.baseLayer.framebuffer,
-    );
+    // ======================================================
+    // Hit testing
+    // ======================================================
 
-    const pose = frame.getViewerPose(referenceSpace);
+    const hitTestResults =
+      frame.getHitTestResults(hitTestSource);
 
-    if (pose) {
-      const view = pose.views[0];
+    if (hitTestResults.length > 0) {
+      const hitPose =
+        hitTestResults[0].getPose(referenceSpace);
 
-      const viewport = currentSession.renderState.baseLayer.getViewport(view);
-
-      renderer.setSize(viewport.width, viewport.height);
-
-      camera.matrix.fromArray(view.transform.matrix);
-
-      camera.projectionMatrix.fromArray(view.projectionMatrix);
-
-      camera.updateMatrixWorld(true);
-
-      // =================================================
-      // Hit testing
-      // =================================================
-
-      const hitTestResults = frame.getHitTestResults(hitTestSource);
-
-      if (hitTestResults.length > 0) {
-        const hitPose = hitTestResults[0].getPose(referenceSpace);
-
+      if (hitPose && reticle) {
         reticle.visible = true;
 
         reticle.position.set(
           hitPose.transform.position.x,
-
           hitPose.transform.position.y,
-
           hitPose.transform.position.z,
         );
 
         reticle.updateMatrixWorld(true);
       }
-
-      // =================================================
-      // Render AR scene
-      // =================================================
-
-      renderer.render(scene, camera);
+    } else if (reticle) {
+      reticle.visible = false;
     }
+
+    // ======================================================
+    // Render AR scene
+    // ======================================================
+
+    renderer.render(scene, camera);
   });
 }
 
@@ -1395,3 +1416,37 @@ function playButtonSound() {
     }, 200);
   }
 }
+
+
+window.selectModel = selectModel;
+window.updateRotation = updateRotation;
+window.updateScale = updateScale;
+window.updateMoveDelta = updateMoveDelta;
+window.moveModelDynamic = moveModelDynamic;
+window.closeDynamicMenu = closeDynamicMenu;
+window.roundTo = window.roundTo;
+
+/* ============================================================
+   GLOBAL API BRIDGE
+   ------------------------------------------------------------
+   ES modules have their own scope. The existing HTML UI uses
+   inline onclick handlers, so expose the existing application
+   functions explicitly on window.
+   ============================================================ */
+
+window.showMenu = showMenu;
+window.openRotationMenu = openRotationMenu;
+window.openScaleMenu = openScaleMenu;
+window.openMoveMenu = openMoveMenu;
+window.deleteModel = deleteModel;
+window.completeEditing = completeEditing;
+window.confirmDelete = confirmDelete;
+window.exitAR = exitAR;
+window.confirmExit = confirmExit;
+window.closeInfoDialog = closeInfoDialog;
+window.getAllPlacedModels = getAllPlacedModels;
+window.activateXR = activateXR;
+window.getXRRenderCamera = () =>
+    xrRenderer && xrRenderer.xr.isPresenting
+        ? xrRenderer.xr.getCamera(camera)
+        : camera;
