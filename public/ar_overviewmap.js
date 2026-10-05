@@ -336,3 +336,4 @@ window.init_map = init_map;
 window.centerOnPlan = centerOnPlan;
 window.threeToLeaflet = threeToLeaflet;
 window.leafletToThree = leafletToThree;
+window.roundTo = roundTo;

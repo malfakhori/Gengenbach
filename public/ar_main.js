@@ -859,8 +859,8 @@ async function activateXR(sceneData = null) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         geoLocation = {
-          latitude: roundTo(position.coords.latitude, 5),
-          longitude: roundTo(position.coords.longitude, 5),
+          latitude: window.roundTo(position.coords.latitude, 5),
+          longitude: window.roundTo(position.coords.longitude, 5),
         };
 
         console.log("GeoLocation: " + JSON.stringify(geoLocation));
@@ -1005,6 +1005,14 @@ function playButtonSound() {
     }, 200);
   }
 }
+
+window.selectModel = selectModel;
+window.updateRotation = updateRotation;
+window.updateScale = updateScale;
+window.updateMoveDelta = updateMoveDelta;
+window.moveModelDynamic = moveModelDynamic;
+window.closeDynamicMenu = closeDynamicMenu;
+window.roundTo = window.roundTo;
 
 /* ============================================================
    GLOBAL API BRIDGE

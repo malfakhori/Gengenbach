@@ -189,7 +189,7 @@ function showStartScreen() {
     predefinedButton2 = null;
 
     // Start AR
-    window.activateXR(sceneData);
+    window.window.activateXR(sceneData);
   };
 
   /* ==========================================================
@@ -197,7 +197,7 @@ function showStartScreen() {
      ========================================================== */
 
   loadButton.onclick = () => {
-    window.loadSceneFromFile((data, fileName) => {
+    window.window.loadSceneFromFile((data, fileName) => {
       if (data && fileName) {
         sceneData = data;
         sceneFileName = fileName;
