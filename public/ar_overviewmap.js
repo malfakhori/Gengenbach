@@ -1,5 +1,3 @@
-import * as THREE from "three";
-
 let init = false;
 let mymap;
 let userIcon;
@@ -100,7 +98,7 @@ function init_map() {
     // Add currently placed models to map
     // ========================================================
 
-    const models = window.getAllPlacedModels();
+    const models = getAllPlacedModels();
 
     models.forEach((model) => {
       const { lat, lng } = threeToLeaflet(model.position.x, model.position.z);
@@ -212,12 +210,7 @@ function updateMap() {
   }
 
   // PERFORMANCE: Reuse the same Vector3 object.
-  const activeCamera =
-    typeof window.getXRRenderCamera === "function"
-      ? window.getXRRenderCamera()
-      : camera;
-
-  activeCamera.getWorldPosition(cameraPosition);
+  camera.getWorldPosition(cameraPosition);
 
   // PERFORMANCE: Do not update Leaflet if the user
   // has not moved.
@@ -330,11 +323,3 @@ function roundTo(n, digits) {
 
   return parseFloat(n);
 }
-
-
-/* Expose map functions needed by the other application modules. */
-window.init_map = init_map;
-window.centerOnPlan = centerOnPlan;
-window.threeToLeaflet = threeToLeaflet;
-window.leafletToThree = leafletToThree;
-window.roundTo = roundTo;

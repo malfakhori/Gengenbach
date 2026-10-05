@@ -1,5 +1,3 @@
-import { activateXR } from './ar_main.js';
-import { loadSceneFromFile } from './ar_download.js';
 /* ========================= */
 /*   DEBUGGING UND START     */
 /* ========================= */
@@ -192,7 +190,7 @@ function showStartScreen() {
     predefinedButton2 = null;
 
     // Start AR
-    window.window.activateXR(sceneData);
+    activateXR(sceneData);
   };
 
   /* ==========================================================
@@ -200,7 +198,7 @@ function showStartScreen() {
      ========================================================== */
 
   loadButton.onclick = () => {
-    window.window.loadSceneFromFile((data, fileName) => {
+    loadSceneFromFile((data, fileName) => {
       if (data && fileName) {
         sceneData = data;
         sceneFileName = fileName;

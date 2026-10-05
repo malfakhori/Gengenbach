@@ -1,7 +1,6 @@
-import { showInfoDialog } from './ar_main.js';
 function downloadScene() {
-    const placedModels = window.getAllPlacedModels().map(model => {
-      const { lat, lng } = window.threeToLeaflet(model.position.x, model.position.z);
+    const placedModels = getAllPlacedModels().map(model => {
+      const { lat, lng } = threeToLeaflet(model.position.x, model.position.z);
       return {
         name: model.modelConfig.name,
         position: model.position,
@@ -18,7 +17,6 @@ function downloadScene() {
       return;
     }
 
-    const geoLocation = window.getGeoLocation();
     if (!geoLocation) {
       console.log("Standort nicht geladen");
       showInfoDialog("Ihr Standort wurde noch nicht geladen");
@@ -73,7 +71,3 @@ function loadSceneFromFile(loadedData) {
   });
   fileInput.click();
 }
-
-/* Expose functions used by the existing HTML and ar_start.js. */
-window.downloadScene = downloadScene;
-window.loadSceneFromFile = loadSceneFromFile;

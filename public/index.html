@@ -9,15 +9,8 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Three.js (modern ES module setup) -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.186.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.186.0/examples/jsm/"
-    }
-  }
-  </script>
+  <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
+  <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 
 <body>
@@ -306,7 +299,7 @@
        ============================================================ -->
 
   <div id="app-version">
-    v186.0.2
+    v0.2.0
   </div>
 
 
@@ -314,7 +307,10 @@
        JAVASCRIPT
        ============================================================ -->
 
-  <!-- Debug console loads first so it can capture module errors/logs -->
+  <script src="ar_start.js"></script>
+
+  <script src="ar_main.js"></script>
+
   <script src="ar_debug_console.js"></script>
 
   <link
@@ -323,13 +319,9 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  <!-- Application modules -->
-  <script type="module" src="ar_main.js"></script>
-  <script type="module" src="ar_overviewmap.js"></script>
-  <script type="module" src="ar_download.js"></script>
-  <script type="module" src="ar_start.js"></script>
+  <script src="ar_overviewmap.js"></script>
 
-
+  <script src="ar_download.js"></script>
 
 
   <!-- ============================================================
