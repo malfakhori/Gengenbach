@@ -148,7 +148,7 @@ function showStartScreen() {
 
   predefinedButton1 = document.createElement("button");
 
-  predefinedButton1.textContent = "Gengenbach Plaza";
+  predefinedButton1.textContent = "Quartiersplatz 1";
 
   predefinedButton1.classList.add(
     "start-screen-button",
@@ -164,7 +164,7 @@ function showStartScreen() {
 
   predefinedButton2 = document.createElement("button");
 
-  predefinedButton2.textContent = "Gengenbach Street";
+  predefinedButton2.textContent = "Quartiersplatz 2";
 
   predefinedButton2.classList.add(
     "start-screen-button",
