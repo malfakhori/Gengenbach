@@ -34,6 +34,7 @@ const state = {
 };
 
 let panel = null;
+let toggleButton = null;
 let refreshTimer = null;
 let frameCount = 0;
 let fpsWindowStarted = 0;
@@ -132,18 +133,43 @@ function getSessionStorage() {
 export function initializeXRDiagnostics() {
   if (!XR_DIAGNOSTICS_ENABLED) return;
 
+  toggleButton = document.createElement("button");
+  toggleButton.id = "xr-diagnostics-toggle";
+  toggleButton.type = "button";
+  toggleButton.textContent = "XR";
+  toggleButton.setAttribute("aria-label", "Toggle XR diagnostics");
+  toggleButton.setAttribute("aria-controls", "xr-diagnostic-panel");
+  toggleButton.setAttribute("aria-expanded", "false");
+  toggleButton.style.cssText = [
+    "position:fixed",
+    "top:10px",
+    "right:10px",
+    "z-index:10001",
+    "min-width:48px",
+    "min-height:48px",
+    "padding:8px 12px",
+    "border:1px solid rgba(0,255,0,.65)",
+    "border-radius:6px",
+    "background:rgba(0,0,0,.88)",
+    "color:#00ff00",
+    "font:bold 14px monospace",
+    "cursor:pointer",
+    "pointer-events:auto",
+    "touch-action:manipulation",
+  ].join(";");
+
   panel = document.createElement("pre");
   panel.id = "xr-diagnostic-panel";
   panel.setAttribute("role", "status");
   panel.setAttribute("aria-live", "polite");
   panel.style.cssText = [
     "position:fixed",
-    "top:38px",
+    "top:64px",
     "left:8px",
-    "z-index:9997",
+    "z-index:10000",
     "box-sizing:border-box",
     "width:min(360px, calc(100vw - 16px))",
-    "max-height:45vh",
+    "max-height:calc(100vh - 76px)",
     "overflow:auto",
     "margin:0",
     "padding:8px",
@@ -153,9 +179,18 @@ export function initializeXRDiagnostics() {
     "color:#00ff00",
     "font:11px/1.35 monospace",
     "white-space:pre-wrap",
-    "pointer-events:none",
+    "pointer-events:auto",
+    "touch-action:pan-y",
+    "display:none",
   ].join(";");
 
+  toggleButton.addEventListener("click", () => {
+    const isOpen = panel.style.display !== "none";
+    panel.style.display = isOpen ? "none" : "block";
+    toggleButton.setAttribute("aria-expanded", String(!isOpen));
+  });
+
+  document.body.appendChild(toggleButton);
   document.body.appendChild(panel);
   cameraWorldPosition = new THREE.Vector3();
 
@@ -247,7 +282,7 @@ export function reportGeolocationReady(location) {
   if (!XR_DIAGNOSTICS_ENABLED) return;
   state.gpsStatus = location.status || "READY";
   state.geolocation =
-    location.latitude.toFixed(5) + ", " + location.longitude.toFixed(5);
+    location.latitude.toFixed(7) + ", " + location.longitude.toFixed(7);
   state.gpsBase = state.geolocation;
   state.gpsAccuracy = Number.isFinite(location.accuracy)
     ? location.accuracy
@@ -273,7 +308,7 @@ export function reportGeolocationStatus(status, location = null) {
   state.gpsStatus = status;
   if (location) {
     state.gpsBase =
-      location.latitude.toFixed(5) + ", " + location.longitude.toFixed(5);
+      location.latitude.toFixed(7) + ", " + location.longitude.toFixed(7);
     state.gpsAccuracy = Number.isFinite(location.accuracy)
       ? location.accuracy
       : null;

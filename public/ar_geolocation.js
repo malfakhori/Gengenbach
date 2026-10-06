@@ -90,9 +90,8 @@ function makeLocation(samples, cluster, source) {
   );
 
   return {
-    // Keep the existing five-decimal origin precision used by the app.
-    latitude: Number(estimate.latitude.toFixed(5)),
-    longitude: Number(estimate.longitude.toFixed(5)),
+    latitude: estimate.latitude,
+    longitude: estimate.longitude,
     accuracy: estimate.accuracy,
     timestamp: newestSample.timestamp,
     sampleCount: selectedSamples.length,

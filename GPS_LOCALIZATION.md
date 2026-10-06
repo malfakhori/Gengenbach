@@ -15,7 +15,7 @@ The current settings are in `public/ar_geolocation.js`:
 | `maximumWaitMs` | 18 s | Maximum acquisition time before using a fallback or reporting failure |
 | `maximumAgeMs` | 1.5 s | Browser cache age requested for each watch reading |
 
-Each accepted sample retains its coordinates, accuracy, and browser timestamp during selection. The chosen `geoLocation` includes rounded latitude/longitude plus accuracy, newest sample timestamp, sample count, spread, source (`stable cluster` or `timeout fallback`), and status (`STABLE` or `APPROXIMATE`). The existing five-decimal origin precision and coordinate conversion functions are unchanged.
+Each accepted sample retains its coordinates, accuracy, and browser timestamp during selection. The chosen `geoLocation` keeps the full calculated floating-point latitude/longitude precision internally and includes accuracy, newest sample timestamp, sample count, spread, source (`stable cluster` or `timeout fallback`), and status (`STABLE` or `APPROXIMATE`). The existing coordinate conversion functions are unchanged. Diagnostics format coordinates to seven decimal places for display only; that formatting does not change the internal origin or increase GPS accuracy.
 
 At timeout, the app uses the best available in-range cluster (or the best usable fix) and labels it approximate. With no usable fix, the app leaves the scene unloaded, reports the failure, and offers **Erneut versuchen**. Once a location is selected, the watch is cleared. Later GPS updates never move models or change the map origin; movement is then owned by WebXR local tracking.
 
