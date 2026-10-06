@@ -2,6 +2,17 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as cloneSkinned } from "three/addons/utils/SkeletonUtils.js";
 import {
+  recordXRFrame,
+  reportDiagnosticError,
+  reportGeolocationError,
+  reportGeolocationReady,
+  reportHitTestSourceCreated,
+  reportReferenceSpaceCreated,
+  reportXRSessionEnded,
+  reportXRSessionStarted,
+  XR_DIAGNOSTICS_ENABLED,
+} from "./ar_diagnostics.js";
+import {
   centerOnPlan,
   configureMap,
   init_map,
@@ -466,6 +477,7 @@ function placeModel(
 
             (error) => {
 
+                reportDiagnosticError("MODEL LOAD", error);
                 console.error(
                     "Fehler beim Laden des Modells:",
                     error
@@ -1158,6 +1170,7 @@ export async function activateXR(sceneData = null) {
     },
     undefined,
     (error) => {
+      reportDiagnosticError("RETICLE LOAD", error);
       console.error("[GLTF] Failed to load reticle:", error);
     },
   );
@@ -1172,7 +1185,9 @@ export async function activateXR(sceneData = null) {
     });
 
     await renderer.xr.setSession(currentSession);
+    reportXRSessionStarted();
   } catch (error) {
+    reportDiagnosticError("XR START", error);
     console.error("[XR] Failed to start session:", error);
     renderer.dispose();
     canvas.remove();
@@ -1182,14 +1197,18 @@ export async function activateXR(sceneData = null) {
   }
 
   const referenceSpace = await currentSession.requestReferenceSpace("local");
+  reportReferenceSpaceCreated("local");
   const viewerSpace = await currentSession.requestReferenceSpace("viewer");
+  reportReferenceSpaceCreated("viewer");
   const hitTestSource = await currentSession.requestHitTestSource({
     space: viewerSpace,
   });
+  reportHitTestSourceCreated();
 
   document.getElementById("menu-bar").style.display = "flex";
 
   currentSession.addEventListener("end", () => {
+    reportXRSessionEnded();
     console.log("AR session ended");
     window.location.reload();
   });
@@ -1204,6 +1223,7 @@ export async function activateXR(sceneData = null) {
           longitude: roundTo(position.coords.longitude, 5),
         };
 
+        reportGeolocationReady(geoLocation);
         console.log("GeoLocation: " + JSON.stringify(geoLocation));
 
         if (sceneData) {
@@ -1244,6 +1264,7 @@ export async function activateXR(sceneData = null) {
         }
       },
       (error) => {
+        reportGeolocationError(error);
         console.error("[Geo] Failed to get location:", error);
       },
       {
@@ -1252,14 +1273,19 @@ export async function activateXR(sceneData = null) {
         timeout: 5000,
       },
     );
+  } else if (XR_DIAGNOSTICS_ENABLED) {
+    reportGeolocationError("Geolocation API unavailable");
   }
 
   renderer.setAnimationLoop((time, frame) => {
+    let hitResultCount = null;
+
     if (frame) {
       const pose = frame.getViewerPose(referenceSpace);
 
       if (pose) {
         const hitTestResults = frame.getHitTestResults(hitTestSource);
+        hitResultCount = hitTestResults.length;
 
         if (hitTestResults.length > 0) {
           const hitPose = hitTestResults[0].getPose(referenceSpace);
@@ -1282,6 +1308,15 @@ export async function activateXR(sceneData = null) {
     }
 
     renderer.render(scene, camera);
+
+    if (XR_DIAGNOSTICS_ENABLED) {
+      recordXRFrame({
+        hitResultCount,
+        reticleVisible: Boolean(reticle && reticle.visible),
+        modelCount: getAllPlacedModels().length,
+        camera,
+      });
+    }
   });
 }
 /* ========================= */
@@ -1350,3 +1385,4 @@ function playButtonSound() {
     }, 200);
   }
 }
+
