@@ -4,8 +4,8 @@ import { clone as cloneSkinned } from "three/addons/utils/SkeletonUtils.js";
 import {
   recordXRFrame,
   reportDiagnosticError,
-  reportGeolocationError,
   reportGeolocationReady,
+  reportCalibrationState,
   reportHitTestSourceCreated,
   reportReferenceSpaceCreated,
   reportXRSessionEnded,
@@ -17,9 +17,9 @@ import {
   configureMap,
   init_map,
   leafletToThree,
-  roundTo,
   stopMapUpdates,
 } from "./ar_overviewmap.js";
+import { acquireStableLocation } from "./ar_geolocation.js";
 
 /* ========================= */
 /*    SHARED AR STATE        */
@@ -31,6 +31,15 @@ export let reticle = null;
 export let scene;
 export let camera;
 export let geoLocation;
+let placedModelsRoot = null;
+let localizationStatusElement = null;
+let calibrationOffset = { x: 0, y: 0, z: 0, rotationY: 0 };
+let calibrationStep = 0.25;
+let calibrationConfirmed = false;
+const CALIBRATION_ROTATION_STEP_DEGREES = 5;
+const CALIBRATION_ROTATION_STEP_RADIANS = THREE.MathUtils.degToRad(
+  CALIBRATION_ROTATION_STEP_DEGREES,
+);
 
 const modelCache = new Map();
 const gltfLoader = new GLTFLoader();
@@ -341,19 +350,21 @@ export function closeInfoDialog() {
 /* ========================= */
 
 export function getAllPlacedModels() {
-
-    return scene.children.filter(
+    return placedModelsRoot ? placedModelsRoot.children.filter(
         child =>
             child.isPlacedModel === true
-    );
+    ) : [];
 }
 
 
 function loadModel(filePath) {
+    const placementPosition = reticle.position.clone();
+    placedModelsRoot.updateMatrixWorld(true);
+    placedModelsRoot.worldToLocal(placementPosition);
 
     placeModel(
         filePath,
-        reticle.position,
+        placementPosition,
         (model) => {
 
             selectedPlacedModel =
@@ -416,7 +427,7 @@ function placeModel(
         model.modelConfig =
             modelConfig;
 
-        scene.add(model);
+        placedModelsRoot.add(model);
 
 
         if (onPlace) {
@@ -465,7 +476,7 @@ function placeModel(
                 model.modelConfig =
                     modelConfig;
 
-                scene.add(model);
+                placedModelsRoot.add(model);
 
 
                 if (onPlace) {
@@ -537,7 +548,7 @@ function selectModelFromScene(event) {
 
     const intersects =
         raycaster.intersectObjects(
-            scene.children,
+            getAllPlacedModels(),
             true
         );
 
@@ -552,7 +563,7 @@ function selectModelFromScene(event) {
 
         while (
             selectedObject.parent &&
-            selectedObject.parent !== scene
+            selectedObject.parent !== placedModelsRoot
         ) {
 
             selectedObject =
@@ -716,7 +727,7 @@ export function confirmDelete(
         selectedPlacedModel
     ) {
 
-        scene.remove(
+        placedModelsRoot.remove(
             selectedPlacedModel
         );
 
@@ -1088,9 +1099,12 @@ export function moveModelDynamic(
 ) {
 
     if (selectedPlacedModel) {
-
-        selectedPlacedModel.position[axis] +=
-            value;
+        const worldDelta = new THREE.Vector3();
+        worldDelta[axis] = value;
+        worldDelta.applyQuaternion(
+            placedModelsRoot.quaternion.clone().invert(),
+        );
+        selectedPlacedModel.position.add(worldDelta);
     }
 }
 
@@ -1122,12 +1136,214 @@ function closeMapDialog() {
         'none';
 }
 
+function updateLocalizationStatus(message, retry = false) {
+  if (!localizationStatusElement) {
+    localizationStatusElement = document.createElement("div");
+    localizationStatusElement.id = "gps-localization-status";
+    localizationStatusElement.style.cssText = [
+      "position:fixed",
+      "top:42px",
+      "left:50%",
+      "transform:translateX(-50%)",
+      "z-index:10000",
+      "max-width:calc(100vw - 24px)",
+      "padding:10px 14px",
+      "border-radius:8px",
+      "background:rgba(0,0,0,.8)",
+      "color:#fff",
+      "font:14px/1.4 sans-serif",
+      "text-align:center",
+      "pointer-events:auto",
+    ].join(";");
+    document.body.appendChild(localizationStatusElement);
+  }
+
+  window.clearTimeout(localizationStatusElement.hideTimer);
+  localizationStatusElement.replaceChildren(document.createTextNode(message));
+
+  if (retry) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Erneut versuchen";
+    button.style.cssText =
+      "display:block;margin:8px auto 0;padding:8px 12px;border:0;border-radius:5px";
+    button.addEventListener("click", () => startLocationLocalization());
+    localizationStatusElement.appendChild(button);
+  } else if (message.startsWith("Standort stabil") || message.startsWith("Standort angenähert")) {
+    localizationStatusElement.hideTimer = window.setTimeout(() => {
+      localizationStatusElement?.remove();
+      localizationStatusElement = null;
+    }, 5000);
+  }
+}
+
+let pendingSceneData = null;
+let sceneModelsLoaded = false;
+
+async function startLocationLocalization() {
+  updateLocalizationStatus("Standort wird stabilisiert …");
+
+  let location;
+  try {
+    location = await acquireStableLocation((progress) => {
+      if (progress.status !== "ACQUIRING") return;
+      const count = progress.goodSampleCount || 0;
+      const accuracy = Number.isFinite(progress.accuracy)
+        ? ` · letzte Genauigkeit ${progress.accuracy.toFixed(0)} m`
+        : "";
+      updateLocalizationStatus(
+        `Standort wird stabilisiert · ${count}/4 konsistente Messungen${accuracy}`,
+      );
+    });
+  } catch (error) {
+    console.error("[Geo] Failed to stabilize location:", error);
+    updateLocalizationStatus(
+      "Standort konnte nicht abgerufen werden. Bitte Standortzugriff prüfen und erneut versuchen.",
+      true,
+    );
+    return;
+  }
+
+  geoLocation = location;
+  reportGeolocationReady(geoLocation);
+  const message = geoLocation.status === "STABLE"
+    ? `Standort stabil · Genauigkeit ca. ${geoLocation.accuracy.toFixed(1)} m`
+    : `Standort angenähert · Genauigkeit ca. ${geoLocation.accuracy.toFixed(1)} m`;
+  updateLocalizationStatus(message);
+
+  if (!sceneModelsLoaded && pendingSceneData && Array.isArray(pendingSceneData.models)) {
+    sceneModelsLoaded = true;
+    pendingSceneData.models.forEach((model) => {
+      if (!model.name) return;
+
+      const modelDefinition = Object.values(models).find(
+        (candidate) => model.name === candidate.name,
+      );
+      if (!modelDefinition) {
+        console.error("[Scene] Model not found:", model.name);
+        return;
+      }
+
+      const { x, z } = leafletToThree(model.lat, model.lng);
+      const positionVector = new THREE.Vector3(x, model.position.y, z);
+      placeModel(modelDefinition.file, positionVector, (placed) => {
+        if (model.rotation) {
+          placed.rotation._x = model.rotation._x;
+          placed.rotation._y = model.rotation._y;
+          placed.rotation._z = model.rotation._z;
+        }
+        if (model.scale) {
+          placed.scale.x = model.scale.x;
+          placed.scale.y = model.scale.y;
+          placed.scale.z = model.scale.z;
+        }
+      });
+    });
+  }
+}
+
+function renderCalibrationMenu() {
+  const dynamicMenu = document.getElementById("dynamic-menu");
+  dynamicMenu.style.display = "flex";
+  dynamicMenu.innerHTML = `
+    <h3>Szene kalibrieren</h3>
+    <p>X = seitlich · Z = vor/zurück</p>
+    <p>Schrittweite: ${calibrationStep.toFixed(2)} m · X ${calibrationOffset.x.toFixed(2)} m · Y ${calibrationOffset.y.toFixed(2)} m · Z ${calibrationOffset.z.toFixed(2)} m</p>
+    <div class="button-row calibration-rotation-controls">
+      <span>Drehung Y · ${CALIBRATION_ROTATION_STEP_DEGREES}°</span>
+      <button class="calibration-rotation-button" type="button" aria-label="Rotate scene left" title="Rotate scene left" onclick="adjustCalibrationRotation(-1)">↺</button>
+      <button class="calibration-rotation-button" type="button" aria-label="Rotate scene right" title="Rotate scene right" onclick="adjustCalibrationRotation(1)">↻</button>
+    </div>
+    <label>Schrittweite
+      <select onchange="setCalibrationStep(this.value)">
+        <option value="0.1" ${calibrationStep === 0.1 ? "selected" : ""}>0,10 m</option>
+        <option value="0.25" ${calibrationStep === 0.25 ? "selected" : ""}>0,25 m</option>
+        <option value="0.5" ${calibrationStep === 0.5 ? "selected" : ""}>0,50 m</option>
+        <option value="1" ${calibrationStep === 1 ? "selected" : ""}>1,00 m</option>
+      </select>
+    </label>
+    <div class="button-row">
+      <button onclick="adjustCalibrationOffset('x', -1)">X −</button>
+      <button onclick="adjustCalibrationOffset('x', 1)">X +</button>
+      <button onclick="adjustCalibrationOffset('z', -1)">Z −</button>
+      <button onclick="adjustCalibrationOffset('z', 1)">Z +</button>
+    </div>
+    <div class="button-row">
+      <button onclick="resetCalibration()">Kalibrierung zurücksetzen</button>
+      <button onclick="confirmCalibration()">${calibrationConfirmed ? "Übernommen ✓" : "Kalibrierung übernehmen"}</button>
+    </div>
+    <button onclick="closeDynamicMenu()">Zurück</button>
+  `;
+}
+
+export function openCalibrationMenu() {
+  renderCalibrationMenu();
+}
+
+export function setCalibrationStep(value) {
+  calibrationStep = Number(value);
+  renderCalibrationMenu();
+}
+
+export function adjustCalibrationOffset(axis, direction) {
+  calibrationOffset[axis] = Number(
+    (calibrationOffset[axis] + direction * calibrationStep).toFixed(2),
+  );
+  applyCalibrationTransform();
+  calibrationConfirmed = false;
+  reportCalibrationState({ ...calibrationOffset, confirmed: calibrationConfirmed });
+  renderCalibrationMenu();
+}
+
+export function adjustCalibrationRotation(direction) {
+  const fullTurn = 2 * Math.PI;
+  const nextRotation =
+    calibrationOffset.rotationY +
+    direction * CALIBRATION_ROTATION_STEP_RADIANS;
+  const normalizedRotation =
+    ((nextRotation + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
+  calibrationOffset.rotationY =
+    Math.abs(normalizedRotation) < 1e-12 ? 0 : normalizedRotation;
+  applyCalibrationTransform();
+  calibrationConfirmed = false;
+  reportCalibrationState({ ...calibrationOffset, confirmed: calibrationConfirmed });
+  renderCalibrationMenu();
+}
+
+function applyCalibrationTransform() {
+  placedModelsRoot.position.set(
+    calibrationOffset.x,
+    calibrationOffset.y,
+    calibrationOffset.z,
+  );
+  placedModelsRoot.rotation.set(0, calibrationOffset.rotationY, 0);
+}
+
+export function resetCalibration() {
+  calibrationOffset = { x: 0, y: 0, z: 0, rotationY: 0 };
+  calibrationConfirmed = false;
+  applyCalibrationTransform();
+  reportCalibrationState({ ...calibrationOffset, confirmed: calibrationConfirmed });
+  renderCalibrationMenu();
+}
+
+export function confirmCalibration() {
+  calibrationConfirmed = true;
+  reportCalibrationState({ ...calibrationOffset, confirmed: calibrationConfirmed });
+  renderCalibrationMenu();
+}
+
 
 /* ========================= */
 /*        AR-HANDLING        */
 /* ========================= */
 
 export async function activateXR(sceneData = null) {
+  pendingSceneData = sceneData;
+  sceneModelsLoaded = false;
+  calibrationOffset = { x: 0, y: 0, z: 0, rotationY: 0 };
+  calibrationConfirmed = false;
+
   const canvas = document.createElement("canvas");
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
@@ -1142,6 +1358,10 @@ export async function activateXR(sceneData = null) {
   renderer.xr.setReferenceSpaceType("local");
 
   scene = new THREE.Scene();
+  placedModelsRoot = new THREE.Group();
+  placedModelsRoot.name = "placed-models-root";
+  scene.add(placedModelsRoot);
+  reportCalibrationState({ ...calibrationOffset, confirmed: false });
   camera = new THREE.PerspectiveCamera(
     70,
     window.innerWidth / window.innerHeight,
@@ -1215,68 +1435,6 @@ export async function activateXR(sceneData = null) {
 
   canvas.addEventListener("pointerdown", selectModelFromScene);
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        geoLocation = {
-          latitude: roundTo(position.coords.latitude, 5),
-          longitude: roundTo(position.coords.longitude, 5),
-        };
-
-        reportGeolocationReady(geoLocation);
-        console.log("GeoLocation: " + JSON.stringify(geoLocation));
-
-        if (sceneData) {
-          sceneData.models.forEach((model) => {
-            if (model.name) {
-              const modelDefinition = Object.values(models).find(
-                (candidate) => model.name === candidate.name,
-              );
-
-              if (!modelDefinition) {
-                console.error("[Scene] Model not found:", model.name);
-                return;
-              }
-
-              const filePath = modelDefinition.file;
-              const { x, z } = leafletToThree(model.lat, model.lng);
-              const positionVector = new THREE.Vector3(
-                x,
-                model.position.y,
-                z,
-              );
-
-              placeModel(filePath, positionVector, (placed) => {
-                if (model.rotation) {
-                  placed.rotation._x = model.rotation._x;
-                  placed.rotation._y = model.rotation._y;
-                  placed.rotation._z = model.rotation._z;
-                }
-
-                if (model.scale) {
-                  placed.scale.x = model.scale.x;
-                  placed.scale.y = model.scale.y;
-                  placed.scale.z = model.scale.z;
-                }
-              });
-            }
-          });
-        }
-      },
-      (error) => {
-        reportGeolocationError(error);
-        console.error("[Geo] Failed to get location:", error);
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 2000,
-        timeout: 5000,
-      },
-    );
-  } else if (XR_DIAGNOSTICS_ENABLED) {
-    reportGeolocationError("Geolocation API unavailable");
-  }
-
   renderer.setAnimationLoop((time, frame) => {
     let hitResultCount = null;
 
@@ -1318,6 +1476,8 @@ export async function activateXR(sceneData = null) {
       });
     }
   });
+
+  void startLocationLocalization();
 }
 /* ========================= */
 /*       AR EXIT             */
@@ -1356,6 +1516,12 @@ export function installLegacyUI(downloadScene) {
     updateScale,
     updateMoveDelta,
     moveModelDynamic,
+    openCalibrationMenu,
+    setCalibrationStep,
+    adjustCalibrationOffset,
+    adjustCalibrationRotation,
+    resetCalibration,
+    confirmCalibration,
   });
 
   Object.defineProperty(window, "moveDelta", {

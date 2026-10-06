@@ -1,13 +1,29 @@
+import * as THREE from "three";
 import { getAllPlacedModels, geoLocation, showInfoDialog } from "./ar_main.js";
 import { threeToLeaflet } from "./ar_overviewmap.js";
 
 export function downloadScene() {
     const placedModels = getAllPlacedModels().map(model => {
-      const { lat, lng } = threeToLeaflet(model.position.x, model.position.z);
+      const finalPosition = model.getWorldPosition(new THREE.Vector3());
+      const finalQuaternion = model.getWorldQuaternion(new THREE.Quaternion());
+      const finalRotation = new THREE.Euler().setFromQuaternion(
+        finalQuaternion,
+        model.rotation.order,
+      );
+      const { lat, lng } = threeToLeaflet(finalPosition.x, finalPosition.z);
       return {
         name: model.modelConfig.name,
-        position: model.position,
-        rotation: model.rotation,
+        position: {
+          x: finalPosition.x,
+          y: finalPosition.y,
+          z: finalPosition.z,
+        },
+        rotation: {
+          _x: finalRotation.x,
+          _y: finalRotation.y,
+          _z: finalRotation.z,
+          _order: finalRotation.order,
+        },
         scale: model.scale,
         lat: lat,
         lng: lng,

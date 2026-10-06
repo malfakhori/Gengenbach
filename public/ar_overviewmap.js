@@ -12,6 +12,7 @@ let getPlacedModels = () => [];
 // PERFORMANCE: Reuse one Vector3 instead of allocating a new
 // Vector3 every time updateMap() runs.
 let cameraPosition = new THREE.Vector3();
+let modelWorldPosition = new THREE.Vector3();
 
 // PERFORMANCE: Cache the map window element once.
 let mapWindow = document.getElementById("map-window");
@@ -113,7 +114,11 @@ export function init_map() {
     const models = getPlacedModels();
 
     models.forEach((model) => {
-      const { lat, lng } = threeToLeaflet(model.position.x, model.position.z);
+      model.getWorldPosition(modelWorldPosition);
+      const { lat, lng } = threeToLeaflet(
+        modelWorldPosition.x,
+        modelWorldPosition.z,
+      );
 
       const modelMarker = L.marker([lat, lng], {
         icon: L.icon({

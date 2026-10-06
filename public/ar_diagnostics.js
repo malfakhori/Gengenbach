@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export const XR_DIAGNOSTICS_ENABLED = true; // Set to false to disable the diagnostics panel
+export const XR_DIAGNOSTICS_ENABLED = true; // Set to true temporarily for device validation
 
 const SESSION_END_KEY = "gengenbach.xrDiagnostics.sessionEnded";
 const REFRESH_INTERVAL_MS = 1000;
@@ -22,6 +22,14 @@ const state = {
   modelCount: 0,
   camera: "NOT INITIALIZED",
   geolocation: "WAITING",
+  gpsStatus: "WAITING",
+  gpsBase: "--",
+  gpsAccuracy: null,
+  gpsSampleCount: 0,
+  gpsSpread: null,
+  gpsSource: "--",
+  gpsTimestamp: null,
+  calibration: { x: 0, y: 0, z: 0, rotationY: 0, confirmed: false },
   events: [],
 };
 
@@ -43,6 +51,11 @@ function addEvent(type, detail) {
   renderPanel();
 }
 
+function signed(value, digits) {
+  const rounded = Number(value).toFixed(digits);
+  return Number(value) >= 0 ? "+" + rounded : rounded;
+}
+
 function renderPanel(now = performance.now()) {
   if (!panel) return;
 
@@ -56,6 +69,13 @@ function renderPanel(now = performance.now()) {
   const fpsText = state.fps === null ? "--" : String(state.fps);
   const hitCountText =
     state.hitResultCount === null ? "--" : String(state.hitResultCount);
+  const gpsAccuracyText =
+    state.gpsAccuracy === null ? "--" : state.gpsAccuracy.toFixed(1) + " m";
+  const gpsSpreadText =
+    state.gpsSpread === null ? "--" : state.gpsSpread.toFixed(1) + " m";
+  const gpsTimestampText = state.gpsTimestamp
+    ? new Date(state.gpsTimestamp).toISOString()
+    : "--";
 
   panel.textContent = [
     "XR DEVICE DIAGNOSTICS",
@@ -72,6 +92,24 @@ function renderPanel(now = performance.now()) {
     "MODELS: " + state.modelCount,
     "CAMERA: " + state.camera,
     "GEOLOCATION: " + state.geolocation,
+    "GPS STATUS: " + state.gpsStatus,
+    "GPS ACCURACY: " + gpsAccuracyText,
+    "GPS SAMPLES: " + state.gpsSampleCount + " | SPREAD: " + gpsSpreadText,
+    "GPS SOURCE / TIME: " + state.gpsSource + " / " + gpsTimestampText,
+    "GPS BASE: " + state.gpsBase,
+    "CALIBRATION BASE: X +0.00 m | Y +0.00 m | Z +0.00 m",
+    "CALIBRATION FINAL: X " +
+      signed(state.calibration.x, 2) +
+      " m | Y " +
+      signed(state.calibration.y, 2) +
+      " m | Z " +
+      signed(state.calibration.z, 2) +
+      " m",
+    "CALIBRATION ROTATION: " +
+      signed(THREE.MathUtils.radToDeg(state.calibration.rotationY), 1) +
+      "° (" +
+      (state.calibration.confirmed ? "CONFIRMED" : "SESSION") +
+      ")",
     "ERRORS / REJECTIONS:",
     eventText,
   ].join("\n");
@@ -207,15 +245,70 @@ export function reportHitTestSourceCreated() {
 
 export function reportGeolocationReady(location) {
   if (!XR_DIAGNOSTICS_ENABLED) return;
+  state.gpsStatus = location.status || "READY";
   state.geolocation =
     location.latitude.toFixed(5) + ", " + location.longitude.toFixed(5);
-  renderPanel();
+  state.gpsBase = state.geolocation;
+  state.gpsAccuracy = Number.isFinite(location.accuracy)
+    ? location.accuracy
+    : null;
+  state.gpsSampleCount = Number(location.sampleCount) || 0;
+  state.gpsSpread = Number.isFinite(location.spreadMeters)
+    ? location.spreadMeters
+    : null;
+  state.gpsSource = location.source || "single fix";
+  state.gpsTimestamp = Number(location.timestamp) || null;
 }
 
 export function reportGeolocationError(error) {
   if (!XR_DIAGNOSTICS_ENABLED) return;
   state.geolocation = "ERROR";
+  state.gpsStatus = "ERROR";
   addEvent("GEOLOCATION", formatError(error));
+}
+
+export function reportGeolocationStatus(status, location = null) {
+  if (!XR_DIAGNOSTICS_ENABLED) return;
+  state.geolocation = status;
+  state.gpsStatus = status;
+  if (location) {
+    state.gpsBase =
+      location.latitude.toFixed(5) + ", " + location.longitude.toFixed(5);
+    state.gpsAccuracy = Number.isFinite(location.accuracy)
+      ? location.accuracy
+      : null;
+    state.gpsSampleCount = Number(location.sampleCount) || 0;
+    state.gpsSpread = Number.isFinite(location.spreadMeters)
+      ? location.spreadMeters
+      : null;
+    state.gpsSource = location.source || "--";
+    state.gpsTimestamp = Number(location.timestamp) || null;
+  }
+}
+
+export function reportGeolocationSample({ accuracy, sampleCount, spreadMeters }) {
+  if (!XR_DIAGNOSTICS_ENABLED) return;
+  state.gpsStatus = "ACQUIRING";
+  state.gpsAccuracy = Number.isFinite(accuracy) ? accuracy : null;
+  state.gpsSampleCount = Number(sampleCount) || 0;
+  state.gpsSpread = Number.isFinite(spreadMeters) ? spreadMeters : null;
+}
+
+export function reportCalibrationState({
+  x = 0,
+  y = 0,
+  z = 0,
+  rotationY = 0,
+  confirmed = false,
+}) {
+  if (!XR_DIAGNOSTICS_ENABLED) return;
+  state.calibration = {
+    x: Number(x) || 0,
+    y: Number(y) || 0,
+    z: Number(z) || 0,
+    rotationY: Number(rotationY) || 0,
+    confirmed,
+  };
 }
 
 export function reportDiagnosticError(type, error) {
