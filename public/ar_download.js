@@ -1,4 +1,7 @@
-function downloadScene() {
+import { getAllPlacedModels, geoLocation, showInfoDialog } from "./ar_main.js";
+import { threeToLeaflet } from "./ar_overviewmap.js";
+
+export function downloadScene() {
     const placedModels = getAllPlacedModels().map(model => {
       const { lat, lng } = threeToLeaflet(model.position.x, model.position.z);
       return {
@@ -44,7 +47,7 @@ function downloadScene() {
     document.body.removeChild(a);
 }
 
-function loadSceneFromFile(loadedData) {
+export function loadSceneFromFile(loadedData) {
   const fileInput = document.createElement('input');
   fileInput.type = 'file';
   fileInput.accept = 'application/json';

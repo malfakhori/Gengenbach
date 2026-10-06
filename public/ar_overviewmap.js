@@ -1,8 +1,13 @@
+import * as THREE from "three";
+
 let init = false;
 let mymap;
 let userIcon;
 let intervalId;
 let modeMarkers = [];
+let getCamera = () => null;
+let getGeoLocation = () => null;
+let getPlacedModels = () => [];
 
 // PERFORMANCE: Reuse one Vector3 instead of allocating a new
 // Vector3 every time updateMap() runs.
@@ -42,12 +47,19 @@ const planBounds = [
 
 const earthRadius = 6378137;
 
+export function configureMap(dependencies) {
+  getCamera = dependencies.getCamera;
+  getGeoLocation = dependencies.getGeoLocation;
+  getPlacedModels = dependencies.getPlacedModels;
+}
+
 // ============================================================
 // Initialize map
 // ============================================================
 
-function init_map() {
+export function init_map() {
   const mapContainer = document.getElementById("map-container");
+  const geoLocation = getGeoLocation();
 
   if (mapContainer) {
     if (!init) {
@@ -98,7 +110,7 @@ function init_map() {
     // Add currently placed models to map
     // ========================================================
 
-    const models = getAllPlacedModels();
+    const models = getPlacedModels();
 
     models.forEach((model) => {
       const { lat, lng } = threeToLeaflet(model.position.x, model.position.z);
@@ -142,11 +154,18 @@ function init_map() {
   }
 }
 
+export function stopMapUpdates() {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+}
+
 // ============================================================
 // Center map on proposed plan
 // ============================================================
 
-function centerOnPlan() {
+export function centerOnPlan() {
   if (!mymap) {
     console.error("Map ist noch nicht initialisiert.");
 
@@ -164,7 +183,7 @@ function centerOnPlan() {
 // Add georeferenced proposed plan
 // ============================================================
 
-function addPlanOverlay() {
+export function addPlanOverlay() {
   if (!mymap) {
     console.error("Map ist noch nicht initialisiert.");
 
@@ -193,7 +212,7 @@ function addPlanOverlay() {
 // Update map
 // ============================================================
 
-function updateMap() {
+export function updateMap() {
   // The interval is normally stopped by closeMap().
   // This guard also handles cases where the map is hidden
   // by another UI action.
@@ -204,6 +223,8 @@ function updateMap() {
 
     return;
   }
+
+  const camera = getCamera();
 
   if (!camera || !userIcon) {
     return;
@@ -234,7 +255,9 @@ function updateMap() {
 // Convert Three.js coordinates to Leaflet coordinates
 // ============================================================
 
-function threeToLeaflet(threeX, threeZ) {
+export function threeToLeaflet(threeX, threeZ) {
+  const geoLocation = getGeoLocation();
+
   if (!geoLocation) {
     console.error("GeoLocation ist noch nicht verfügbar");
 
@@ -265,7 +288,9 @@ function threeToLeaflet(threeX, threeZ) {
 // Convert Leaflet coordinates to Three.js coordinates
 // ============================================================
 
-function leafletToThree(lat, lng) {
+export function leafletToThree(lat, lng) {
+  const geoLocation = getGeoLocation();
+
   if (!geoLocation) {
     console.error("GeoLocation ist noch nicht verfügbar");
 
@@ -298,7 +323,7 @@ function leafletToThree(lat, lng) {
 // Round number
 // ============================================================
 
-function roundTo(n, digits) {
+export function roundTo(n, digits) {
   var negative = false;
 
   if (digits === undefined) {
