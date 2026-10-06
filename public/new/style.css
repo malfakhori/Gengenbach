@@ -1,0 +1,994 @@
+/* ============================================================
+   GLOBAL / START SCREEN
+   ============================================================ */
+
+body {
+  margin: 0;
+
+  font-family: Arial, sans-serif;
+
+  color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 100vh;
+
+  overflow: hidden;
+
+  background-image:
+    linear-gradient(
+      rgba(0, 0, 0, 0.35),
+      rgba(0, 0, 0, 0.50)
+    ),
+    url('assets/images/gengenbach.png');
+
+  background-size: cover;
+
+  background-position: center;
+
+  background-repeat: no-repeat;
+}
+
+
+/* ============================================================
+   GENERAL CONTAINER
+   ============================================================ */
+
+.container {
+  text-align: center;
+
+  background: rgba(20, 20, 20, 0.55);
+
+  padding: 40px 30px;
+
+  border-radius: 20px;
+
+  color: white;
+
+  max-width: 80%;
+
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.35);
+
+  backdrop-filter: blur(8px);
+
+  -webkit-backdrop-filter: blur(8px);
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+
+/* ============================================================
+   GENERAL HEADINGS / TEXT
+   ============================================================ */
+
+h1 {
+  font-size: 2.5em;
+
+  margin-bottom: 10px;
+
+  color: white;
+}
+
+p {
+  font-size: 1.1em;
+
+  margin-bottom: 30px;
+
+  color: rgba(255, 255, 255, 0.85);
+}
+
+
+/* ============================================================
+   GENERAL BUTTONS
+   ============================================================ */
+
+button {
+  background-color: #4CAF50;
+
+  color: white;
+
+  font-size: 1em;
+
+  padding: 10px 20px;
+
+  border: none;
+
+  border-radius: 5px;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.3s ease-in-out,
+    transform 0.2s;
+
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1);
+
+  margin: 10px;
+
+  touch-action: manipulation;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+button:active {
+  background-color: #387a39;
+}
+
+
+/* ============================================================
+   START SCREEN
+   ============================================================ */
+
+.start-screen {
+  position: fixed;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  width: min(340px, 82vw);
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 11px;
+
+  z-index: 10;
+
+  text-align: center;
+}
+
+/* ==========================================================
+   HFT LOGO
+   ========================================================== */
+
+.start-screen-logo {
+  width: 110px;
+  height: auto;
+  display: block;
+  margin: 0 auto 18px auto;
+  object-fit: contain;
+}
+
+/* ============================================================
+   START SCREEN TITLE
+   ============================================================ */
+
+.start-screen-title {
+  margin: 0;
+
+  color: white;
+
+  font-size: clamp(28px, 7vw, 42px);
+
+  font-weight: 700;
+
+  letter-spacing: 3px;
+
+  line-height: 1.1;
+
+  text-shadow:
+    0 3px 12px rgba(0, 0, 0, 0.45);
+}
+
+
+.start-screen-subtitle {
+  margin: 4px 0 4px;
+
+  color: rgba(255, 255, 255, 0.88);
+
+  font-size: 15px;
+
+  font-weight: 400;
+
+  letter-spacing: 1px;
+
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+
+/* ============================================================
+   START SCREEN DIVIDER
+   ============================================================ */
+
+.start-screen-divider {
+  width: 55px;
+
+  height: 2px;
+
+  margin: 8px 0 12px;
+
+  background: rgba(255, 255, 255, 0.75);
+
+  border-radius: 2px;
+}
+
+
+/* ============================================================
+   START SCREEN BUTTONS
+   ============================================================ */
+
+.start-screen-button {
+  position: relative;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  min-height: 54px;
+
+  padding: 15px 48px 15px 48px;
+
+  font-size: 16px;
+
+  font-weight: 500;
+
+  letter-spacing: 0.2px;
+
+  border-radius: 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  color: white;
+
+  cursor: pointer;
+
+  backdrop-filter: blur(10px);
+
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.25);
+
+  margin: 0;
+
+  touch-action: manipulation;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+
+/* ============================================================
+   BUTTON ICONS
+   ============================================================ */
+
+.start-screen-button::before {
+  position: absolute;
+
+  left: 18px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  font-size: 19px;
+
+  opacity: 0.9;
+}
+
+
+/* Start AR */
+.start-ar-button::before {
+  content: "◎";
+}
+
+
+/* Load scene */
+.load-scene-button::before {
+  content: "↥";
+}
+
+
+/* Plaza */
+.predefined-scene-button-1::before {
+  content: "⌂";
+}
+
+
+/* Street */
+.predefined-scene-button-2::before {
+  content: "▥";
+}
+
+
+/* ============================================================
+   SELECTED SCENE CHECKMARK
+   ============================================================ */
+
+.scene-button.selected::after {
+  content: "✓";
+
+  position: absolute;
+
+  right: 18px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  color: white;
+}
+
+
+/* ============================================================
+   START AR BUTTON
+   ============================================================ */
+
+.start-ar-button {
+  background: #4CAF50;
+
+  min-height: 60px;
+
+  font-size: 19px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.3px;
+
+  border-color:
+    rgba(255, 255, 255, 0.28);
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.30),
+    0 3px 12px rgba(76, 175, 80, 0.20);
+
+  margin-bottom: 7px;
+}
+
+
+.start-ar-button:hover {
+  background: #45a049;
+
+  transform: scale(1.03);
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    0 4px 16px rgba(76, 175, 80, 0.25);
+}
+
+
+.start-ar-button:active {
+  background: #387a39;
+
+  transform: scale(0.98);
+}
+
+
+/* ============================================================
+   SCENE BUTTONS
+   ============================================================ */
+
+.scene-button {
+  background: rgba(45, 45, 45, 0.78);
+}
+
+
+.scene-button:hover {
+  background: rgba(70, 70, 70, 0.88);
+
+  transform: scale(1.02);
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.30);
+}
+
+
+.scene-button.selected {
+  background: #4CAF50;
+
+  border-color:
+    rgba(255, 255, 255, 0.30);
+
+  box-shadow:
+    0 7px 24px rgba(0, 0, 0, 0.30),
+    0 3px 14px rgba(76, 175, 80, 0.25);
+}
+
+
+.scene-button.selected:hover {
+  background: #45a049;
+
+  transform: scale(1.02);
+}
+
+
+.scene-button:active {
+  transform: scale(0.98);
+}
+
+
+/* ============================================================
+   STANDARD MENÜ
+   ============================================================ */
+
+#menu-bar,
+.menu-placeholder {
+  position: absolute;
+
+  bottom: 0;
+
+  width: 100%;
+
+  height: 80px;
+
+  display: flex;
+
+  justify-content: space-around;
+
+  align-items: center;
+
+  background: #121212;
+
+  padding: 10px;
+
+  box-shadow:
+    0 -2px 10px rgba(0, 0, 0, 0.8);
+
+  color: white;
+
+  z-index: 10;
+
+  border-top: 1px solid #2a2a2a;
+}
+
+
+/* ============================================================
+   MENU INITIAL STATE
+   ============================================================ */
+
+#menu-bar,
+#add-menu,
+#edit-menu,
+#options-menu {
+  display: none;
+}
+
+
+/* ============================================================
+   MENU ITEMS
+   ============================================================ */
+
+.menu-item {
+  background: #2c2c2c;
+
+  border-radius: 20px;
+
+  padding: 8px;
+
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+.menu-item:hover {
+  background-color: #3a3a3a;
+
+  transform: scale(1.1);
+}
+
+.menu-item img {
+  width: 50px;
+  height: 50px;
+}
+
+.menu-placeholder .menu-item img {
+  width: 50px;
+  height: 50px;
+}
+
+
+/* ============================================================
+   ADD MENU
+   ============================================================ */
+
+#add-menu {
+  overflow-y: auto;
+}
+
+
+/* ============================================================
+   DYNAMIC MENU
+   ============================================================ */
+
+#dynamic-menu {
+  position: absolute;
+
+  bottom: 90px;
+
+  display: none;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  background: #1e1e1e;
+
+  box-shadow:
+    0 -2px 6px rgba(0, 0, 0, 0.8);
+
+  color: white;
+
+  width: 100vw;
+
+  height: 250px;
+
+  z-index: 20;
+
+  overflow-y: auto;
+
+  border-radius: 8px;
+}
+
+
+/* ============================================================
+   RANGE SLIDER
+   ============================================================ */
+
+#dynamic-menu input[type="range"] {
+  width: 100%;
+
+  margin: 10px auto;
+
+  background: #3a3a3a;
+
+  border-radius: 5px;
+}
+
+#dynamic-menu input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+
+  appearance: none;
+
+  width: 20px;
+
+  height: 20px;
+
+  background: #fff;
+
+  border: 2px solid #555;
+
+  border-radius: 50%;
+
+  cursor: pointer;
+}
+
+
+/* ============================================================
+   CONFIRMATION / INFORMATION DIALOGS
+   ============================================================ */
+
+#confirmation-dialog,
+#delete-confirmation-dialog,
+#info-dialog {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: none;
+
+  justify-content: center;
+
+  align-items: center;
+
+  z-index: 20;
+}
+
+
+.dialog-overlay {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0, 0, 0, 0.7);
+}
+
+
+.dialog-box {
+  position: relative;
+
+  background: #2c2c2c;
+
+  padding: 20px;
+
+  border-radius: 10px;
+
+  text-align: center;
+
+  color: white;
+
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.8);
+}
+
+
+.dialog-box p {
+  margin-bottom: 20px;
+
+  font-size: 1.2em;
+
+  color: #f0f0f0;
+}
+
+
+.dialog-box button {
+  margin: 5px;
+
+  padding: 10px 20px;
+
+  font-size: 16px;
+
+  border: none;
+
+  border-radius: 5px;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s;
+}
+
+
+.dialog-box button:first-child {
+  background-color: #e74c3c;
+
+  color: white;
+}
+
+
+.dialog-box button:first-child:hover {
+  background-color: #c0392b;
+
+  transform: scale(1.05);
+}
+
+
+.dialog-box button:last-child {
+  background-color: #3498db;
+
+  color: white;
+}
+
+
+.dialog-box button:last-child:hover {
+  background-color: #2980b9;
+
+  transform: scale(1.05);
+}
+
+
+/* ============================================================
+   MAP WINDOW
+   ============================================================ */
+
+#map-window {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  display: none;
+
+  flex-direction: column;
+
+  background: #ffffff;
+
+  z-index: 100;
+
+  box-sizing: border-box;
+
+  padding: 10px;
+}
+
+
+/* ============================================================
+   MAP CONTAINER
+   ============================================================ */
+
+#map-container {
+  position: relative;
+
+  z-index: 1500;
+
+  flex: 15;
+
+  width: 100%;
+
+  height: 100%;
+}
+
+
+/* ============================================================
+   MAP BACK BUTTON
+   ============================================================ */
+
+.map-back-button {
+  cursor: pointer;
+
+  flex: 1;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+
+.map-back-button img {
+  width: 30px;
+
+  height: 30px;
+}
+
+
+/* ============================================================
+   LEAFLET MAP
+   ============================================================ */
+
+#map-container .leaflet-container {
+  width: 100%;
+
+  height: 100%;
+}
+
+
+/* ============================================================
+   DEBUG CONSOLE
+   ============================================================ */
+
+#debug-container {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+
+  z-index: 9999;
+
+  font-family: monospace;
+
+  font-size: 12px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+}
+
+
+#debug-console {
+  width: 100%;
+
+  max-height: 200px;
+
+  overflow-y: auto;
+
+  background: rgba(0, 0, 0, 0.7);
+
+  color: #00ff00;
+
+  padding: 5px;
+
+  display: none;
+}
+
+
+#debug-toggle-btn {
+  background: rgba(0, 0, 0, 0.7);
+
+  color: #00ff00;
+
+  font-size: 14px;
+
+  border: none;
+
+  padding: 5px 10px;
+
+  cursor: pointer;
+
+  display: none;
+}
+
+
+/* ============================================================
+   MOVE MENU
+   ============================================================ */
+
+.button-row {
+  display: flex;
+
+  gap: 15px;
+
+  justify-content: center;
+
+  align-items: center;
+}
+
+
+.control-button {
+  flex: 0 0 auto;
+
+  border: none;
+
+  border-radius: 20px;
+
+  padding: 8px;
+
+  background-color: #007BFF;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+
+.control-button img {
+  width: 30px;
+
+  height: 30px;
+}
+
+
+.control-button:active {
+  background-color: #0056b3;
+
+  transform: scale(0.95);
+}
+
+
+/* ============================================================
+   APP VERSION
+   Manual version number for development
+   ============================================================ */
+
+#app-version {
+  position: fixed;
+
+  right: 8px;
+
+  bottom: 6px;
+
+  z-index: 9998;
+
+  font-family: monospace;
+
+  font-size: 10px;
+
+  color: rgba(255, 255, 255, 0.55);
+
+  background: rgba(0, 0, 0, 0.25);
+
+  padding: 3px 6px;
+
+  border-radius: 5px;
+
+  pointer-events: none;
+
+  user-select: none;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+  .start-screen {
+    width: 78vw;
+  }
+
+  .start-screen-title {
+    font-size: 30px;
+
+    letter-spacing: 2.5px;
+  }
+
+  .start-screen-subtitle {
+    font-size: 14px;
+  }
+
+  .start-screen-button {
+    min-height: 52px;
+
+    padding: 14px 45px;
+
+    font-size: 16px;
+  }
+
+  .start-ar-button {
+    min-height: 58px;
+
+    font-size: 18px;
+  }
+}
+
+
+/* ============================================================
+   SMALL HEIGHT DEVICES
+   ============================================================ */
+
+@media (max-height: 650px) {
+
+  .start-screen {
+    gap: 7px;
+
+    width: min(310px, 76vw);
+  }
+
+  .start-screen-title {
+    font-size: 27px;
+  }
+
+  .start-screen-subtitle {
+    font-size: 13px;
+  }
+
+  .start-screen-divider {
+    margin: 4px 0 6px;
+  }
+
+  .start-screen-button {
+    min-height: 46px;
+
+    padding-top: 11px;
+
+    padding-bottom: 11px;
+  }
+
+  .start-ar-button {
+    min-height: 50px;
+  }
+}
+
+
+/* ============================================================
+   VERY SMALL SCREENS / LANDSCAPE
+   ============================================================ */
+
+@media (max-height: 500px) {
+
+  .start-screen {
+    transform:
+      translate(-50%, -50%)
+      scale(0.85);
+
+    transform-origin: center;
+  }
+}
