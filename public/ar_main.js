@@ -1,48 +1,18 @@
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { clone as cloneSkinned } from "three/addons/utils/SkeletonUtils.js";
-import {
-  recordXRFrame,
-  reportDiagnosticError,
-  reportGeolocationReady,
-  reportCalibrationState,
-  reportHitTestSourceCreated,
-  reportReferenceSpaceCreated,
-  reportXRSessionEnded,
-  reportXRSessionStarted,
-  XR_DIAGNOSTICS_ENABLED,
-} from "./ar_diagnostics.js";
-import {
-  centerOnPlan,
-  configureMap,
-  init_map,
-  leafletToThree,
-  stopMapUpdates,
-} from "./ar_overviewmap.js";
-import { acquireStableLocation } from "./ar_geolocation.js";
-
 /* ========================= */
-/*    SHARED AR STATE        */
+/*    GLOBALE VARIABLEN      */
 /* ========================= */
 
-export let selectedPlacedModel = null;
-export let currentSession = null;
-export let reticle = null;
-export let scene;
-export let camera;
-export let geoLocation;
-let placedModelsRoot = null;
-let localizationStatusElement = null;
-let calibrationOffset = { x: 0, y: 0, z: 0, rotationY: 0 };
-let calibrationStep = 0.25;
-let calibrationConfirmed = false;
-const CALIBRATION_ROTATION_STEP_DEGREES = 5;
-const CALIBRATION_ROTATION_STEP_RADIANS = THREE.MathUtils.degToRad(
-  CALIBRATION_ROTATION_STEP_DEGREES,
-);
+let selectedPlacedModel = null;
+let currentSession = null;
+let reticle = null;
+let scene, camera;
+let geoLocation;
 
 const modelCache = new Map();
-const gltfLoader = new GLTFLoader();
+
+// PERFORMANCE: Reuse one GLTFLoader instead of creating
+// a new loader every time a model is placed.
+const gltfLoader = new THREE.GLTFLoader();
 
 const menus = [
     'menu-bar',
@@ -65,69 +35,70 @@ menus.forEach(id => {
 /*          MODELLE          */
 /* ========================= */
 
-export let models = {
-  bench: {
-    name: "Bench",
-    image: "assets/previewImages/bench.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/bench_model/scene.gltf",
-    scale: { x: 0.1, y: 0.1, z: 0.1 },
-    minScale: 0.05,
-    maxScale: 0.5,
-  },
+let models = {
 
-  trashbin: {
-    name: "Trash bin",
-    image: "assets/previewImages/trash_can.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/trash_model/scene.gltf",
-    scale: { x: 0.03, y: 0.03, z: 0.03 },
-    minScale: 0.01,
-    maxScale: 0.1,
-  },
+    bench: {
+        name: "Bench",
+        image: "assets/previewImages/bench.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf",
+        scale: { x: 0.1, y: 0.1, z: 0.1 },
+        minScale: 0.05,
+        maxScale: 0.5
+    },
 
-  lantern: {
-    name: "Lantern",
-    image: "assets/previewImages/park_light.png",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/park_light_model/scene.gltf",
-    scale: { x: 0.5, y: 0.5, z: 0.5 },
-    minScale: 0.2,
-    maxScale: 5,
-  },
+    trashbin: {
+        name: "Trash bin",
+        image: "assets/previewImages/trash_can.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf",
+        scale: { x: 0.03, y: 0.03, z: 0.03 },
+        minScale: 0.01,
+        maxScale: 0.1
+    },
 
-  telephone_box: {
-    name: "Telephone Box",
-    image: "assets/previewImages/telephone_box.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/telephone_box_model/scene.gltf",
-    scale: { x: 0.5, y: 0.5, z: 0.5 },
-    minScale: 0.05,
-    maxScale: 1,
-  },
+    lantern: {
+        name: "Lantern",
+        image: "assets/previewImages/park_light.png",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/park_light_model/scene.gltf",
+        scale: { x: 0.5, y: 0.5, z: 0.5 },
+        minScale: 0.2,
+        maxScale: 5
+    },
 
-  fire_hydrant_model: {
-    name: "Fire Hydrant",
-    image: "assets/previewImages/hydrant.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/fire_hydrant_model/scene.gltf",
-    scale: { x: 0.3, y: 0.3, z: 0.3 },
-    minScale: 0.1,
-    maxScale: 1,
-  },
+    telephone_box: {
+        name: "Telephone Box",
+        image: "assets/previewImages/telephone_box.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/telephone_box_model/scene.gltf",
+        scale: { x: 0.5, y: 0.5, z: 0.5 },
+        minScale: 0.05,
+        maxScale: 1
+    },
 
-  statue: {
-    name: "Statue",
-    image: "assets/previewImages/statue.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/statue_model/scene.gltf",
-    scale: { x: 0.5, y: 0.5, z: 0.5 },
-    minScale: 0.05,
-    maxScale: 2,
-  },
+    fire_hydrant_model: {
+        name: "Fire Hydrant",
+        image: "assets/previewImages/hydrant.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fire_hydrant_model/scene.gltf",
+        scale: { x: 0.3, y: 0.3, z: 0.3 },
+        minScale: 0.1,
+        maxScale: 1
+    },
 
-  fountain: {
-    name: "Fountain",
-    image: "assets/previewImages/fountain.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/fountain_model/scene.gltf",
-    scale: { x: 0.001, y: 0.001, z: 0.001 },
-    minScale: 0.0005,
-    maxScale: 0.005,
-  },
+    statue: {
+        name: "Statue",
+        image: "assets/previewImages/statue.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/statue_model/scene.gltf",
+        scale: { x: 0.5, y: 0.5, z: 0.5 },
+        minScale: 0.05,
+        maxScale: 2
+    },
+
+    fountain: {
+        name: "Fountain",
+        image: "assets/previewImages/fountain.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fountain_model/scene.gltf",
+        scale: { x: 0.001, y: 0.001, z: 0.001 },
+        minScale: 0.0005,
+        maxScale: 0.005
+    }
 };
 
 
@@ -135,12 +106,8 @@ export let models = {
 /*     INITIALISIERUNG       */
 /* ========================= */
 
-export function initializeMainUI() {
-    configureMap({
-        getCamera: () => camera,
-        getGeoLocation: () => geoLocation,
-        getPlacedModels: getAllPlacedModels,
-    });
+window.onload = () => {
+
     initializeAddMenu();
 
     // Allen Buttons den Sound hinzufügen
@@ -154,7 +121,7 @@ export function initializeMainUI() {
             playButtonSound
         );
     });
-}
+};
 
 
 function initializeAddMenu() {
@@ -198,7 +165,7 @@ function initializeAddMenu() {
 /*     MENÜ-STEUERUNG        */
 /* ========================= */
 
-export function showMenu(menuId) {
+function showMenu(menuId) {
 
     const isMapWindow =
         menuId === 'map-window';
@@ -289,7 +256,18 @@ function closeMap() {
     }
 
 
-    stopMapUpdates();
+    // Stop the map update interval
+    if (
+        typeof intervalId !== 'undefined'
+    ) {
+
+        if (intervalId) {
+
+            clearInterval(intervalId);
+
+            intervalId = null;
+        }
+    }
 
 
     // Clear selected model
@@ -297,7 +275,7 @@ function closeMap() {
 }
 
 
-export function closeDynamicMenu() {
+function closeDynamicMenu() {
 
     const dynamicMenu =
         document.getElementById(
@@ -312,7 +290,7 @@ export function closeDynamicMenu() {
 }
 
 
-export function showInfoDialog(message) {
+function showInfoDialog(message) {
 
     const infoDialog =
         document.getElementById(
@@ -332,7 +310,7 @@ export function showInfoDialog(message) {
 }
 
 
-export function closeInfoDialog() {
+function closeInfoDialog() {
 
     const infoDialog =
         document.getElementById(
@@ -348,22 +326,20 @@ export function closeInfoDialog() {
 /*     MODELL-HANDLING       */
 /* ========================= */
 
-export function getAllPlacedModels() {
-    return placedModelsRoot ? placedModelsRoot.children.filter(
+function getAllPlacedModels() {
+
+    return scene.children.filter(
         child =>
             child.isPlacedModel === true
-    ) : [];
+    );
 }
 
 
 function loadModel(filePath) {
-    const placementPosition = reticle.position.clone();
-    placedModelsRoot.updateMatrixWorld(true);
-    placedModelsRoot.worldToLocal(placementPosition);
 
     placeModel(
         filePath,
-        placementPosition,
+        reticle.position,
         (model) => {
 
             selectedPlacedModel =
@@ -400,7 +376,7 @@ function placeModel(
             modelCache.get(filePath);
 
         const model =
-            cloneSkinned(cachedModel);
+            cachedModel.clone(true);
 
 
         if (
@@ -426,7 +402,7 @@ function placeModel(
         model.modelConfig =
             modelConfig;
 
-        placedModelsRoot.add(model);
+        scene.add(model);
 
 
         if (onPlace) {
@@ -449,7 +425,7 @@ function placeModel(
                 );
 
                 const model =
-                    cloneSkinned(gltf.scene);
+                    gltf.scene.clone(true);
 
 
                 if (
@@ -475,7 +451,7 @@ function placeModel(
                 model.modelConfig =
                     modelConfig;
 
-                placedModelsRoot.add(model);
+                scene.add(model);
 
 
                 if (onPlace) {
@@ -487,7 +463,6 @@ function placeModel(
 
             (error) => {
 
-                reportDiagnosticError("MODEL LOAD", error);
                 console.error(
                     "Fehler beim Laden des Modells:",
                     error
@@ -498,7 +473,7 @@ function placeModel(
 }
 
 
-export function selectModel(modelId) {
+function selectModel(modelId) {
 
     const model =
         models[modelId];
@@ -547,7 +522,7 @@ function selectModelFromScene(event) {
 
     const intersects =
         raycaster.intersectObjects(
-            getAllPlacedModels(),
+            scene.children,
             true
         );
 
@@ -562,7 +537,7 @@ function selectModelFromScene(event) {
 
         while (
             selectedObject.parent &&
-            selectedObject.parent !== placedModelsRoot
+            selectedObject.parent !== scene
         ) {
 
             selectedObject =
@@ -684,7 +659,7 @@ function removeHighlightFromAllModels() {
 }
 
 
-export function deleteModel() {
+function deleteModel() {
 
     if (!selectedPlacedModel) {
 
@@ -707,7 +682,7 @@ export function deleteModel() {
 }
 
 
-export function confirmDelete(
+function confirmDelete(
     shouldDelete
 ) {
 
@@ -726,7 +701,7 @@ export function confirmDelete(
         selectedPlacedModel
     ) {
 
-        placedModelsRoot.remove(
+        scene.remove(
             selectedPlacedModel
         );
 
@@ -740,7 +715,7 @@ export function confirmDelete(
 }
 
 
-export function completeEditing() {
+function completeEditing() {
 
     removeHighlightFromSelectedModel();
 
@@ -765,7 +740,7 @@ export function completeEditing() {
 /*    BEARBEITUNGS-MENÜS     */
 /* ========================= */
 
-export function openRotationMenu() {
+function openRotationMenu() {
 
     if (!selectedPlacedModel) {
 
@@ -821,7 +796,7 @@ export function openRotationMenu() {
 }
 
 
-export function updateRotation(
+function updateRotation(
     axis,
     value
 ) {
@@ -852,7 +827,7 @@ export function updateRotation(
 }
 
 
-export function openScaleMenu() {
+function openScaleMenu() {
 
     if (!selectedPlacedModel) {
 
@@ -929,7 +904,7 @@ export function openScaleMenu() {
 }
 
 
-export function updateScale(
+function updateScale(
     percentValue,
     minScale,
     maxScale
@@ -968,7 +943,7 @@ export function updateScale(
 let moveDelta = 0.1;
 
 
-export function openMoveMenu() {
+function openMoveMenu() {
 
     if (!selectedPlacedModel) {
 
@@ -1070,7 +1045,7 @@ export function openMoveMenu() {
 }
 
 
-export function updateMoveDelta(
+function updateMoveDelta(
     value
 ) {
 
@@ -1092,18 +1067,15 @@ export function updateMoveDelta(
 }
 
 
-export function moveModelDynamic(
+function moveModelDynamic(
     axis,
     value
 ) {
 
     if (selectedPlacedModel) {
-        const worldDelta = new THREE.Vector3();
-        worldDelta[axis] = value;
-        worldDelta.applyQuaternion(
-            placedModelsRoot.quaternion.clone().invert(),
-        );
-        selectedPlacedModel.position.add(worldDelta);
+
+        selectedPlacedModel.position[axis] +=
+            value;
     }
 }
 
@@ -1135,398 +1107,271 @@ function closeMapDialog() {
         'none';
 }
 
-function updateLocalizationStatus(message, retry = false) {
-  if (!localizationStatusElement) {
-    localizationStatusElement = document.createElement("div");
-    localizationStatusElement.id = "gps-localization-status";
-    localizationStatusElement.style.cssText = [
-      "position:fixed",
-      "top:42px",
-      "left:50%",
-      "transform:translateX(-50%)",
-      "z-index:10000",
-      "max-width:calc(100vw - 24px)",
-      "padding:10px 14px",
-      "border-radius:8px",
-      "background:rgba(0,0,0,.8)",
-      "color:#fff",
-      "font:14px/1.4 sans-serif",
-      "text-align:center",
-      "pointer-events:auto",
-    ].join(";");
-    document.body.appendChild(localizationStatusElement);
-  }
-
-  window.clearTimeout(localizationStatusElement.hideTimer);
-  localizationStatusElement.replaceChildren(document.createTextNode(message));
-
-  if (retry) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Erneut versuchen";
-    button.style.cssText =
-      "display:block;margin:8px auto 0;padding:8px 12px;border:0;border-radius:5px";
-    button.addEventListener("click", () => startLocationLocalization());
-    localizationStatusElement.appendChild(button);
-  } else if (message.startsWith("Standort stabil") || message.startsWith("Standort angenähert")) {
-    localizationStatusElement.hideTimer = window.setTimeout(() => {
-      localizationStatusElement?.remove();
-      localizationStatusElement = null;
-    }, 5000);
-  }
-}
-
-let pendingSceneData = null;
-let sceneModelsLoaded = false;
-
-async function startLocationLocalization() {
-  updateLocalizationStatus("Standort wird stabilisiert …");
-
-  let location;
-  try {
-    location = await acquireStableLocation((progress) => {
-      if (progress.status !== "ACQUIRING") return;
-      const count = progress.goodSampleCount || 0;
-      const accuracy = Number.isFinite(progress.accuracy)
-        ? ` · letzte Genauigkeit ${progress.accuracy.toFixed(0)} m`
-        : "";
-      updateLocalizationStatus(
-        `Standort wird stabilisiert · ${count}/4 konsistente Messungen${accuracy}`,
-      );
-    });
-  } catch (error) {
-    console.error("[Geo] Failed to stabilize location:", error);
-    updateLocalizationStatus(
-      "Standort konnte nicht abgerufen werden. Bitte Standortzugriff prüfen und erneut versuchen.",
-      true,
-    );
-    return;
-  }
-
-  geoLocation = location;
-  reportGeolocationReady(geoLocation);
-  const message = geoLocation.status === "STABLE"
-    ? `Standort stabil · Genauigkeit ca. ${geoLocation.accuracy.toFixed(1)} m`
-    : `Standort angenähert · Genauigkeit ca. ${geoLocation.accuracy.toFixed(1)} m`;
-  updateLocalizationStatus(message);
-
-  if (!sceneModelsLoaded && pendingSceneData && Array.isArray(pendingSceneData.models)) {
-    sceneModelsLoaded = true;
-    pendingSceneData.models.forEach((model) => {
-      if (!model.name) return;
-
-      const modelDefinition = Object.values(models).find(
-        (candidate) => model.name === candidate.name,
-      );
-      if (!modelDefinition) {
-        console.error("[Scene] Model not found:", model.name);
-        return;
-      }
-
-      const { x, z } = leafletToThree(model.lat, model.lng);
-      const positionVector = new THREE.Vector3(x, model.position.y, z);
-      placeModel(modelDefinition.file, positionVector, (placed) => {
-        if (model.rotation) {
-          placed.rotation._x = model.rotation._x;
-          placed.rotation._y = model.rotation._y;
-          placed.rotation._z = model.rotation._z;
-        }
-        if (model.scale) {
-          placed.scale.x = model.scale.x;
-          placed.scale.y = model.scale.y;
-          placed.scale.z = model.scale.z;
-        }
-      });
-    });
-  }
-}
-
-function renderCalibrationMenu() {
-  const dynamicMenu = document.getElementById("dynamic-menu");
-  dynamicMenu.style.display = "flex";
-  dynamicMenu.innerHTML = `
-    <h3>Szene kalibrieren</h3>
-    <p>X = seitlich · Z = vor/zurück</p>
-    <p>Schrittweite: ${calibrationStep.toFixed(2)} m · X ${calibrationOffset.x.toFixed(2)} m · Y ${calibrationOffset.y.toFixed(2)} m · Z ${calibrationOffset.z.toFixed(2)} m</p>
-    <div class="button-row calibration-rotation-controls">
-      <span>Drehung Y · ${CALIBRATION_ROTATION_STEP_DEGREES}°</span>
-      <button class="calibration-rotation-button" type="button" aria-label="Rotate scene left" title="Rotate scene left" onclick="adjustCalibrationRotation(-1)">↺</button>
-      <button class="calibration-rotation-button" type="button" aria-label="Rotate scene right" title="Rotate scene right" onclick="adjustCalibrationRotation(1)">↻</button>
-    </div>
-    <label>Schrittweite
-      <select onchange="setCalibrationStep(this.value)">
-        <option value="0.1" ${calibrationStep === 0.1 ? "selected" : ""}>0,10 m</option>
-        <option value="0.25" ${calibrationStep === 0.25 ? "selected" : ""}>0,25 m</option>
-        <option value="0.5" ${calibrationStep === 0.5 ? "selected" : ""}>0,50 m</option>
-        <option value="1" ${calibrationStep === 1 ? "selected" : ""}>1,00 m</option>
-      </select>
-    </label>
-    <div class="button-row">
-      <button onclick="adjustCalibrationOffset('x', -1)">X −</button>
-      <button onclick="adjustCalibrationOffset('x', 1)">X +</button>
-      <button onclick="adjustCalibrationOffset('z', -1)">Z −</button>
-      <button onclick="adjustCalibrationOffset('z', 1)">Z +</button>
-    </div>
-    <div class="button-row">
-      <button onclick="resetCalibration()">Kalibrierung zurücksetzen</button>
-      <button onclick="confirmCalibration()">${calibrationConfirmed ? "Übernommen ✓" : "Kalibrierung übernehmen"}</button>
-    </div>
-    <button onclick="closeDynamicMenu()">Zurück</button>
-  `;
-}
-
-export function openCalibrationMenu() {
-  renderCalibrationMenu();
-}
-
-export function setCalibrationStep(value) {
-  calibrationStep = Number(value);
-  renderCalibrationMenu();
-}
-
-export function adjustCalibrationOffset(axis, direction) {
-  calibrationOffset[axis] = Number(
-    (calibrationOffset[axis] + direction * calibrationStep).toFixed(2),
-  );
-  applyCalibrationTransform();
-  calibrationConfirmed = false;
-  reportCalibrationState({ ...calibrationOffset, confirmed: calibrationConfirmed });
-  renderCalibrationMenu();
-}
-
-export function adjustCalibrationRotation(direction) {
-  const fullTurn = 2 * Math.PI;
-  const nextRotation =
-    calibrationOffset.rotationY +
-    direction * CALIBRATION_ROTATION_STEP_RADIANS;
-  const normalizedRotation =
-    ((nextRotation + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
-  calibrationOffset.rotationY =
-    Math.abs(normalizedRotation) < 1e-12 ? 0 : normalizedRotation;
-  applyCalibrationTransform();
-  calibrationConfirmed = false;
-  reportCalibrationState({ ...calibrationOffset, confirmed: calibrationConfirmed });
-  renderCalibrationMenu();
-}
-
-function applyCalibrationTransform() {
-  placedModelsRoot.position.set(
-    calibrationOffset.x,
-    calibrationOffset.y,
-    calibrationOffset.z,
-  );
-  placedModelsRoot.rotation.set(0, calibrationOffset.rotationY, 0);
-}
-
-export function resetCalibration() {
-  calibrationOffset = { x: 0, y: 0, z: 0, rotationY: 0 };
-  calibrationConfirmed = false;
-  applyCalibrationTransform();
-  reportCalibrationState({ ...calibrationOffset, confirmed: calibrationConfirmed });
-  renderCalibrationMenu();
-}
-
-export function confirmCalibration() {
-  calibrationConfirmed = true;
-  reportCalibrationState({ ...calibrationOffset, confirmed: calibrationConfirmed });
-  renderCalibrationMenu();
-}
-
 
 /* ========================= */
 /*        AR-HANDLING        */
 /* ========================= */
 
-export async function activateXR(sceneData = null) {
-  pendingSceneData = sceneData;
-  sceneModelsLoaded = false;
-  calibrationOffset = { x: 0, y: 0, z: 0, rotationY: 0 };
-  calibrationConfirmed = false;
-
+async function activateXR(sceneData = null) {
   const canvas = document.createElement("canvas");
-  const renderer = new THREE.WebGLRenderer({
-    alpha: true,
-    antialias: true,
-    canvas,
-  });
 
   document.body.appendChild(canvas);
 
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.xr.enabled = true;
-  renderer.xr.setReferenceSpaceType("local");
+  const gl = canvas.getContext("webgl", {
+    xrCompatible: true,
+  });
+
+  const renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    canvas,
+    context: gl,
+  });
+
+  renderer.autoClear = false;
 
   scene = new THREE.Scene();
-  placedModelsRoot = new THREE.Group();
-  placedModelsRoot.name = "placed-models-root";
-  scene.add(placedModelsRoot);
-  reportCalibrationState({ ...calibrationOffset, confirmed: false });
-  camera = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    0.01,
-    20,
-  );
 
+  camera = new THREE.PerspectiveCamera();
+
+  camera.matrixAutoUpdate = false;
+
+  // ========================================================
   // AR lighting
+  // ========================================================
+
+  // Soft overall illumination
   const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
+
   scene.add(ambientLight);
 
+  // Sky/ground illumination
   const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x888888, 1.5);
+
   scene.add(hemisphereLight);
 
+  // Directional light for shadows and form
   const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+
   directionalLight.position.set(10, 20, 10);
+
   scene.add(directionalLight);
 
+  // ========================================================
   // Reticle
-  gltfLoader.load(
+  // ========================================================
+
+  const loader = new THREE.GLTFLoader();
+
+  loader.load(
     "https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf",
+
     (gltf) => {
       reticle = gltf.scene;
+
       reticle.visible = false;
+
       scene.add(reticle);
-    },
-    undefined,
-    (error) => {
-      reportDiagnosticError("RETICLE LOAD", error);
-      console.error("[GLTF] Failed to load reticle:", error);
     },
   );
 
-  try {
-    currentSession = await navigator.xr.requestSession("immersive-ar", {
-      requiredFeatures: ["hit-test"],
-      optionalFeatures: ["dom-overlay"],
-      domOverlay: {
-        root: document.body,
-      },
-    });
+  // ========================================================
+  // Start WebXR AR session
+  // ========================================================
 
-    await renderer.xr.setSession(currentSession);
-    reportXRSessionStarted();
-  } catch (error) {
-    reportDiagnosticError("XR START", error);
-    console.error("[XR] Failed to start session:", error);
-    renderer.dispose();
-    canvas.remove();
-    currentSession = null;
-    showInfoDialog("Die AR-Session konnte nicht gestartet werden.");
-    return;
-  }
+  currentSession = await navigator.xr.requestSession("immersive-ar", {
+    optionalFeatures: ["dom-overlay"],
+
+    domOverlay: {
+      root: document.body,
+    },
+
+    requiredFeatures: ["hit-test"],
+  });
+
+  currentSession.updateRenderState({
+    baseLayer: new XRWebGLLayer(currentSession, gl),
+  });
 
   const referenceSpace = await currentSession.requestReferenceSpace("local");
-  reportReferenceSpaceCreated("local");
+
   const viewerSpace = await currentSession.requestReferenceSpace("viewer");
-  reportReferenceSpaceCreated("viewer");
+
   const hitTestSource = await currentSession.requestHitTestSource({
     space: viewerSpace,
   });
-  reportHitTestSourceCreated();
+
+  // ========================================================
+  // Show main menu
+  // ========================================================
 
   document.getElementById("menu-bar").style.display = "flex";
 
+  // ========================================================
+  // AR session ended
+  // Reload the complete website
+  // ========================================================
+
   currentSession.addEventListener("end", () => {
-    reportXRSessionEnded();
     console.log("AR session ended");
+
+    // Completely reload the website.
+    // This resets the AR canvas, menus, scene, map,
+    // variables, and all other application state.
     window.location.reload();
   });
 
+  // ========================================================
+  // Select objects in AR
+  // ========================================================
+
   canvas.addEventListener("pointerdown", selectModelFromScene);
 
-  renderer.setAnimationLoop((time, frame) => {
-    let hitResultCount = null;
+  // ========================================================
+  // Geolocation
+  // ========================================================
 
-    if (frame) {
-      const pose = frame.getViewerPose(referenceSpace);
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        geoLocation = {
+          latitude: roundTo(position.coords.latitude, 5),
 
-      if (pose) {
-        const hitTestResults = frame.getHitTestResults(hitTestSource);
-        hitResultCount = hitTestResults.length;
+          longitude: roundTo(position.coords.longitude, 5),
+        };
 
-        if (hitTestResults.length > 0) {
-          const hitPose = hitTestResults[0].getPose(referenceSpace);
+        console.log("GeoLocation: " + JSON.stringify(geoLocation));
 
-          if (reticle && hitPose) {
-            reticle.visible = true;
-            reticle.position.set(
-              hitPose.transform.position.x,
-              hitPose.transform.position.y,
-              hitPose.transform.position.z,
-            );
-            reticle.updateMatrixWorld(true);
-          }
-        } else if (reticle) {
-          reticle.visible = false;
+        // =================================================
+        // Load saved scene models
+        // =================================================
+
+        if (sceneData) {
+          sceneData.models.forEach((model) => {
+            if (model.name) {
+              const modelDefinition = Object.values(models).find(
+                (m) => model.name === m.name,
+              );
+
+              if (!modelDefinition) {
+                console.error("Modell nicht gefunden:", model.name);
+
+                return;
+              }
+
+              const filePath = modelDefinition.file;
+
+              const { x, z } = leafletToThree(model.lat, model.lng);
+
+              const positionVector = new THREE.Vector3(x, model.position.y, z);
+
+              placeModel(filePath, positionVector, (placed) => {
+                if (model.rotation) {
+                  placed.rotation._x = model.rotation._x;
+
+                  placed.rotation._y = model.rotation._y;
+
+                  placed.rotation._z = model.rotation._z;
+                }
+
+                if (model.scale) {
+                  placed.scale.x = model.scale.x;
+
+                  placed.scale.y = model.scale.y;
+
+                  placed.scale.z = model.scale.z;
+                }
+              });
+            }
+          });
         }
-      } else if (reticle) {
-        reticle.visible = false;
+      },
+
+      (error) => {
+        console.error(
+          "Fehler bei der Geolokalisierung:",
+          JSON.stringify(error),
+        );
+      },
+
+      {
+        enableHighAccuracy: true,
+        maximumAge: 2000,
+        timeout: 5000,
+      },
+    );
+  }
+  // ========================================================
+  // XR render loop
+  // ========================================================
+
+  currentSession.requestAnimationFrame(function onXRFrame(time, frame) {
+    currentSession.requestAnimationFrame(onXRFrame);
+
+    gl.bindFramebuffer(
+      gl.FRAMEBUFFER,
+      currentSession.renderState.baseLayer.framebuffer,
+    );
+
+    const pose = frame.getViewerPose(referenceSpace);
+
+    if (pose) {
+      const view = pose.views[0];
+
+      const viewport = currentSession.renderState.baseLayer.getViewport(view);
+
+      renderer.setSize(viewport.width, viewport.height);
+
+      camera.matrix.fromArray(view.transform.matrix);
+
+      camera.projectionMatrix.fromArray(view.projectionMatrix);
+
+      camera.updateMatrixWorld(true);
+
+      // =================================================
+      // Hit testing
+      // =================================================
+
+      const hitTestResults = frame.getHitTestResults(hitTestSource);
+
+      if (hitTestResults.length > 0) {
+        const hitPose = hitTestResults[0].getPose(referenceSpace);
+
+        reticle.visible = true;
+
+        reticle.position.set(
+          hitPose.transform.position.x,
+
+          hitPose.transform.position.y,
+
+          hitPose.transform.position.z,
+        );
+
+        reticle.updateMatrixWorld(true);
       }
-    }
 
-    renderer.render(scene, camera);
+      // =================================================
+      // Render AR scene
+      // =================================================
 
-    if (XR_DIAGNOSTICS_ENABLED) {
-      recordXRFrame({
-        hitResultCount,
-        reticleVisible: Boolean(reticle && reticle.visible),
-        modelCount: getAllPlacedModels().length,
-        camera,
-      });
+      renderer.render(scene, camera);
     }
   });
-
-  void startLocationLocalization();
 }
+
 /* ========================= */
 /*       AR EXIT             */
 /* ========================= */
 
-export function exitAR() {
+function exitAR() {
   document.getElementById("confirmation-dialog").style.display = "flex";
 }
 
-export function confirmExit(shouldExit) {
+function confirmExit(shouldExit) {
   if (shouldExit && currentSession) {
     currentSession.end();
   }
 
   document.getElementById("confirmation-dialog").style.display = "none";
-}
-
-
-export function installLegacyUI(downloadScene) {
-  Object.assign(window, {
-    showMenu,
-    selectModel,
-    showInfoDialog,
-    openRotationMenu,
-    openScaleMenu,
-    openMoveMenu,
-    deleteModel,
-    completeEditing,
-    exitAR,
-    downloadScene,
-    confirmDelete,
-    confirmExit,
-    closeInfoDialog,
-    closeDynamicMenu,
-    updateRotation,
-    updateScale,
-    updateMoveDelta,
-    moveModelDynamic,
-    openCalibrationMenu,
-    setCalibrationStep,
-    adjustCalibrationOffset,
-    adjustCalibrationRotation,
-    resetCalibration,
-    confirmCalibration,
-  });
-
-  Object.defineProperty(window, "moveDelta", {
-    configurable: true,
-    get: () => moveDelta,
-  });
 }
 
 /* ========================= */
@@ -1550,4 +1395,3 @@ function playButtonSound() {
     }, 200);
   }
 }
-

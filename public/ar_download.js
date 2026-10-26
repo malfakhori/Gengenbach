@@ -1,29 +1,10 @@
-import * as THREE from "three";
-import { getAllPlacedModels, geoLocation, showInfoDialog } from "./ar_main.js";
-import { threeToLeaflet } from "./ar_overviewmap.js";
-
-export function downloadScene() {
+function downloadScene() {
     const placedModels = getAllPlacedModels().map(model => {
-      const finalPosition = model.getWorldPosition(new THREE.Vector3());
-      const finalQuaternion = model.getWorldQuaternion(new THREE.Quaternion());
-      const finalRotation = new THREE.Euler().setFromQuaternion(
-        finalQuaternion,
-        model.rotation.order,
-      );
-      const { lat, lng } = threeToLeaflet(finalPosition.x, finalPosition.z);
+      const { lat, lng } = threeToLeaflet(model.position.x, model.position.z);
       return {
         name: model.modelConfig.name,
-        position: {
-          x: finalPosition.x,
-          y: finalPosition.y,
-          z: finalPosition.z,
-        },
-        rotation: {
-          _x: finalRotation.x,
-          _y: finalRotation.y,
-          _z: finalRotation.z,
-          _order: finalRotation.order,
-        },
+        position: model.position,
+        rotation: model.rotation,
         scale: model.scale,
         lat: lat,
         lng: lng,
@@ -63,7 +44,7 @@ export function downloadScene() {
     document.body.removeChild(a);
 }
 
-export function loadSceneFromFile(loadedData) {
+function loadSceneFromFile(loadedData) {
   const fileInput = document.createElement('input');
   fileInput.type = 'file';
   fileInput.accept = 'application/json';

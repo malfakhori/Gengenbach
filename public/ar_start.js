@@ -1,6 +1,3 @@
-import { activateXR } from "./ar_main.js";
-import { loadSceneFromFile } from "./ar_download.js";
-
 /* ========================= */
 /*   DEBUGGING UND START     */
 /* ========================= */
@@ -20,7 +17,7 @@ let predefinedButton2 = null;
 /*   PREDEFINED SCENE        */
 /* ========================= */
 
-export async function loadPredefinedScene(filePath, fileName) {
+async function loadPredefinedScene(filePath, fileName) {
   try {
     const response = await fetch(filePath);
 
@@ -47,7 +44,7 @@ export async function loadPredefinedScene(filePath, fileName) {
 /* Create the Start Screen                                     */
 /* ============================================================ */
 
-export function showStartScreen() {
+function showStartScreen() {
   // Prevent duplicate start screens
   if (
     startScreen ||
@@ -265,3 +262,12 @@ export function showStartScreen() {
   };
 }
 
+/* ============================================================ */
+/* INITIAL START                                                */
+/* ============================================================ */
+
+if (navigator.xr) {
+  showStartScreen();
+} else {
+  alert("WebXR wird nicht unterstützt.");
+}

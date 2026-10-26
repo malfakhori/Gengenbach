@@ -489,19 +489,6 @@ button:active {
   height: 50px;
 }
 
-.calibration-menu-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 66px;
-  height: 66px;
-  color: #fff;
-  font-size: 11px;
-  line-height: 1.2;
-  text-align: center;
-  cursor: pointer;
-}
-
 .menu-placeholder .menu-item img {
   width: 50px;
   height: 50px;
@@ -849,18 +836,6 @@ button:active {
   justify-content: center;
 
   align-items: center;
-}
-
-.calibration-rotation-controls {
-  gap: 8px;
-}
-
-.calibration-rotation-button {
-  min-width: 52px;
-  min-height: 48px;
-  margin: 4px;
-  padding: 6px 12px;
-  font-size: 24px;
 }
 
 
