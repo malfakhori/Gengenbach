@@ -148,7 +148,7 @@ function showStartScreen() {
 
   predefinedButton1 = document.createElement("button");
 
-  predefinedButton1.textContent = "Quartiersplatz 1";
+  predefinedButton1.textContent = "Quartiersplatz";
 
   predefinedButton1.classList.add(
     "start-screen-button",
@@ -171,7 +171,7 @@ function showStartScreen() {
     "predefined-scene-button-2",
     "scene-button",
   );
-
+  predefinedButton2.style.display = "none";
   startScreen.appendChild(predefinedButton2);
 
   /* ==========================================================
