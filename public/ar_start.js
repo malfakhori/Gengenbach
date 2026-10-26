@@ -224,7 +224,7 @@ function showStartScreen() {
   predefinedButton1.onclick = async () => {
     const success = await loadPredefinedScene(
       "scenes/gengenbach-plaza.json",
-      "Quartiersplatz 1",
+      "Quartiersplatz",
     );
 
     if (success) {
