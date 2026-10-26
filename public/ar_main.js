@@ -36,11 +36,12 @@ menus.forEach(id => {
 /* ========================= */
 
 
+
 let models = {
   bench: {
     name: "Bench",
     image: "assets/previewImages/bench.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/bench_model/scene.gltf",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach/master/public/assets/models/bench_model/scene.gltf",
     scale: { x: 0.1, y: 0.1, z: 0.1 },
     minScale: 0.05,
     maxScale: 0.5,
@@ -49,7 +50,7 @@ let models = {
   trashbin: {
     name: "Trash bin",
     image: "assets/previewImages/trash_can.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/trash_model/scene.gltf",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach/master/public/assets/models/trash_model/scene.gltf",
     scale: { x: 0.03, y: 0.03, z: 0.03 },
     minScale: 0.01,
     maxScale: 0.1,
@@ -58,7 +59,7 @@ let models = {
   lantern: {
     name: "Lantern",
     image: "assets/previewImages/park_light.png",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/park_light_model/scene.gltf",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach/master/public/assets/models/park_light_model/scene.gltf",
     scale: { x: 0.5, y: 0.5, z: 0.5 },
     minScale: 0.2,
     maxScale: 5,
@@ -67,7 +68,7 @@ let models = {
   telephone_box: {
     name: "Telephone Box",
     image: "assets/previewImages/telephone_box.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/telephone_box_model/scene.gltf",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach/master/public/assets/models/telephone_box_model/scene.gltf",
     scale: { x: 0.5, y: 0.5, z: 0.5 },
     minScale: 0.05,
     maxScale: 1,
@@ -76,7 +77,7 @@ let models = {
   fire_hydrant_model: {
     name: "Fire Hydrant",
     image: "assets/previewImages/hydrant.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/fire_hydrant_model/scene.gltf",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach/master/public/assets/models/fire_hydrant_model/scene.gltf",
     scale: { x: 0.3, y: 0.3, z: 0.3 },
     minScale: 0.1,
     maxScale: 1,
@@ -85,7 +86,7 @@ let models = {
   statue: {
     name: "Statue",
     image: "assets/previewImages/statue.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/statue_model/scene.gltf",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach/master/public/assets/models/statue_model/scene.gltf",
     scale: { x: 0.5, y: 0.5, z: 0.5 },
     minScale: 0.05,
     maxScale: 2,
@@ -94,12 +95,13 @@ let models = {
   fountain: {
     name: "Fountain",
     image: "assets/previewImages/fountain.PNG",
-    file: "https://github.com/malfakhori/Gengenbach/raw/master/public/assets/models/fountain_model/scene.gltf",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach/master/public/assets/models/fountain_model/scene.gltf",
     scale: { x: 0.001, y: 0.001, z: 0.001 },
     minScale: 0.0005,
     maxScale: 0.005,
   },
 };
+
 
 
 
