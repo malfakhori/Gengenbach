@@ -151,7 +151,7 @@ export function showStartScreen() {
 
   predefinedButton1 = document.createElement("button");
 
-  predefinedButton1.textContent = "Quartiersplatz";
+  predefinedButton1.textContent = "Quartiersplatz 1";
 
   predefinedButton1.classList.add(
     "start-screen-button",
@@ -175,7 +175,6 @@ export function showStartScreen() {
     "scene-button",
   );
 
-  predefinedButton2.style.display = "none"; // Hide the button initially
   startScreen.appendChild(predefinedButton2);
 
   /* ==========================================================

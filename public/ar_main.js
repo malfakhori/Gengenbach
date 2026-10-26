@@ -65,95 +65,71 @@ menus.forEach(id => {
 /*          MODELLE          */
 /* ========================= */
 
-
-const MODEL_BASE_URL =
-  "https://transfer.hft-stuttgart.de/gitlab/muhammad.alfakhori/Gengenbach/-/raw/master/public/assets/models";
-
 export let models = {
-  // Existing environmental objects
-  bench: {
-    name: "Bench",
-    image: "assets/previewImages/bench.PNG",
-    file: `${MODEL_BASE_URL}/bench_model/scene.gltf`,
-    scale: { x: 0.3, y: 0.3, z: 0.3 },
-    minScale: 0.05,
-    maxScale: 0.5,
-  },
 
-  trashbin: {
-    name: "Trash bin",
-    image: "assets/previewImages/trash_can.PNG",
-    file: `${MODEL_BASE_URL}/trash_model/scene.gltf`,
-    scale: { x: 0.03, y: 0.03, z: 0.03 },
-    minScale: 0.01,
-    maxScale: 0.1,
-  },
+    bench: {
+        name: "Bench",
+        image: "assets/previewImages/bench.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/bench_model/scene.gltf",
+        scale: { x: 0.1, y: 0.1, z: 0.1 },
+        minScale: 0.05,
+        maxScale: 0.5
+    },
 
-  lantern: {
-    name: "Lantern",
-    image: "assets/previewImages/park_light.png",
-    file: `${MODEL_BASE_URL}/park_light_model/scene.gltf`,
-    scale: { x: 0.5, y: 0.5, z: 0.5 },
-    minScale: 0.2,
-    maxScale: 5,
-  },
+    trashbin: {
+        name: "Trash bin",
+        image: "assets/previewImages/trash_can.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/trash_model/scene.gltf",
+        scale: { x: 0.03, y: 0.03, z: 0.03 },
+        minScale: 0.01,
+        maxScale: 0.1
+    },
 
-  // Tree models
-  ahorn: {
-    name: "Ahorn",
-    image: `${MODEL_BASE_URL}/Ahorn/Ahorn.png`,
-    file: `${MODEL_BASE_URL}/Ahorn/Ahorn.glb`,
-    scale: { x: 1, y: 1, z: 1 },
-    minScale: 0.5,
-    maxScale: 2,
-  },
+    lantern: {
+        name: "Lantern",
+        image: "assets/previewImages/park_light.png",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/park_light_model/scene.gltf",
+        scale: { x: 0.5, y: 0.5, z: 0.5 },
+        minScale: 0.2,
+        maxScale: 5
+    },
 
-  hasel: {
-    name: "Hasel",
-    image: `${MODEL_BASE_URL}/Hasel/Hasel.png`,
-    file: `${MODEL_BASE_URL}/Hasel/Hasel.glb`,
-    scale: { x: 1, y: 1, z: 1 },
-    minScale: 0.5,
-    maxScale: 2,
-  },
+    telephone_box: {
+        name: "Telephone Box",
+        image: "assets/previewImages/telephone_box.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/telephone_box_model/scene.gltf",
+        scale: { x: 0.5, y: 0.5, z: 0.5 },
+        minScale: 0.05,
+        maxScale: 1
+    },
 
-  linde: {
-    name: "Linde",
-    image: `${MODEL_BASE_URL}/Linde/Linde.png`,
-    file: `${MODEL_BASE_URL}/Linde/Linde.glb`,
-    scale: { x: 1, y: 1, z: 1 },
-    minScale: 0.5,
-    maxScale: 2,
-  },
+    fire_hydrant_model: {
+        name: "Fire Hydrant",
+        image: "assets/previewImages/hydrant.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fire_hydrant_model/scene.gltf",
+        scale: { x: 0.3, y: 0.3, z: 0.3 },
+        minScale: 0.1,
+        maxScale: 1
+    },
 
-  platane: {
-    name: "Platane",
-    image: `${MODEL_BASE_URL}/Platane/Platane.png`,
-    file: `${MODEL_BASE_URL}/Platane/Platane.glb`,
-    scale: { x: 1, y: 1, z: 1 },
-    minScale: 0.5,
-    maxScale: 2,
-  },
+    statue: {
+        name: "Statue",
+        image: "assets/previewImages/statue.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/statue_model/scene.gltf",
+        scale: { x: 0.5, y: 0.5, z: 0.5 },
+        minScale: 0.05,
+        maxScale: 2
+    },
 
-  robinie: {
-    name: "Robinie",
-    image: `${MODEL_BASE_URL}/Robinie/Robinie.png`,
-    file: `${MODEL_BASE_URL}/Robinie/Robinie.glb`,
-    scale: { x: 1, y: 1, z: 1 },
-    minScale: 0.5,
-    maxScale: 2,
-  },
-
-  rotbuche: {
-    name: "Rotbuche",
-    image: `${MODEL_BASE_URL}/Rotbuche/Rotbuche.png`,
-    file: `${MODEL_BASE_URL}/Rotbuche/Rotbuche.glb`,
-    scale: { x: 1, y: 1, z: 1 },
-    minScale: 0.5,
-    maxScale: 2,
-  },
+    fountain: {
+        name: "Fountain",
+        image: "assets/previewImages/fountain.PNG",
+        file: "https://transfer.hft-stuttgart.de/gitlab/geovistoogsi/ar/-/raw/master/public/assets/models/fountain_model/scene.gltf",
+        scale: { x: 0.001, y: 0.001, z: 0.001 },
+        minScale: 0.0005,
+        maxScale: 0.005
+    }
 };
-
 
 
 /* ========================= */
