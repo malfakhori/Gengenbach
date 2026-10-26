@@ -38,6 +38,61 @@ menus.forEach(id => {
 
 
 let models = {
+  // Trees
+  ahorn: {
+    name: "Ahorn",
+    image: "assets/models/Ahorn/Ahorn.png",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach-186/master/public/assets/models/Ahorn/Ahorn.glb",
+    scale: { x: 1, y: 1, z: 1 },
+    minScale: 0.1,
+    maxScale: 5,
+  },
+
+  hasel: {
+    name: "Hasel",
+    image: "assets/models/Hasel/Hasel.png",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach-186/master/public/assets/models/Hasel/Hasel.glb",
+    scale: { x: 1, y: 1, z: 1 },
+    minScale: 0.1,
+    maxScale: 5,
+  },
+
+  linde: {
+    name: "Linde",
+    image: "assets/models/Linde/Linde.png",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach-186/master/public/assets/models/Linde/Linde.glb",
+    scale: { x: 1, y: 1, z: 1 },
+    minScale: 0.1,
+    maxScale: 5,
+  },
+
+  platane: {
+    name: "Platane",
+    image: "assets/models/Platane/Platane.png",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach-186/master/public/assets/models/Platane/Platane.glb",
+    scale: { x: 1, y: 1, z: 1 },
+    minScale: 0.1,
+    maxScale: 5,
+  },
+
+  robinie: {
+    name: "Robinie",
+    image: "assets/models/Robinie/Robinie.png",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach-186/master/public/assets/models/Robinie/Robinie.glb",
+    scale: { x: 1, y: 1, z: 1 },
+    minScale: 0.1,
+    maxScale: 5,
+  },
+
+  rotbuche: {
+    name: "Rotbuche",
+    image: "assets/models/Rotbuche/Rotbuche.png",
+    file: "https://raw.githubusercontent.com/malfakhori/Gengenbach-186/master/public/assets/models/Rotbuche/Rotbuche.glb",
+    scale: { x: 1, y: 1, z: 1 },
+    minScale: 0.1,
+    maxScale: 5,
+  },
+
   bench: {
     name: "Bench",
     image: "assets/previewImages/bench.PNG",
